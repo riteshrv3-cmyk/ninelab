@@ -5,6 +5,7 @@ import { requireStudent, StudentAuthedRequest } from "../middlewares/studentAuth
 import { getTodayTasks, completeTask, addFollowupTask, autoCompleteTaskKind, formatDailyTask, istToday } from "../lib/dailyTasks";
 import { logEvent } from "../lib/events";
 import { getTopNoticing } from "../lib/noticings";
+import { checkMilestones } from "../lib/trackProgress";
 
 const router = Router();
 
@@ -13,13 +14,24 @@ router.get("/students/:id/today-tasks", requireStudent({ allowGuest: true }), as
   const id = Number(req.params.id);
   const student = req.student!;
   try {
+    // Self-heal track progress before building tasks: this marks any milestone
+    // the student has since satisfied, persists readiness, and yields the next
+    // incomplete milestone to surface as today's track_step task. Wrapped so a
+    // checker fault never breaks the Home load.
+    let trackStep = null;
+    try {
+      const progress = await checkMilestones(id);
+      trackStep = progress.nextTask;
+    } catch (err) {
+      req.log.error({ err }, "checkMilestones failed (non-fatal)");
+    }
     // getTodayTasks and getTopNoticing are independent of each other — run them
     // concurrently. Both work off the same pre-fetched `student` snapshot, so the
     // noticing rules (comeback/streak_risk) still see pre-request state regardless
     // of ordering, preserving the "compute noticing before advancing lastActiveDate"
     // requirement below.
     const [{ date, tasks }, noticing] = await Promise.all([
-      getTodayTasks(id, student),
+      getTodayTasks(id, student, trackStep),
       getTopNoticing(id, student),
     ]);
     const today = istToday();

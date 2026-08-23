@@ -26,3 +26,7 @@ export * from "./courseFinalExams";
 export * from "./courseFinalExamAttempts";
 export * from "./courseCertificateInterviews";
 export * from "./courseCertificates";
+export * from "./collegeAdmins";
+export * from "./learningTracks";
+export * from "./trackMilestones";
+export * from "./studentTrackEnrollments";
