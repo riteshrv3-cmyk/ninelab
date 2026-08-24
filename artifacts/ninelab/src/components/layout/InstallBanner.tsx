@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, Share, SquarePlus, Smartphone } from "lucide-react";
+import { X, Share, SquarePlus, Smartphone, MoreVertical } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 /**
@@ -99,14 +99,27 @@ export function InstallBanner() {
   };
 
   const install = async () => {
+    // Chrome can fire beforeinstallprompt a beat after load — on Android give
+    // it up to 1.5s to arrive before falling back to the manual guide.
+    if (!canPromptInstall() && !isIOS()) {
+      await new Promise<void>((resolve) => {
+        const done = () => { promptListeners.delete(done); resolve(); };
+        promptListeners.add(done);
+        setTimeout(done, 1500);
+      });
+    }
     if (canPromptInstall()) {
       // Declined native prompt: leave the banner; the X is the explicit snooze.
       if (await promptInstall()) setVisible(false);
       return;
     }
-    // iOS (or Android before the event fires): show the manual guide.
+    // iOS always lands here (no install API); Android lands here when the
+    // browser never offered a prompt (non-Chrome browsers, or the app is
+    // already installed on the device).
     setShowGuide(true);
   };
+
+  const ios = isIOS();
 
   return (
     <>
@@ -133,14 +146,16 @@ export function InstallBanner() {
         {showGuide && (
           <>
             <motion.div
-              className="fixed inset-0 bg-ink/40 z-50"
+              className="fixed inset-0 bg-ink/40 z-[60]"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowGuide(false)}
             />
+            {/* z-[60]: must paint over BottomNav (fixed z-50), which sits later
+                in the DOM and otherwise clips the sheet's button. */}
             <motion.div
-              className="fixed bottom-0 inset-x-0 z-50 bg-paper rounded-t-3xl p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
+              className="fixed bottom-0 inset-x-0 z-[60] bg-paper rounded-t-3xl p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
@@ -151,10 +166,14 @@ export function InstallBanner() {
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-canvas flex items-center justify-center shrink-0">
-                    <Share className="w-4.5 h-4.5 text-brand" />
+                    {ios ? <Share className="w-4.5 h-4.5 text-brand" /> : <MoreVertical className="w-4.5 h-4.5 text-brand" />}
                   </div>
                   <p className="text-[13px] text-ink">
-                    Tap the <span className="font-bold">Share</span> button in your browser
+                    {ios ? (
+                      <>Tap the <span className="font-bold">Share</span> button in Safari</>
+                    ) : (
+                      <>Tap the <span className="font-bold">⋮ menu</span> in your browser</>
+                    )}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -162,7 +181,11 @@ export function InstallBanner() {
                     <SquarePlus className="w-4.5 h-4.5 text-brand" />
                   </div>
                   <p className="text-[13px] text-ink">
-                    Choose <span className="font-bold">Add to Home Screen</span>
+                    {ios ? (
+                      <>Choose <span className="font-bold">Add to Home Screen</span></>
+                    ) : (
+                      <>Choose <span className="font-bold">Add to Home screen</span> or <span className="font-bold">Install app</span></>
+                    )}
                   </p>
                 </div>
               </div>
