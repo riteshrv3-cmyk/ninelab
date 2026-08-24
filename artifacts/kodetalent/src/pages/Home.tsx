@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Flame } from "lucide-react";
 import { Toko } from "@/components/kodetalent/Toko";
 import { TaskRow } from "@/components/kodetalent/TaskRow";
+import { TrackCard } from "@/components/kodetalent/TrackCard";
 import { Confetti } from "@/components/kodetalent/Confetti";
 import { useTodayTasks } from "@/hooks/useTodayTasks";
 import { useStudentProfile } from "@/hooks/useStudentProfile";
@@ -140,6 +141,8 @@ export default function Home() {
               ))}
             </div>
           )}
+
+          {!isError && <TrackCard studentId={studentId} />}
 
           {!isLoading && !isError && noticing && (
             <div className="bg-brand-soft rounded-2xl p-4 mb-4">

@@ -45,6 +45,8 @@ const RecruiterPortalShortcut = lazy(
 );
 const PublicResume = lazy(() => import("@/pages/PublicResume"));
 const PublicCertificate = lazy(() => import("@/pages/PublicCertificate"));
+const TrackView = lazy(() => import("@/pages/TrackView"));
+const TpoApp = lazy(() => import("@/pages/tpo/TpoApp"));
 
 const clerkPubKey = publishableKeyFromHost(
   window.location.hostname,
@@ -230,11 +232,19 @@ function Router() {
           </Suspense>
         )}
       </Route>
+      {/* TPO surface — nested, above the student catch-all so it never inherits
+          the student AppLayout chrome. Its own gate + layout live in TpoApp. */}
+      <Route path="/tpo" nest>
+        <Suspense fallback={<PageSkeleton />}>
+          <TpoApp />
+        </Suspense>
+      </Route>
       <Route>
         <AppLayout>
           <Suspense fallback={<PageSkeleton />}>
             <Switch>
               <Route path="/home" component={Home} />
+              <Route path="/track" component={TrackView} />
               <Route path="/notebook" component={Notebook} />
               <Route path="/chat" component={AIChat} />
               <Route path="/practice" component={Prep} />

@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import { apiFetch } from "@/lib/api/authFetch";
 import { ResumeImport } from "@/components/ResumeImport";
+import { CollegePicker } from "@/components/kodetalent/CollegePicker";
 import { MonthYearPicker } from "@/components/MonthYearPicker";
 import { useStudentId } from "@/hooks/useStudentId";
 import { useNameGate } from "@/components/NameGate";
@@ -947,6 +948,10 @@ export default function Profile() {
                   </div>
 
                   {/* College + City */}
+                  <CollegePicker
+                    studentId={studentId}
+                    onPicked={(name) => setBasicForm(f => ({ ...f, college: name }))}
+                  />
                   <div className="space-y-1.5">
                     <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider flex items-center gap-1">
                       <Building2 className="w-3 h-3" /> College
