@@ -4,6 +4,7 @@ import { TopBar } from "./TopBar";
 import { SideNav } from "./SideNav";
 import { ProfileSidebar } from "./ProfileSidebar";
 import { OfflineBanner } from "./OfflineBanner";
+import { InstallBanner } from "./InstallBanner";
 import { TokoBubble } from "@/components/ninelab/TokoBubble";
 import { AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
@@ -61,6 +62,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           absorbs, since the page renders with viewport-fit=cover. */}
       <main ref={mainRef} className="max-w-md mx-auto w-full pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[calc(4rem+env(safe-area-inset-bottom))] min-h-[100dvh] lg:max-w-5xl lg:px-8 lg:pt-8 lg:pb-8">
         <OfflineBanner />
+        <InstallBanner />
         {/* Routes render directly — no fade wrapper. Instant navigation reads
             faster than any transition, and the removed motion.div also means
             no persistent stacking context that could trap in-page fixed

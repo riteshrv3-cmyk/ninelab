@@ -23,6 +23,7 @@ import confetti from "canvas-confetti";
 import { apiFetch } from "@/lib/api/authFetch";
 import { ResumeImport } from "@/components/ResumeImport";
 import { CollegePicker } from "@/components/ninelab/CollegePicker";
+import { promptInstall, canPromptInstall } from "@/components/layout/InstallBanner";
 import { MonthYearPicker } from "@/components/MonthYearPicker";
 import { useStudentId } from "@/hooks/useStudentId";
 import { useNameGate } from "@/components/NameGate";
@@ -227,15 +228,13 @@ function ActivityCard({ studentId }: { studentId: number }) {
 }
 
 /**
- * iOS-only prompt to add the app to the home screen.
- *
- * Android and desktop are left to the browser's own install affordance, which
- * is the product's choice. iOS has no equivalent: Safari never offers to
- * install a PWA and exposes no API to ask, so without this row an iPhone
- * student has no way to discover the app is installable at all.
+ * Always-available manual install path on Profile (the top banner snoozes;
+ * this card doesn't). iOS gets the Share -> Add to Home Screen instructions
+ * (Safari has no install API); Android gets a real install button when the
+ * captured beforeinstallprompt is available.
  */
 function InstallCard() {
-  const [show, setShow] = useState(false);
+  const [platform, setPlatform] = useState<"ios" | "android" | null>(null);
 
   useEffect(() => {
     // navigator.standalone is the iOS-specific signal for "already installed";
@@ -243,25 +242,45 @@ function InstallCard() {
     const installed =
       window.matchMedia("(display-mode: standalone)").matches ||
       (navigator as Navigator & { standalone?: boolean }).standalone === true;
+    if (installed) return;
     // iPadOS 13+ reports a desktop Safari user-agent, so the UA test alone
     // misses every modern iPad. A Mac that reports touch points is one.
     const iPadOS =
       navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
-    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || iPadOS;
-    setShow(isIOS && !installed);
+    if (/iphone|ipad|ipod/i.test(navigator.userAgent) || iPadOS) setPlatform("ios");
+    else if (/android/i.test(navigator.userAgent)) setPlatform("android");
   }, []);
 
-  if (!show) return null;
+  if (!platform) return null;
 
   return (
     <div className="bg-paper rounded-2xl shadow-soft p-5">
       <h3 className="text-[14px] font-bold text-ink mb-1 flex items-center gap-2">
         <Share className="w-4 h-4 text-ink" /> Add to home screen
       </h3>
-      <p className="text-[12px] text-ink-muted">
-        Tap the Share button in Safari, then choose <span className="font-semibold text-ink">Add to Home Screen</span> to
-        open ninelab like an app.
-      </p>
+      {platform === "ios" ? (
+        <p className="text-[12px] text-ink-muted">
+          Tap the Share button in Safari, then choose <span className="font-semibold text-ink">Add to Home Screen</span> to
+          open ninelab like an app.
+        </p>
+      ) : (
+        <>
+          <p className="text-[12px] text-ink-muted mb-3">
+            Install ninelab for the full app experience — fullscreen, faster, on your home screen.
+          </p>
+          <button
+            type="button"
+            onClick={async () => {
+              const installed = await promptInstall();
+              if (installed) setPlatform(null);
+            }}
+            disabled={!canPromptInstall()}
+            className="bg-brand text-white text-[13px] font-bold px-4 py-2 rounded-xl disabled:opacity-50"
+          >
+            {canPromptInstall() ? "Install ninelab" : "Open in Chrome to install"}
+          </button>
+        </>
+      )}
     </div>
   );
 }
