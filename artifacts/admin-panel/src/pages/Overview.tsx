@@ -118,7 +118,7 @@ export default function Overview() {
         <div>
           <h1 className="text-3xl font-bold">Overview</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Live cross-portal metrics for KodeTalent · refreshes every 5s
+            Live cross-portal metrics for ninelab · refreshes every 5s
           </p>
         </div>
         <div className="text-xs text-muted-foreground">

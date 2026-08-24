@@ -1,4 +1,4 @@
-# Deploying KodeTalent
+# Deploying ninelab
 
 The app runs as a **single Node service**: the Express API also serves the built
 React frontend, so everything lives on one origin (no CORS, `/api/*` just works).
@@ -20,14 +20,14 @@ cd /c/dev/Career-Companion
 git add -A
 git commit -m "Deploy-ready: single-origin build + Render blueprint"
 # create an empty repo on github.com first, then:
-git remote add origin https://github.com/<you>/kodetalent.git
+git remote add origin https://github.com/<you>/ninelab.git
 git branch -M main
 git push -u origin main
 ```
 
 ### 2. Create the Render service
 1. Go to https://render.com, sign up (free), connect your GitHub.
-2. **New +** -> **Blueprint** -> pick the `kodetalent` repo. Render reads `render.yaml`.
+2. **New +** -> **Blueprint** -> pick the `ninelab` repo. Render reads `render.yaml`.
 3. Render prompts for the secret env vars (marked `sync:false`). Paste the same
    values from your local `.env`:
    - `DATABASE_URL`
@@ -39,7 +39,7 @@ git push -u origin main
 4. Click **Apply**. First build takes a few minutes.
 
 ### 3. Open the live URL
-Render gives you `https://kodetalent.onrender.com` (or similar).
+Render gives you `https://ninelab.onrender.com` (or similar).
 
 ## Notes
 - **Free tier sleeps** after ~15 min idle; the next request cold-starts in ~50s.

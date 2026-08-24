@@ -62,7 +62,7 @@ app.use("/api", router);
 app.use("/api", notFoundHandler);
 
 // Serve the built frontend from a single origin (production/deploy).
-// The deploy build copies artifacts/kodetalent/dist/public into ./public next
+// The deploy build copies artifacts/ninelab/dist/public into ./public next
 // to the bundle. When that folder isn't present (local dev, where Vite serves
 // the frontend separately), this whole block is skipped.
 const publicDir = process.env.PUBLIC_DIR ?? path.join(__dirname, "public");

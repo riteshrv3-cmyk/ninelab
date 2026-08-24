@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/recruiter-portal/"
-title = "KodeTalent Recruiter Portal"
+title = "ninelab Recruiter Portal"
 version = "1.0.0"
 id = "artifacts/recruiter-portal"
 router = "path"

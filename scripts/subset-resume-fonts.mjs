@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Documents (and can re-run) how the resume PDF engine's embedded fonts were
 // produced. This is a ONE-TIME LOCAL step, not part of the build — the output
-// (artifacts/kodetalent/public/fonts/resume/*.ttf) is committed to git like any
+// (artifacts/ninelab/public/fonts/resume/*.ttf) is committed to git like any
 // other static asset. Nothing in CI/Render ever runs Python; this script is for
 // a developer's machine only, if the font set ever needs to change.
 //
@@ -29,7 +29,7 @@ import os from "node:os";
 
 const UNICODES = "U+0020-00FF,U+0100-017F,U+2013,U+2014,U+2018,U+2019,U+201C,U+201D,U+2022,U+2026,U+25AA,U+20B9";
 
-const DEST = path.resolve(import.meta.dirname, "../artifacts/kodetalent/public/fonts/resume");
+const DEST = path.resolve(import.meta.dirname, "../artifacts/ninelab/public/fonts/resume");
 const TMP = path.join(os.tmpdir(), `resume-fonts-${Date.now()}`);
 
 const SOURCES = {

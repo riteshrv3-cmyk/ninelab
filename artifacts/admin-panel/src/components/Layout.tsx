@@ -34,7 +34,7 @@ export function Layout({ children }: { children: ReactNode }) {
               <Zap className="w-4 h-4 text-white fill-white" />
             </div>
             <div>
-              <div className="font-bold text-sm leading-tight">KodeTalent</div>
+              <div className="font-bold text-sm leading-tight">ninelab</div>
               <div className="text-[11px] text-muted-foreground leading-tight">Admin Console</div>
             </div>
           </div>

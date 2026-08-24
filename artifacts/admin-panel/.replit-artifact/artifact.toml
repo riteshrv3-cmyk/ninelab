@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/admin/"
-title = "KodeTalent Admin Panel"
+title = "ninelab Admin Panel"
 version = "1.0.0"
 id = "artifacts/admin-panel"
 router = "path"

@@ -430,7 +430,7 @@ router.post("/admin/curated-opportunities", async (req, res) => {
     pay: str(b.pay, 60) || null,
     tags,
     url,
-    source: str(b.source, 60) || "KodeTalent",
+    source: str(b.source, 60) || "ninelab",
     kind,
     role: str(b.role, 120),
     active: b.active !== false,

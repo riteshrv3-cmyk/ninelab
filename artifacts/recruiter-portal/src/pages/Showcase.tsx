@@ -164,7 +164,7 @@ export default function Showcase() {
             <div className="w-7 h-7 bg-[#f97316] rounded-lg flex items-center justify-center">
               <Zap className="w-4 h-4 text-white fill-white" />
             </div>
-            <span className="font-black text-[#0f172a] text-[15px] tracking-tight">KodeTalent</span>
+            <span className="font-black text-[#0f172a] text-[15px] tracking-tight">ninelab</span>
             <span className="hidden sm:block text-[#cbd5e1] text-sm">/ Recruiter</span>
           </div>
           <button onClick={() => setLocation("/login")} className="bg-[#4f46e5] hover:bg-[#4338ca] active:scale-95 text-white font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-1.5 transition-all">
@@ -189,7 +189,7 @@ export default function Showcase() {
               <span className="text-[#4f46e5]">Get one that works.</span>
             </motion.h1>
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.14 }} className="text-[17px] text-[#64748b] mb-8 leading-relaxed max-w-md">
-              KodeTalent replaces your entire campus hiring stack — sourcing, screening, scoring — with one AI-powered pool of verified engineering students.
+              ninelab replaces your entire campus hiring stack — sourcing, screening, scoring — with one AI-powered pool of verified engineering students.
             </motion.p>
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="flex flex-col sm:flex-row gap-3">
               <button onClick={() => setLocation("/login")} className="bg-[#4f46e5] hover:bg-[#4338ca] text-white font-black px-7 py-3.5 rounded-xl flex items-center gap-2 shadow-[0_4px_20px_rgba(79,70,229,0.3)] hover:shadow-[0_8px_32px_rgba(79,70,229,0.4)] transition-all active:scale-[0.98] text-[15px]">
@@ -318,7 +318,7 @@ export default function Showcase() {
                 <>
                   <div className="flex gap-1">{OLD_TOOLS.map((_, i) => (<motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }} className="w-1.5 h-1.5 rounded-full bg-[#ef4444]/40" />))}</div>
                   <button onClick={() => setCollapsed(true)} className="flex items-center gap-2 bg-[#4f46e5] hover:bg-[#4338ca] text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all active:scale-[0.98]">
-                    <Sparkles className="w-4 h-4" /> Replace all 5 with KodeTalent
+                    <Sparkles className="w-4 h-4" /> Replace all 5 with ninelab
                   </button>
                 </>
               ) : (
@@ -327,7 +327,7 @@ export default function Showcase() {
                     <Zap className="w-10 h-10 text-white fill-white" />
                   </div>
                   <div className="text-center">
-                    <div className="font-black text-[#0f172a] text-xl mb-1">KodeTalent</div>
+                    <div className="font-black text-[#0f172a] text-xl mb-1">ninelab</div>
                     <div className="text-[#64748b] text-sm">One platform. Everything done.</div>
                   </div>
                   <div className="flex flex-wrap justify-center gap-2">
@@ -460,7 +460,7 @@ export default function Showcase() {
           <div className="text-center mb-10">
             <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-xs font-black uppercase tracking-widest text-[#4f46e5] mb-2">Honest comparison</motion.p>
             <motion.h2 initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-3xl font-black text-[#0f172a] mb-2">
-              How does KodeTalent actually stack up?
+              How does ninelab actually stack up?
             </motion.h2>
             <p className="text-[#64748b] text-sm max-w-lg mx-auto">We're not trying to replace everything. We're great at what others can't do — and we're honest about the rest.</p>
           </div>
@@ -481,7 +481,7 @@ export default function Showcase() {
                   </div>
                   <div className="grid grid-cols-3 divide-x divide-[#f0f4ff]">
                     {[
-                      { label: "KodeTalent", val: row.kt, highlight: true, isKt: true },
+                      { label: "ninelab", val: row.kt, highlight: true, isKt: true },
                       { label: "LinkedIn", val: row.linkedin, highlight: false, isKt: false },
                       { label: "ATS Tools", val: row.ats, highlight: false, isKt: false },
                     ].map(({ label, val, highlight, isKt }) => (
@@ -505,7 +505,7 @@ export default function Showcase() {
           <div className="hidden md:block bg-white border border-[#e5e7eb] rounded-2xl overflow-hidden shadow-sm">
             <div className="grid text-[10px] font-black uppercase tracking-wider" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr" }}>
               <div className="px-5 py-3.5 text-[#94a3b8] bg-[#f8fafc] border-b border-[#f0f4ff]">Feature</div>
-              <div className="px-3 py-3.5 text-center text-[#4f46e5] bg-[#eef2ff] border-b border-[#c7d2fe]">KodeTalent</div>
+              <div className="px-3 py-3.5 text-center text-[#4f46e5] bg-[#eef2ff] border-b border-[#c7d2fe]">ninelab</div>
               <div className="px-3 py-3.5 text-center text-[#0077b5] bg-[#f8fafc] border-b border-[#f0f4ff]">LinkedIn</div>
               <div className="px-3 py-3.5 text-center text-[#64748b] bg-[#f8fafc] border-b border-[#f0f4ff]">ATS Tools</div>
               <div className="px-3 py-3.5 text-center text-[#64748b] bg-[#f8fafc] border-b border-[#f0f4ff]">Campus Drive</div>

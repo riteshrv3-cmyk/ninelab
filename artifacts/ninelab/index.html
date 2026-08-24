@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit=cover is what makes env(safe-area-inset-*) resolve to real
+         values; without it every safe-area rule in the app silently computes to
+         0 and the bottom nav sits under the iPhone home indicator once
+         installed. maximum-scale is deliberately absent so pinch-zoom works —
+         see the (pointer: coarse) input rule in index.css for the iOS
+         focus-zoom this would otherwise cause. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>ninelab</title>
+    <!-- PNG, not SVG: the mark is Toko's real 3D render, not hand-drawn vector art. -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Matches the TopBar surface so the status bar blends with the app's top
+         edge. Keep in sync with manifest theme_color in vite.config.ts. -->
+    <meta name="theme-color" content="#ffffff">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ninelab">
+    <meta name="description" content="ninelab — everything for placement season. Free for students. Explore first — jobs, resume, mock interviews and courses, no signup needed.">
+
+    <!-- Open Graph / social share cards. Uses the apple-touch-icon already
+         referenced above as the share image. Keep og:url on the canonical
+         apex domain the app opens into. -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ninelab">
+    <meta property="og:title" content="ninelab">
+    <meta property="og:description" content="Everything for placement season. Free for students. Explore first — no signup needed.">
+    <meta property="og:url" content="https://ninelab.in">
+    <meta property="og:image" content="/apple-touch-icon.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ninelab">
+    <meta name="twitter:description" content="Everything for placement season. Free for students. Explore first — no signup needed.">
+    <meta name="twitter:image" content="/apple-touch-icon.png">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

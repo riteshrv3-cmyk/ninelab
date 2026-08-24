@@ -13,7 +13,7 @@ const src = path.join(
   "C:/Users/asusv/AppData/Local/Temp/claude/C--Users-asusv-OneDrive-Desktop-yc/d4596f64-56f5-4cea-a0b1-a55d55566366/scratchpad",
   "toko-pose-grid.png",
 );
-const publicDir = path.join(root, "artifacts/kodetalent/public/toko");
+const publicDir = path.join(root, "artifacts/ninelab/public/toko");
 
 const SPREAD_THRESHOLD = 3;
 const ERODE = 3;

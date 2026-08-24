@@ -497,7 +497,7 @@ router.post("/students/:id/profile/github-projects", requireStudent({ allowGuest
       async () => {
         const resp = await fetch(
           `https://api.github.com/users/${username}/repos?sort=pushed&per_page=20`,
-          { headers: { Accept: "application/vnd.github.v3+json", "User-Agent": "KodeTalent-App" } },
+          { headers: { Accept: "application/vnd.github.v3+json", "User-Agent": "ninelab-App" } },
         );
         if (!resp.ok) throw new Error(`GitHub API ${resp.status}`);
         return (await resp.json()) as GithubRepo[];
@@ -555,10 +555,10 @@ router.post("/students/:id/analyze-github", requireStudent({ allowGuest: true })
   try {
     const [userResp, reposResp] = await Promise.all([
       fetch(`https://api.github.com/users/${username}`, {
-        headers: { Accept: "application/vnd.github.v3+json", "User-Agent": "KodeTalent-App" },
+        headers: { Accept: "application/vnd.github.v3+json", "User-Agent": "ninelab-App" },
       }),
       fetch(`https://api.github.com/users/${username}/repos?sort=stars&per_page=6`, {
-        headers: { Accept: "application/vnd.github.v3+json", "User-Agent": "KodeTalent-App" },
+        headers: { Accept: "application/vnd.github.v3+json", "User-Agent": "ninelab-App" },
       }),
     ]);
 
@@ -717,7 +717,7 @@ Overall Score: ${Math.round(student.overallScore)}/100
 XP: ${student.xp} | Streak: ${student.streakCount} days
 Open to Work: ${student.openToWork ? "Yes" : "No"}`.trim();
 
-    const systemPrompt = `You are Kit — KodeTalent's AI career companion for Indian engineering students, and also a very cool cat who wears sunglasses. 😎🐱
+    const systemPrompt = `You are Kit — ninelab's AI career companion for Indian engineering students, and also a very cool cat who wears sunglasses. 😎🐱
 
 CURRENT STUDENT PROFILE:
 ${profileCtx}

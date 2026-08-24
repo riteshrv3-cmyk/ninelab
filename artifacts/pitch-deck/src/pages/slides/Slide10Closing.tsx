@@ -22,7 +22,7 @@ export default function Slide10Closing() {
           <div style={{ width: "0.15vw", background: "rgba(148,163,184,0.15)" }} />
           <div>
             <div style={{ fontSize: "1.5vw", color: "#94A3B8", marginBottom: "0.8vh" }}>Website</div>
-            <div style={{ fontSize: "1.9vw", color: "#F97316", fontWeight: 600 }}>kodetalent.in</div>
+            <div style={{ fontSize: "1.9vw", color: "#F97316", fontWeight: 600 }}>ninelab.in</div>
           </div>
           <div style={{ width: "0.15vw", background: "rgba(148,163,184,0.15)" }} />
           <div>
@@ -32,7 +32,7 @@ export default function Slide10Closing() {
         </div>
       </div>
       <div style={{ position: "absolute", bottom: "5vh", left: "8vw", right: "8vw", display: "flex", justifyContent: "space-between" }}>
-        <div style={{ fontSize: "2vw", fontWeight: 800, color: "#F97316" }}>KodeTalent</div>
+        <div style={{ fontSize: "2vw", fontWeight: 800, color: "#F97316" }}>ninelab</div>
         <div style={{ fontSize: "1.5vw", color: "#3D4255" }}>Confidential — For Discussion Only</div>
       </div>
     </div>

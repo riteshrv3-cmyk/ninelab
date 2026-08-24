@@ -1,6 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 
-const CHANNEL_NAME = "kodetalent-sync";
+const CHANNEL_NAME = "ninelab-sync";
 
 export const queryClient = new QueryClient({
   defaultOptions: {

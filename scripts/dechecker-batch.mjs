@@ -19,7 +19,7 @@ import { renameSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const dir = path.join(root, "artifacts/kodetalent/public/toko");
+const dir = path.join(root, "artifacts/ninelab/public/toko");
 
 // Background needs BOTH tests, measured across all four files:
 //

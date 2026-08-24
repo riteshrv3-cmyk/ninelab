@@ -64,7 +64,7 @@ export default function Login() {
             <Zap className="w-5 h-5 text-white fill-white" />
           </div>
           <div>
-            <div className="font-black text-[#0f172a] text-xl tracking-tight leading-none">KodeTalent</div>
+            <div className="font-black text-[#0f172a] text-xl tracking-tight leading-none">ninelab</div>
             <div className="text-xs text-[#94a3b8] font-medium">Private Hiring Network</div>
           </div>
         </motion.div>

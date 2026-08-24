@@ -30,7 +30,7 @@ const DEMO_INVITE_CODE = "DEMO2026";
 const DEMO_COLLEGE_NAME = "NMAM Institute of Technology, Nitte";
 const DEMO_CITY = "Nitte, Karnataka";
 const DEMO_TPO_EMAIL = "riteshrv3@gmail.com";
-const DEMO_EMAIL_DOMAIN = "@kodetalent.demo";
+const DEMO_EMAIL_DOMAIN = "@ninelab.demo";
 const SDE_TEMPLATE = "sde_placement_v1";
 
 type ProfileLevel = "full" | "partial" | "minimal" | "none";
@@ -91,7 +91,7 @@ function profileFields(level: ProfileLevel) {
     linkedinUrl: null,
     portfolioUrl: null,
     phone: null,
-    bio: "Getting started on KodeTalent.",
+    bio: "Getting started on ninelab.",
     projects: [] as unknown[],
     certifications: [] as unknown[],
     experience: [] as unknown[],

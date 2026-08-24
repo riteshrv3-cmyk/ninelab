@@ -46,7 +46,7 @@ export default function Invite() {
   useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
 
   const inviteUrl = college
-    ? `${window.location.origin}/kodetalent/join/${college.inviteCode}`
+    ? `${window.location.origin}/ninelab/join/${college.inviteCode}`
     : "";
 
   async function copy() {
@@ -58,7 +58,7 @@ export default function Invite() {
 
   function shareWhatsApp() {
     if (!college) return;
-    const msg = `Hey! 🚀 ${college.name} ke saare students ke liye KodeTalent — AI Career Companion. Sign up using our college invite link:\n\n${inviteUrl}\n\n• AI mock interviews (with camera)\n• Live job-fit checker\n• Personalized roadmap\n• Free forever`;
+    const msg = `Hey! 🚀 ${college.name} ke saare students ke liye ninelab — AI Career Companion. Sign up using our college invite link:\n\n${inviteUrl}\n\n• AI mock interviews (with camera)\n• Live job-fit checker\n• Personalized roadmap\n• Free forever`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   }
 

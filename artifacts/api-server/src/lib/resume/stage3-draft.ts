@@ -194,7 +194,7 @@ async function fetchResumeCourseCertificates(studentId: number): Promise<Certifi
     .orderBy(desc(courseCertificatesTable.issuedAt));
   return rows.map((c) => ({
     name: `${c.subDomainName} — Verified Certificate`,
-    issuer: "KodeTalent",
+    issuer: "ninelab",
     date: c.issuedAt.toISOString().slice(0, 7), // YYYY-MM
     link: `/certs/${c.verifySlug}`,
   }));
