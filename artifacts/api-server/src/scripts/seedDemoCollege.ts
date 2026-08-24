@@ -33,9 +33,11 @@ const DEMO_TPO_EMAIL = "riteshrv3@gmail.com";
 const DEMO_EMAIL_DOMAIN = "@kodetalent.demo";
 const SDE_TEMPLATE = "sde_placement_v1";
 
+type ProfileLevel = "full" | "partial" | "minimal" | "none";
+
 interface Tier {
   count: number;
-  profileFull: boolean;
+  profile: ProfileLevel;
   skills: number;      // number of non-generic skills
   skillLevel: number;  // avg skill value
   mocks: number;       // completed mock interviews
@@ -47,12 +49,62 @@ interface Tier {
   daysSinceActive: number;
 }
 
+// Tuned so readiness spreads across green/amber/red for a credible pitch:
+// strong -> ~75-90 (green), mid -> ~40-58 (amber), early -> ~15-30 (red),
+// inactive -> ~0-10 (red). profile carries 25% of readiness, so the mid tier
+// needs a real (partial) profile to clear the amber threshold.
 const TIERS: Tier[] = [
-  { count: 5, profileFull: true, skills: 5, skillLevel: 82, mocks: 4, mockBase: 58, apps: 4, resume: true, course: true, streak: 9, daysSinceActive: 0 },
-  { count: 10, profileFull: false, skills: 3, skillLevel: 55, mocks: 2, mockBase: 45, apps: 2, resume: true, course: false, streak: 3, daysSinceActive: 1 },
-  { count: 6, profileFull: false, skills: 1, skillLevel: 35, mocks: 1, mockBase: 38, apps: 0, resume: false, course: false, streak: 0, daysSinceActive: 2 },
-  { count: 3, profileFull: false, skills: 0, skillLevel: 0, mocks: 0, mockBase: 0, apps: 0, resume: false, course: false, streak: 0, daysSinceActive: 34 },
+  { count: 5, profile: "full", skills: 5, skillLevel: 82, mocks: 4, mockBase: 58, apps: 4, resume: true, course: true, streak: 9, daysSinceActive: 0 },
+  { count: 10, profile: "partial", skills: 3, skillLevel: 58, mocks: 2, mockBase: 48, apps: 2, resume: true, course: false, streak: 3, daysSinceActive: 1 },
+  { count: 6, profile: "minimal", skills: 1, skillLevel: 35, mocks: 1, mockBase: 38, apps: 0, resume: false, course: false, streak: 0, daysSinceActive: 2 },
+  { count: 3, profile: "none", skills: 0, skillLevel: 0, mocks: 0, mockBase: 0, apps: 0, resume: false, course: false, streak: 0, daysSinceActive: 34 },
 ];
+
+/** Profile columns per level — drives computeProfileStrength deterministically. */
+function profileFields(level: ProfileLevel) {
+  const full = {
+    githubUrl: "https://github.com/demo",
+    linkedinUrl: "https://linkedin.com/in/demo",
+    portfolioUrl: "https://demo.dev",
+    phone: "9000000000",
+    bio: "Final-year student aiming for a strong SDE placement this cycle.",
+    projects: [{ id: "p1", title: "Project A" }, { id: "p2", title: "Project B" }, { id: "p3", title: "Project C" }],
+    certifications: [{ id: "c1", name: "AWS Cloud Practitioner" }],
+    experience: [{ id: "e1", company: "Startup", role: "Intern", period: "2025", bullets: ["Built features"] }],
+    preferredLocations: ["Bengaluru", "Remote"],
+    expectedSalary: "8 LPA",
+  };
+  const partial = {
+    githubUrl: "https://github.com/demo",
+    linkedinUrl: "https://linkedin.com/in/demo",
+    portfolioUrl: null,
+    phone: null,
+    bio: "Third-year student building projects and prepping for placements.",
+    projects: [{ id: "p1", title: "Project A" }],
+    certifications: [] as unknown[],
+    experience: [] as unknown[],
+    preferredLocations: [] as unknown[],
+    expectedSalary: null,
+  };
+  const minimal = {
+    githubUrl: "https://github.com/demo",
+    linkedinUrl: null,
+    portfolioUrl: null,
+    phone: null,
+    bio: "Getting started on KodeTalent.",
+    projects: [] as unknown[],
+    certifications: [] as unknown[],
+    experience: [] as unknown[],
+    preferredLocations: [] as unknown[],
+    expectedSalary: null,
+  };
+  const none = {
+    githubUrl: null, linkedinUrl: null, portfolioUrl: null, phone: null, bio: null,
+    projects: [] as unknown[], certifications: [] as unknown[], experience: [] as unknown[],
+    preferredLocations: [] as unknown[], expectedSalary: null,
+  };
+  return level === "full" ? full : level === "partial" ? partial : level === "minimal" ? minimal : none;
+}
 
 const FIRST_NAMES = ["Aarav", "Vivaan", "Aditya", "Ananya", "Diya", "Ishaan", "Kabir", "Saanvi", "Riya", "Arjun", "Sai", "Meera", "Rohan", "Neha", "Karthik", "Pooja", "Rahul", "Sneha", "Tanvi", "Yash", "Ira", "Devansh", "Nikhil", "Anjali"];
 const LAST_NAMES = ["Shetty", "Rao", "Nayak", "Hegde", "Bhat", "Kamath", "Pai", "Shenoy", "Kulkarni", "Prabhu", "Acharya", "Kotian"];
@@ -175,39 +227,31 @@ async function main(): Promise<void> {
         skills[SKILL_NAMES[(index + s) % SKILL_NAMES.length]] = Math.min(95, tier.skillLevel + ((index + s) % 3) * 4);
       }
 
+      const pf = profileFields(tier.profile);
+      const baseFields = {
+        name,
+        college: DEMO_COLLEGE_NAME,
+        collegeId,
+        city: DEMO_CITY,
+        year: 3 + (index % 2),
+        field: FIELDS[index % FIELDS.length],
+        targetRole: ROLES[index % ROLES.length],
+        targetBatch: 2027,
+        skills,
+        streakCount: tier.streak,
+        lastActiveDate: istDateStr(tier.daysSinceActive),
+        ...pf,
+      };
+
       const [existing] = await db.select({ id: studentsTable.id }).from(studentsTable).where(eq(studentsTable.email, email)).limit(1);
       let studentId: number;
       if (existing) {
+        // Refresh profile/skills so re-runs pick up tuning changes; activity
+        // (mocks/apps/resume/course) is left intact to avoid duplicates.
         studentId = existing.id;
+        await db.update(studentsTable).set(baseFields).where(eq(studentsTable.id, studentId));
       } else {
-        const [created] = await db
-          .insert(studentsTable)
-          .values({
-            name,
-            email,
-            college: DEMO_COLLEGE_NAME,
-            collegeId,
-            city: DEMO_CITY,
-            year: 3 + (index % 2),
-            field: FIELDS[index % FIELDS.length],
-            targetRole: ROLES[index % ROLES.length],
-            targetBatch: 2027,
-            skills,
-            streakCount: tier.streak,
-            lastActiveDate: istDateStr(tier.daysSinceActive),
-            // Full-profile fields for the strong tier drive complete_profile.
-            githubUrl: tier.profileFull ? "https://github.com/demo" : null,
-            linkedinUrl: tier.profileFull ? "https://linkedin.com/in/demo" : null,
-            portfolioUrl: tier.profileFull ? "https://demo.dev" : null,
-            phone: tier.profileFull ? "9000000000" : null,
-            bio: tier.profileFull ? "Final-year student aiming for a strong SDE placement this cycle." : null,
-            projects: tier.profileFull ? [{ id: "p1", title: "Project A" }, { id: "p2", title: "Project B" }, { id: "p3", title: "Project C" }] : [],
-            certifications: tier.profileFull ? [{ id: "c1", name: "AWS Cloud Practitioner" }] : [],
-            experience: tier.profileFull ? [{ id: "e1", company: "Startup", role: "Intern", period: "2025", bullets: ["Built features"] }] : [],
-            preferredLocations: tier.profileFull ? ["Bengaluru", "Remote"] : [],
-            expectedSalary: tier.profileFull ? "8 LPA" : null,
-          })
-          .returning();
+        const [created] = await db.insert(studentsTable).values({ email, ...baseFields }).returning();
         studentId = created.id;
         await seedStudentActivity(studentId, tier);
       }
