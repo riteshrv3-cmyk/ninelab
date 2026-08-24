@@ -15,8 +15,6 @@ import courseLinkRouter from "./courseLink";
 import opportunitiesRouter from "./opportunities";
 import matchedOpportunitiesRouter from "./matched-opportunities";
 import profileRouter from "./profile";
-import tpoRouter from "./tpo";
-import tpoAuthRouter from "./tpoAuth";
 import driveCheckRouter from "./driveCheck";
 import resumeRouter from "./resume";
 import recruiterRouter from "./recruiter";
@@ -26,6 +24,9 @@ import activityLogRouter from "./activityLog";
 import dailyTasksRouter from "./dailyTasks";
 import pipelineRouter from "./pipeline";
 import notebookRouter from "./notebook";
+import collegeAdminRouter from "./collegeAdmin";
+import meRouter from "./me";
+import tracksRouter from "./tracks";
 
 const router: IRouter = Router();
 
@@ -45,8 +46,9 @@ router.use(courseVideoRouter);
 router.use(courseLinkRouter);
 router.use(opportunitiesRouter);
 router.use(matchedOpportunitiesRouter);
-router.use(tpoAuthRouter);
-router.use(tpoRouter);
+// (tpoAuthRouter + tpoRouter unmounted: the legacy email/password TPO portal is
+//  retired in favor of the Clerk college-admin surface below. Their tables
+//  remain; the open, unauthenticated read routes are simply no longer served.)
 router.use(driveCheckRouter);
 router.use(resumeRouter);
 router.use(recruiterRouter);
@@ -56,5 +58,8 @@ router.use(activityLogRouter);
 router.use(dailyTasksRouter);
 router.use(pipelineRouter);
 router.use(notebookRouter);
+router.use(collegeAdminRouter);
+router.use(meRouter);
+router.use(tracksRouter);
 
 export default router;

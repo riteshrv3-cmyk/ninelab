@@ -259,7 +259,7 @@ export default function TalentPool() {
               <div className="w-8 h-8 bg-[#f97316] rounded-lg flex items-center justify-center">
                 <Zap className="w-4 h-4 text-white fill-white" />
               </div>
-              <span className="font-black text-[#0f172a] text-lg">KodeTalent</span>
+              <span className="font-black text-[#0f172a] text-lg">ninelab</span>
             </div>
             <span className="text-[#94a3b8] text-sm hidden sm:block">· Recruiter Portal</span>
           </div>

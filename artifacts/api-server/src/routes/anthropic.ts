@@ -120,7 +120,7 @@ router.post("/anthropic/conversations/:id/messages", rlAiMedium, async (req, res
     const stream = anthropic.messages.stream({
       model: AI_MODEL,
       max_tokens: 8192,
-      system: "You are Kit, KodeTalent's AI career companion for Indian engineering students. Be warm, direct, and specific — give real actionable career advice, not generic fluff.",
+      system: "You are Kit, ninelab's AI career companion for Indian engineering students. Be warm, direct, and specific — give real actionable career advice, not generic fluff.",
       messages: chatMessages,
     });
 

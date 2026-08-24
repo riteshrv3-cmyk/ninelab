@@ -13,7 +13,7 @@ export default function Slide01Title() {
           <span style={{ fontSize: "1.5vw", color: "#F97316", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" }}>Idea Stage — Pre-Seed 2026</span>
         </div>
         <div style={{ fontSize: "9vw", fontWeight: 800, color: "#F97316", lineHeight: 1, letterSpacing: "-0.03em", marginBottom: "2.5vh" }}>
-          KodeTalent
+          ninelab
         </div>
         <div style={{ fontSize: "2.4vw", fontWeight: 400, color: "#F8FAFC", lineHeight: 1.4, marginBottom: "2vh", opacity: 0.88, textWrap: "balance" }}>
           India's AI career platform for engineering students.

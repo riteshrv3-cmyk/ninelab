@@ -65,7 +65,7 @@ export default function Login() {
             <Zap className="w-6 h-6 text-white fill-white" />
           </div>
           <div>
-            <p className="text-xl font-bold text-white">KodeTalent</p>
+            <p className="text-xl font-bold text-white">ninelab</p>
             <p className="text-xs text-indigo-300 font-medium">Training & Placement Portal</p>
           </div>
         </div>
@@ -133,7 +133,7 @@ export default function Login() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-indigo-300/60 mt-6">KodeTalent · AI Career Companion for India</p>
+        <p className="text-center text-xs text-indigo-300/60 mt-6">ninelab · AI Career Companion for India</p>
       </div>
     </div>
   );

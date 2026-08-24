@@ -6,7 +6,7 @@
 # first deploy. Fill them with the same values from your local .env.
 services:
   - type: web
-    name: kodetalent
+    name: ninelab
     runtime: node
     plan: free
     buildCommand: corepack enable && pnpm install --no-frozen-lockfile && pnpm run build:deploy

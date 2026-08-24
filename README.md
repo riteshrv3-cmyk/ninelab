@@ -1,8 +1,8 @@
-# KodeTalent
+# ninelab
 
 **An AI career companion for India's engineering students — mock interviews, personalized roadmaps, skill verification, and a direct line to recruiters.**
 
-Live: https://kodetalent-production-8b96.up.railway.app
+Live: https://ninelab-production-8b96.up.railway.app
 
 ---
 
@@ -47,7 +47,7 @@ Also included: TPO portal (college placement officers), recruiter portal, and ad
 
 ```
 artifacts/                     deployable apps
-  kodetalent/                  student-facing React app
+  ninelab/                  student-facing React app
   api-server/                  Express 5 API (also serves the built frontend)
   recruiter-portal/
   tpo-portal/
@@ -133,8 +133,8 @@ pnpm start              # serves both from a single origin
 Deployed on Railway as a single service that serves both the API and the built frontend.
 
 ```bash
-railway up --service kodetalent --environment production --detach -m "<release summary>"
-railway deployment list --service kodetalent --environment production --json   # poll until SUCCESS
+railway up --service ninelab --environment production --detach -m "<release summary>"
+railway deployment list --service ninelab --environment production --json   # poll until SUCCESS
 ```
 
 Build: `corepack enable && pnpm install --no-frozen-lockfile && pnpm run build:deploy`
@@ -161,4 +161,4 @@ Health check: `/api/healthz`
 ## Documentation
 
 - [`PRODUCT_HANDBOOK.md`](PRODUCT_HANDBOOK.md) — product overview, pitch material, technical deep-dive, and Q&A prep
-- [`DOCUMENTATION.md`](DOCUMENTATION.md), [`KODETALENT_DOCS.md`](KODETALENT_DOCS.md) — feature documentation
+- [`DOCUMENTATION.md`](DOCUMENTATION.md), [`NINELAB_DOCS.md`](NINELAB_DOCS.md) — feature documentation

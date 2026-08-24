@@ -1,9 +1,9 @@
 /**
- * Generates the PWA icon set for artifacts/kodetalent from a single source mark.
+ * Generates the PWA icon set for artifacts/ninelab from a single source mark.
  *
  * Run: node scripts/generate-icons.mjs
  *
- * The mark is Toko, the KodeTalent toucan, composited onto brand indigo. The
+ * The mark is Toko, the ninelab toucan, composited onto brand indigo. The
  * source is the real 3D render at public/toko/toko-head.png (cropped to the
  * neckline, alpha recovered by scripts/dechecker.mjs) — the same file the
  * React <Toko> component renders, so the icon and the in-app avatar can never
@@ -30,7 +30,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const publicDir = path.join(root, "artifacts/kodetalent/public");
+const publicDir = path.join(root, "artifacts/ninelab/public");
 const markPath = path.join(publicDir, "toko/toko-head.png");
 
 /** Brand indigo — must stay in sync with --color-brand in src/index.css. */

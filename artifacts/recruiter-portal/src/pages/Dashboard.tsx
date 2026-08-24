@@ -73,7 +73,7 @@ export default function Dashboard() {
               <div className="w-8 h-8 bg-gradient-to-br from-[#4f46e5] to-[#6366f1] rounded-xl flex items-center justify-center">
                 <Zap className="w-4 h-4 text-white" />
               </div>
-              <span className="font-black text-[#0f172a] text-lg">KodeTalent</span>
+              <span className="font-black text-[#0f172a] text-lg">ninelab</span>
             </div>
             <span className="text-[#94a3b8] text-sm hidden sm:block">· Recruiter Portal</span>
           </div>

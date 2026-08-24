@@ -41,6 +41,19 @@ interface Candidate {
   hot: boolean;
   manual: boolean;
   source: "rule" | "report";
+  meta?: Record<string, unknown>;
+}
+
+/**
+ * The next incomplete track milestone, surfaced as a daily task (R8). Resolved
+ * by lib/trackProgress.checkMilestones in the today-tasks route and threaded in
+ * here as a param, so this module never imports trackProgress (avoids a cycle).
+ */
+export interface TrackStep {
+  milestoneId: number;
+  label: string;
+  sublabel: string;
+  href: string;
 }
 
 async function weakestSkill(studentId: number, skills: Record<string, number>): Promise<string | null> {
@@ -76,6 +89,7 @@ async function weakestSkill(studentId: number, skills: Record<string, number>): 
 async function buildCandidates(
   studentId: number,
   student: typeof studentsTable.$inferSelect,
+  trackStep?: TrackStep | null,
 ): Promise<Candidate[]> {
   const candidates: Candidate[] = [];
 
@@ -143,6 +157,20 @@ async function buildCandidates(
     }
   }
 
+  // R8 — the next incomplete track milestone (before R4 so it survives CAP).
+  if (trackStep) {
+    candidates.push({
+      kind: "track_step",
+      label: trackStep.label,
+      sublabel: trackStep.sublabel,
+      href: trackStep.href,
+      hot: false,
+      manual: false,
+      source: "rule",
+      meta: { milestoneId: trackStep.milestoneId },
+    });
+  }
+
   // R4 — pipeline nudge.
   candidates.push({
     kind: "jobs",
@@ -183,6 +211,7 @@ async function buildCandidates(
 export async function generateTodayTasks(
   studentId: number,
   student: typeof studentsTable.$inferSelect,
+  trackStep?: TrackStep | null,
 ): Promise<void> {
   const date = istToday();
   // existingKinds and the candidate pool don't depend on each other — build both concurrently.
@@ -191,7 +220,7 @@ export async function generateTodayTasks(
       .select({ kind: dailyTasksTable.kind })
       .from(dailyTasksTable)
       .where(and(eq(dailyTasksTable.studentId, studentId), eq(dailyTasksTable.date, date))),
-    buildCandidates(studentId, student),
+    buildCandidates(studentId, student, trackStep),
   ]);
   const existingKinds = new Set(existing.map((r) => r.kind));
 
@@ -214,13 +243,14 @@ export async function generateTodayTasks(
         manual: c.manual,
         done: false,
         source: c.source,
+        meta: c.meta ?? null,
       })),
     )
     .onConflictDoNothing();
 }
 
-export async function getTodayTasks(studentId: number, student: typeof studentsTable.$inferSelect) {
-  await generateTodayTasks(studentId, student);
+export async function getTodayTasks(studentId: number, student: typeof studentsTable.$inferSelect, trackStep?: TrackStep | null) {
+  await generateTodayTasks(studentId, student, trackStep);
   const date = istToday();
   const rows = await db
     .select()
@@ -352,6 +382,7 @@ const CTA_LABEL_BY_KIND: Record<string, string> = {
   invite: "Invite",
   drive_check: "Check",
   followup: "Do it",
+  track_step: "Go",
 };
 
 export function formatDailyTask(t: typeof dailyTasksTable.$inferSelect) {

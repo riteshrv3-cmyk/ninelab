@@ -31,7 +31,7 @@ export default function Slide05Market() {
           </div>
         </div>
       </div>
-      <div style={{ position: "absolute", bottom: "5vh", left: "8vw", fontSize: "1.5vw", color: "#3D4255", fontWeight: 600 }}>KodeTalent</div>
+      <div style={{ position: "absolute", bottom: "5vh", left: "8vw", fontSize: "1.5vw", color: "#3D4255", fontWeight: 600 }}>ninelab</div>
     </div>
   );
 }

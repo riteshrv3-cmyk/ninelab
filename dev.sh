@@ -24,7 +24,7 @@ API_PID=$!
 
 # Student frontend
 (
-  cd artifacts/kodetalent
+  cd artifacts/ninelab
   # Stop Git Bash (MSYS2) from converting a lone "/" into C:\Program Files\Git
   export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' MSYS2_ENV_CONV_EXCL='*'
   export PORT=5000 BASE_PATH=/

@@ -58,7 +58,7 @@ export default function Shortlist() {
     const csv = rows.map(r => r.map(v => `"${v}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "kodetalent_shortlist.csv"; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = "ninelab_shortlist.csv"; a.click();
     URL.revokeObjectURL(url);
   };
 

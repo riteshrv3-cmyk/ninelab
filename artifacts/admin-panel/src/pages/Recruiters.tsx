@@ -80,7 +80,7 @@ export default function Recruiters() {
         <div>
           <h1 className="text-2xl font-bold">Recruiter Demand Signals</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Live validation: who is finding KodeTalent and actually using it. Auto-refreshes every 15s.
+            Live validation: who is finding ninelab and actually using it. Auto-refreshes every 15s.
           </p>
         </div>
         <div className="text-xs text-muted-foreground bg-muted/40 border border-border rounded-lg px-3 py-1.5">

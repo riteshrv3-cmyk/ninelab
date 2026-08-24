@@ -17,7 +17,7 @@ const router = Router();
 const VALID_TEMPLATES = ["ats", "classic", "tech", "minimal"] as const;
 type TemplateId = typeof VALID_TEMPLATES[number];
 
-// Mirrors artifacts/kodetalent/src/lib/resume-pdf/templates/*.ts — the server
+// Mirrors artifacts/ninelab/src/lib/resume-pdf/templates/*.ts — the server
 // has no access to those client-only template configs (fonts/colors), but
 // needs the density value for estimateLayout()'s densityFit critic axis.
 // Keep this in sync if a template's density ever changes.

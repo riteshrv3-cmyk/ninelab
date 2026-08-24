@@ -9,39 +9,9 @@ import { contextPack } from "../lib/contextPack";
 import { extractJson } from "../lib/extractJson";
 import { logEvent } from "../lib/events";
 import { cacheGetOrSet } from "../lib/aiCache";
+import { computeProfileStrength, computeCommitmentScore } from "../lib/profileStrength";
 
 const router = Router();
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function computeProfileStrength(s: typeof studentsTable.$inferSelect): number {
-  let score = 0;
-  if (s.githubUrl) score += 10;
-  if (s.linkedinUrl) score += 15;
-  if (s.portfolioUrl) score += 5;
-  if (s.phone) score += 5;
-  if (s.bio && s.bio.length > 20) score += 10;
-  const projects = Array.isArray(s.projects) ? s.projects : [];
-  if (projects.length >= 1) score += 20;
-  if (projects.length >= 3) score += 5;
-  const certs = Array.isArray(s.certifications) ? s.certifications : [];
-  if (certs.length >= 1) score += 10;
-  const experience = Array.isArray(s.experience) ? s.experience : [];
-  if (experience.length >= 1) score += 10;
-  const locs = Array.isArray(s.preferredLocations) ? s.preferredLocations : [];
-  if (locs.length > 0) score += 5;
-  if (s.expectedSalary) score += 5;
-  if (s.githubStats) score += 5;
-  if (s.linkedinData) score += 5;
-  return Math.min(score, 100);
-}
-
-function computeCommitmentScore(s: typeof studentsTable.$inferSelect): number {
-  const xpScore = Math.min((s.xp / 25), 40);
-  const streakScore = s.lastActiveDate ? Math.min(s.streakCount * 3, 30) : 0;
-  const overallScore = Math.round((s.overallScore || 0) * 0.3);
-  return Math.min(Math.round(xpScore + streakScore + overallScore), 100);
-}
 
 // ─── GET /students/:id/full-profile ──────────────────────────────────────────
 
@@ -527,7 +497,7 @@ router.post("/students/:id/profile/github-projects", requireStudent({ allowGuest
       async () => {
         const resp = await fetch(
           `https://api.github.com/users/${username}/repos?sort=pushed&per_page=20`,
-          { headers: { Accept: "application/vnd.github.v3+json", "User-Agent": "KodeTalent-App" } },
+          { headers: { Accept: "application/vnd.github.v3+json", "User-Agent": "ninelab-App" } },
         );
         if (!resp.ok) throw new Error(`GitHub API ${resp.status}`);
         return (await resp.json()) as GithubRepo[];
@@ -585,10 +555,10 @@ router.post("/students/:id/analyze-github", requireStudent({ allowGuest: true })
   try {
     const [userResp, reposResp] = await Promise.all([
       fetch(`https://api.github.com/users/${username}`, {
-        headers: { Accept: "application/vnd.github.v3+json", "User-Agent": "KodeTalent-App" },
+        headers: { Accept: "application/vnd.github.v3+json", "User-Agent": "ninelab-App" },
       }),
       fetch(`https://api.github.com/users/${username}/repos?sort=stars&per_page=6`, {
-        headers: { Accept: "application/vnd.github.v3+json", "User-Agent": "KodeTalent-App" },
+        headers: { Accept: "application/vnd.github.v3+json", "User-Agent": "ninelab-App" },
       }),
     ]);
 
@@ -747,7 +717,7 @@ Overall Score: ${Math.round(student.overallScore)}/100
 XP: ${student.xp} | Streak: ${student.streakCount} days
 Open to Work: ${student.openToWork ? "Yes" : "No"}`.trim();
 
-    const systemPrompt = `You are Kit — KodeTalent's AI career companion for Indian engineering students, and also a very cool cat who wears sunglasses. 😎🐱
+    const systemPrompt = `You are Kit — ninelab's AI career companion for Indian engineering students, and also a very cool cat who wears sunglasses. 😎🐱
 
 CURRENT STUDENT PROFILE:
 ${profileCtx}

@@ -30,7 +30,8 @@ function slug8(): string {
 function certCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const rand = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-  return `KT-${new Date().getFullYear()}-${rand}`;
+  // NL- prefix since the ninelab rebrand; earlier KT- codes remain valid.
+  return `NL-${new Date().getFullYear()}-${rand}`;
 }
 function letter(s: unknown): string {
   return String(s ?? "").trim().charAt(0).toUpperCase();
@@ -374,7 +375,7 @@ router.get("/certs/:slug", async (req, res) => {
     if (!cert) return res.status(404).json({ error: "Not found" });
     const [student] = await db.select({ name: studentsTable.name }).from(studentsTable).where(eq(studentsTable.id, cert.studentId)).limit(1);
     return res.json({
-      studentName: student?.name ?? "A KodeTalent learner",
+      studentName: student?.name ?? "A ninelab learner",
       certificateCode: cert.certificateCode,
       subDomainName: cert.subDomainName,
       domainName: cert.domainName,

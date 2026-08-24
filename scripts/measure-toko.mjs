@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const dir = path.join(root, "artifacts/kodetalent/public/toko");
+const dir = path.join(root, "artifacts/ninelab/public/toko");
 
 // How far does the light-background contamination reach inward from the
 // silhouette edge? Walk inward along the top of the black head, where the true

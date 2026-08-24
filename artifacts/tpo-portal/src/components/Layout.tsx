@@ -37,7 +37,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Zap className="w-4 h-4 text-white fill-white" />
             </div>
             <div>
-              <p className="text-xs font-bold text-[#4f46e5] tracking-wide uppercase">KodeTalent</p>
+              <p className="text-xs font-bold text-[#4f46e5] tracking-wide uppercase">ninelab</p>
               <p className="text-[10px] text-[#94a3b8] font-medium">TPO Portal</p>
             </div>
           </div>

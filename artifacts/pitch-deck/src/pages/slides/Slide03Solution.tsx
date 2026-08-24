@@ -8,7 +8,7 @@ export default function Slide03Solution() {
           One Platform. Three Customers.
         </div>
         <div style={{ fontSize: "2vw", color: "#94A3B8", marginBottom: "6vh", fontWeight: 400 }}>
-          KodeTalent serves each side of the hiring equation simultaneously.
+          ninelab serves each side of the hiring equation simultaneously.
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "3.5vh" }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: "2.5vw" }}>
@@ -40,7 +40,7 @@ export default function Slide03Solution() {
           </div>
         </div>
       </div>
-      <div style={{ position: "absolute", bottom: "5vh", left: "8vw", fontSize: "1.5vw", color: "#3D4255", fontWeight: 600 }}>KodeTalent</div>
+      <div style={{ position: "absolute", bottom: "5vh", left: "8vw", fontSize: "1.5vw", color: "#3D4255", fontWeight: 600 }}>ninelab</div>
     </div>
   );
 }

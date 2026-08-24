@@ -28,7 +28,7 @@ if (!process.env.VITE_CLERK_PUBLISHABLE_KEY) {
 }
 
 // 1) Frontend. vite.config.ts requires PORT and BASE_PATH even for `build`.
-run("pnpm --filter @workspace/kodetalent run build", {
+run("pnpm --filter @workspace/ninelab run build", {
   NODE_ENV: "production",
   PORT: "5000",
   BASE_PATH: "/",
@@ -38,7 +38,7 @@ run("pnpm --filter @workspace/kodetalent run build", {
 run("pnpm --filter @workspace/api-server run build");
 
 // 3) Copy the built frontend next to the API bundle as ./public.
-const frontendDist = path.join(root, "artifacts/kodetalent/dist/public");
+const frontendDist = path.join(root, "artifacts/ninelab/dist/public");
 const apiPublic = path.join(root, "artifacts/api-server/dist/public");
 if (!existsSync(frontendDist)) {
   throw new Error(`Frontend build not found at ${frontendDist}`);

@@ -1,7 +1,7 @@
 import type { LayoutEstimate, ResumeDocument, SectionKey } from "./types";
 import type { TemplateDensity } from "./budget";
 
-// A4 geometry, matching artifacts/kodetalent/src/lib/resume-pdf/geometry.ts exactly —
+// A4 geometry, matching artifacts/ninelab/src/lib/resume-pdf/geometry.ts exactly —
 // keep these two files in sync if the page geometry ever changes.
 const CW = 493.28; // usable content width, pt
 const CH = 751.89; // usable content height, pt

@@ -17,7 +17,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const dir = path.join(root, "artifacts/kodetalent/public/toko");
+const dir = path.join(root, "artifacts/ninelab/public/toko");
 
 const POSES = ["toko-head", "toko-hero", "toko-shrug", "toko-think", "toko-cheer"];
 const PAD = 24;

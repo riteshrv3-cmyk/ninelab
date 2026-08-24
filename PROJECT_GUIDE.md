@@ -1,14 +1,14 @@
-# KodeTalent — Project Guide
+# ninelab — Project Guide
 
 An AI career companion for India's engineering students. Students pick a goal, get
 a daily plan built from their real progress, practice interviews with an AI, check
 whether a placement message is a scam, and track every job they apply to.
 
-**Live:** https://kodetalent-production-8b96.up.railway.app
-**Repo:** https://github.com/riteshrv3-cmyk/kodetalent-platform
+**Live:** https://ninelab-production-8b96.up.railway.app
+**Repo:** https://github.com/riteshrv3-cmyk/ninelab-platform
 
 > Accurate as of commit `e4f893c` (27 Jul 2026). Older docs in this repo
-> (`DOCUMENTATION.md`, `KODETALENT_DOCS.md`, `replit.md`, parts of `README.md`)
+> (`DOCUMENTATION.md`, `NINELAB_DOCS.md`, `replit.md`, parts of `README.md`)
 > predate the Phase 4 rebuild and describe removed features — prefer this file.
 
 ---
@@ -60,7 +60,7 @@ there is no CORS and `/api/*` just works. One service, one URL.
 ```
 Career-Companion/
 ├── artifacts/
-│   ├── kodetalent/        # Student app (React) — the main product
+│   ├── ninelab/        # Student app (React) — the main product
 │   ├── api-server/        # Express API (also serves the built frontend)
 │   ├── recruiter-portal/  # Recruiter UI      ─┐
 │   ├── tpo-portal/        # College TPO UI     ├─ not in active development
@@ -89,8 +89,8 @@ Career-Companion/
 **Prerequisites:** Node 24+, pnpm 10, and a Postgres database (Neon free tier is fine).
 
 ```bash
-git clone https://github.com/riteshrv3-cmyk/kodetalent-platform.git
-cd kodetalent-platform
+git clone https://github.com/riteshrv3-cmyk/ninelab-platform.git
+cd ninelab-platform
 pnpm install
 cp .env.example .env     # then fill it in (see below)
 pnpm --filter @workspace/db run push    # create the tables
@@ -158,7 +158,7 @@ TypeScript afterwards.
 cap 5, floor 3, exactly one "hot" task. Kinds: `first_mock`, `practice`,
 `course`, `jobs`, `invite`, `followup`, `drive_check`. Dates are IST.
 
-**Design system.** `artifacts/kodetalent/src/DESIGN_SYSTEM.md` is the spec —
+**Design system.** `artifacts/ninelab/src/DESIGN_SYSTEM.md` is the spec —
 indigo "Canopy" look: brand `#4a55c7`, canvas `#f4f5f7`, pill CTAs, soft-shadow
 cards, canopy header + white sheet. Green is reserved for completed states, red
 for errors/scams, orange for badges. All 17 screens follow it.
@@ -167,7 +167,7 @@ for errors/scams, orange for badges. All 17 screens follow it.
 
 ## 6. Key surfaces
 
-**Student app routes** (`artifacts/kodetalent/src/App.tsx`)
+**Student app routes** (`artifacts/ninelab/src/App.tsx`)
 
 `/` welcome · `/onboarding` · `/home` daily checklist · `/practice` +
 `/practice/interview/:id` + `/practice/courses` + `/practice/history` ·

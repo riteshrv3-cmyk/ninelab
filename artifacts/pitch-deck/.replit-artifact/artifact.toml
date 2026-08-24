@@ -1,6 +1,6 @@
 kind = "slides"
 previewPath = "/pitch-deck/"
-title = "KodeTalent Investor Pitch Deck"
+title = "ninelab Investor Pitch Deck"
 version = "1.0.0"
 id = "artifacts/pitch-deck"
 router = "path"

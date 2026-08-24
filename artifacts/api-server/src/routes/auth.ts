@@ -64,7 +64,7 @@ router.post("/auth/claim", async (req, res) => {
     const primaryEmail =
       clerkUser.emailAddresses.find((e) => e.id === clerkUser.primaryEmailAddressId)?.emailAddress ??
       clerkUser.emailAddresses[0]?.emailAddress ??
-      `${userId}@clerk.kodetalent.internal`;
+      `${userId}@clerk.ninelab.internal`;
     const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") || "Student";
 
     // Legacy row with this real email but no clerkUserId (pre-dates guest-email scheme) — claim it instead of erroring.

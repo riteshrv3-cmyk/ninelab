@@ -1,4 +1,4 @@
-# KodeTalent — AI Career Companion
+# ninelab — AI Career Companion
 
 ## Overview
 
@@ -13,7 +13,7 @@ Full-stack AI career companion for Indian engineering students (1st year → pla
 | Monorepo | pnpm workspaces |
 | Node.js | v24 |
 | TypeScript | 5.9 |
-| Frontend | React + Vite (`artifacts/kodetalent`) |
+| Frontend | React + Vite (`artifacts/ninelab`) |
 | API | Express 5 (`artifacts/api-server`) |
 | Database | PostgreSQL + Drizzle ORM |
 | Validation | Zod v4 + drizzle-zod |
@@ -30,7 +30,7 @@ Full-stack AI career companion for Indian engineering students (1st year → pla
 
 ```
 artifacts/
-  kodetalent/          # React + Vite frontend (previewPath /)
+  ninelab/          # React + Vite frontend (previewPath /)
   api-server/          # Express API server (previewPath /api)
   recruiter-portal/    # React + Vite recruiter marketplace (previewPath /recruiter-portal/)
   tpo-portal/          # React + Vite TPO portal (previewPath /tpo-portal/, port 21176)
@@ -54,7 +54,7 @@ scripts/               # Shared utility scripts
 
 **Typography**: `Plus Jakarta Sans` (weights 400/500/600/700/800) — loaded in both `index.html` `<link>` AND `index.css` `@import` for redundancy. NO Inter (removed across all portals).
 
-**Tokens** (identical in `kodetalent`, `recruiter-portal`, `tpo-portal` — light theme; `admin-panel` uses dark variant of same hues):
+**Tokens** (identical in `ninelab`, `recruiter-portal`, `tpo-portal` — light theme; `admin-panel` uses dark variant of same hues):
 
 | Token | Light value | Hex | Use |
 |---|---|---|---|
@@ -97,7 +97,7 @@ scripts/               # Shared utility scripts
 
 **Bottom nav (3 items only):** Home · AI Chat · Practice
 
-**Top bar (fixed):** KodeTalent logo · Inbox icon (with unread badge) · Profile avatar (opens sidebar)
+**Top bar (fixed):** ninelab logo · Inbox icon (with unread badge) · Profile avatar (opens sidebar)
 
 **Profile Sidebar:** Slides in from the right. Shows profile strength, scores, stats, links, skills, project/cert counts. "Edit Full Profile" button navigates to `/profile`.
 
@@ -115,7 +115,7 @@ Three-level drill-down:
 2. **Sub-domain list** — 4 sub-domains per domain (48 total)
 3. **Opportunity cards** — Jobs / Internship / Freelancing tabs with real company listings + **Prepare** and **Apply** actions
 
-Sub-domain data lives in `artifacts/kodetalent/src/data/domains.ts` (shared across Opportunities and the preloader).
+Sub-domain data lives in `artifacts/ninelab/src/data/domains.ts` (shared across Opportunities and the preloader).
 
 ---
 
@@ -175,7 +175,7 @@ Ready-made mock interviews for real companies, presented **role-first** and filt
 
 ## Background Course Preloader
 
-`artifacts/kodetalent/src/hooks/useCoursePreloader.ts`
+`artifacts/ninelab/src/hooks/useCoursePreloader.ts`
 
 Triggered 1.5s after Opportunities page mounts. Silently generates all 48 sub-domain courses in **batches of 4** using `Promise.all`. Each batch saves to localStorage on success. A module-level singleton prevents duplicate runs. Status tracked under `course_preload_status` in localStorage.
 
@@ -275,16 +275,16 @@ pnpm --filter @workspace/db run push
 
 | File | Purpose |
 |---|---|
-| `artifacts/kodetalent/src/data/domains.ts` | Shared DOMAINS + ALL_SUBDOMAINS constants (48 sub-domains) |
-| `artifacts/kodetalent/src/hooks/useCoursePreloader.ts` | Background course pre-generation hook |
-| `artifacts/kodetalent/src/pages/Course.tsx` | Full Coursera-style course page (roadmap + SM-2 flashcards + quiz) |
-| `artifacts/kodetalent/src/pages/Opportunities.tsx` | 3-level domain explorer |
-| `artifacts/kodetalent/src/pages/Onboarding.tsx` | 10-step WhatsApp chatbot onboarding |
+| `artifacts/ninelab/src/data/domains.ts` | Shared DOMAINS + ALL_SUBDOMAINS constants (48 sub-domains) |
+| `artifacts/ninelab/src/hooks/useCoursePreloader.ts` | Background course pre-generation hook |
+| `artifacts/ninelab/src/pages/Course.tsx` | Full Coursera-style course page (roadmap + SM-2 flashcards + quiz) |
+| `artifacts/ninelab/src/pages/Opportunities.tsx` | 3-level domain explorer |
+| `artifacts/ninelab/src/pages/Onboarding.tsx` | 10-step WhatsApp chatbot onboarding |
 | `artifacts/api-server/src/routes/course.ts` | POST /api/course/generate (two-call AI strategy) |
 | `artifacts/api-server/src/routes/interview.ts` | AI interview with feedback |
 | `artifacts/api-server/src/routes/index.ts` | Route registration |
 | `artifacts/api-server/src/routes/profile.ts` | Profile API + talent-pool route |
-| `artifacts/kodetalent/src/pages/Profile.tsx` | Rich 851-line profile page (strength ring, GitHub/LinkedIn AI, projects, certs) |
+| `artifacts/ninelab/src/pages/Profile.tsx` | Rich 851-line profile page (strength ring, GitHub/LinkedIn AI, projects, certs) |
 | `artifacts/recruiter-portal/src/App.tsx` | Recruiter portal routing (wouter) |
 | `artifacts/recruiter-portal/src/pages/Login.tsx` | Recruiter login (company/name/email → localStorage) |
 | `artifacts/recruiter-portal/src/pages/TalentPool.tsx` | Browse + filter all candidates (search, work mode, field, CGPA, strength) |

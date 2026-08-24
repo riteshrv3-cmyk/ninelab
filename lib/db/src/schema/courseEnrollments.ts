@@ -10,7 +10,7 @@ import { z } from "zod/v4";
  * same row instead of creating a duplicate.
  *
  * subDomainId/domainId are validated text, not FKs: the domain taxonomy is
- * frontend-owned static data (artifacts/kodetalent/src/data/domains.ts),
+ * frontend-owned static data (artifacts/ninelab/src/data/domains.ts),
  * effectively a stable enum with no runtime table behind it.
  */
 export const courseEnrollmentsTable = pgTable("course_enrollments", {

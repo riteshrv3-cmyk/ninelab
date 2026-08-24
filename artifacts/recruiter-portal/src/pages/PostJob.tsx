@@ -237,7 +237,7 @@ export default function PostJob() {
               </div>
 
               <p className="mt-6 text-xs text-[#cbd5e1]">
-                Questions? Reply to any email from us or reach out at hello@kodetalent.in
+                Questions? Reply to any email from us or reach out at hello@ninelab.in
               </p>
             </motion.div>
           </motion.div>

@@ -1,8 +1,8 @@
-# KodeTalent — Founder's Handbook
+# ninelab — Founder's Handbook
 
 Everything you need to explain, pitch, and defend this product — from a 10-second elevator line to deep technical answers.
 
-Live app: https://kodetalent-production-8b96.up.railway.app
+Live app: https://ninelab-production-8b96.up.railway.app
 
 ---
 
@@ -10,13 +10,13 @@ Live app: https://kodetalent-production-8b96.up.railway.app
 
 ## The one-liner
 
-**"KodeTalent is an AI career coach in your pocket for India's 1.5 million engineering students — it trains them for placements and connects them directly to recruiters."**
+**"ninelab is an AI career coach in your pocket for India's 1.5 million engineering students — it trains them for placements and connects them directly to recruiters."**
 
 ## The 30-second pitch
 
 Every year, India produces around 1.5 million engineering graduates. Most of them fail campus placements — not because they lack talent, but because nobody teaches them *how* to get hired: how to interview, what skills companies actually want, how to write a resume that gets shortlisted, or even which "placement drive" messages on WhatsApp are scams.
 
-Coaching institutes charge Rs 50,000+ and only exist in big cities. KodeTalent puts that entire coaching experience into an app: an AI interviewer that talks to you face-to-face, personalized career roadmaps, courses, verifiable certificates, resume building, and a direct line to recruiters — for a fraction of the cost, available to a student in any tier-3 town with a phone.
+Coaching institutes charge Rs 50,000+ and only exist in big cities. ninelab puts that entire coaching experience into an app: an AI interviewer that talks to you face-to-face, personalized career roadmaps, courses, verifiable certificates, resume building, and a direct line to recruiters — for a fraction of the cost, available to a student in any tier-3 town with a phone.
 
 ## The problem (3 bullet points)
 
@@ -101,7 +101,7 @@ Coaching institutes charge Rs 50,000+ and only exist in big cities. KodeTalent p
 
 ```
 artifacts/          <- deployable apps
-  kodetalent/       <- student-facing React app
+  ninelab/       <- student-facing React app
   api-server/       <- Express 5 API (serves the built frontend too)
   recruiter-portal/ tpo-portal/ admin-panel/
 lib/                <- shared internal packages
@@ -215,7 +215,7 @@ A: Pull live numbers before every meeting from the platform stats endpoint (real
 # PART 4 — QUICK REFERENCE CARD
 
 - **Product:** AI career coach + verified talent marketplace for Indian engineering students
-- **Live URL:** https://kodetalent-production-8b96.up.railway.app
+- **Live URL:** https://ninelab-production-8b96.up.railway.app
 - **Stack in one breath:** React 19 + Vite + Tailwind | Express 5 + TypeScript | PostgreSQL (Neon) + Drizzle | OpenAI (gpt-4o-mini / tts-1 / Whisper) | Clerk auth | Railway hosting | pnpm monorepo
 - **Killer demo:** the voice mock interview (camera on, AI speaks, you speak back, scored report at the end) and Drive-Check (paste a scam placement message live)
 - **Revenue:** free students -> paid recruiters (B2B) -> college SaaS (B2B)

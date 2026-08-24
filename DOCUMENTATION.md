@@ -1,4 +1,4 @@
-# KodeTalent — Complete App Documentation
+# ninelab — Complete App Documentation
 
 > Last updated: May 2026  
 > Version: Production (pnpm monorepo, 4 portals + API)
@@ -7,12 +7,12 @@
 
 ## Table of Contents
 
-1. [What is KodeTalent?](#1-what-is-kodetalent)
+1. [What is ninelab?](#1-what-is-ninelab)
 2. [Business Model](#2-business-model)
 3. [System Architecture](#3-system-architecture)
 4. [Tech Stack](#4-tech-stack)
 5. [Monorepo Structure](#5-monorepo-structure)
-6. [Student App (kodetalent)](#6-student-app-kodetalent)
+6. [Student App (ninelab)](#6-student-app-ninelab)
 7. [Recruiter Portal](#7-recruiter-portal)
 8. [TPO Portal (College)](#8-tpo-portal-college)
 9. [Admin Panel](#9-admin-panel)
@@ -26,9 +26,9 @@
 
 ---
 
-## 1. What is KodeTalent?
+## 1. What is ninelab?
 
-KodeTalent is a **mobile-first AI career platform for Indian engineering students** — from their 1st year all the way to campus placement.
+ninelab is a **mobile-first AI career platform for Indian engineering students** — from their 1st year all the way to campus placement.
 
 **For students:** It's a personal AI career companion. They build their profile, practice interviews, explore career paths, take AI-generated courses, earn verifiable certificates, and receive recruiter invites — all in one app.
 
@@ -105,9 +105,9 @@ App     Server               (College)
 ## 5. Monorepo Structure
 
 ```
-kodetalent/
+ninelab/
 ├── artifacts/
-│   ├── kodetalent/          ← Student app          (previewPath: /)
+│   ├── ninelab/          ← Student app          (previewPath: /)
 │   ├── api-server/          ← Express API           (previewPath: /api)
 │   ├── recruiter-portal/    ← Recruiter marketplace (previewPath: /recruiter-portal/)
 │   ├── tpo-portal/          ← College/TPO portal    (previewPath: /tpo-portal/)
@@ -130,7 +130,7 @@ kodetalent/
 
 ---
 
-## 6. Student App (kodetalent)
+## 6. Student App (ninelab)
 
 **URL:** `/`  
 **Auth:** Student ID stored in `localStorage` as `"studentId"`  
@@ -167,7 +167,7 @@ kodetalent/
 Data & Analytics, UI/UX Design, Web Development, Mobile Dev, AI/ML, Cybersecurity, Cloud & DevOps, Blockchain, Game Dev, Embedded/IoT, QA & Testing, Product Management
 
 Each domain has **4 sub-domains** = 48 total. All defined in:
-`artifacts/kodetalent/src/data/domains.ts`
+`artifacts/ninelab/src/data/domains.ts`
 
 ### Course Page (deep dive)
 

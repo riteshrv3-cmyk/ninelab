@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/tpo-portal/"
-title = "KodeTalent TPO Portal"
+title = "ninelab TPO Portal"
 version = "1.0.0"
 id = "artifacts/tpo-portal"
 router = "path"
