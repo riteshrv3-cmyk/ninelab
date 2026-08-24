@@ -11,6 +11,8 @@ import {
   interviewSessionsTable,
   tpoAccountsTable,
   curatedOpportunitiesTable,
+  collegesTable,
+  collegeAdminsTable,
 } from "@workspace/db";
 import { desc, sql, gte, eq } from "drizzle-orm";
 import { timingSafeEqual } from "crypto";
@@ -65,6 +67,54 @@ router.post("/admin/tpo-accounts/:id/verify", async (req, res): Promise<void> =>
     .returning();
   if (!updated) { res.status(404).json({ error: "Not found" }); return; }
   res.json({ ok: true, account: { id: updated.id, verified: updated.verified } });
+});
+
+// Register a college admin (TPO) on the Clerk allowlist. Either pass an existing
+// collegeId, or {collegeName, city} to create the college inline in one call.
+// When that email later signs in via Clerk, requireCollegeAdmin binds it.
+function genInviteCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let s = "";
+  for (let i = 0; i < 8; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+}
+async function uniqueInviteCode(): Promise<string> {
+  for (let i = 0; i < 8; i++) {
+    const c = genInviteCode();
+    const [hit] = await db.select({ id: collegesTable.id }).from(collegesTable).where(eq(collegesTable.inviteCode, c));
+    if (!hit) return c;
+  }
+  return genInviteCode();
+}
+
+router.post("/admin/college-admins", async (req, res): Promise<void> => {
+  const body = req.body as { email?: string; name?: string; collegeId?: number; collegeName?: string; city?: string };
+  const email = String(body.email || "").toLowerCase().trim();
+  if (!email) { res.status(400).json({ error: "email required" }); return; }
+  try {
+    let collegeId = Number(body.collegeId);
+    if (!Number.isFinite(collegeId)) {
+      const collegeName = String(body.collegeName || "").trim();
+      if (!collegeName) { res.status(400).json({ error: "collegeId or collegeName required" }); return; }
+      const code = await uniqueInviteCode();
+      const [college] = await db.insert(collegesTable).values({
+        name: collegeName, city: String(body.city || "").trim(), tpoEmail: email, tpoName: body.name || null, inviteCode: code,
+      }).returning();
+      collegeId = college.id;
+    } else {
+      const [college] = await db.select({ id: collegesTable.id }).from(collegesTable).where(eq(collegesTable.id, collegeId)).limit(1);
+      if (!college) { res.status(404).json({ error: "College not found" }); return; }
+    }
+    const [admin] = await db
+      .insert(collegeAdminsTable)
+      .values({ email, name: body.name || null, collegeId })
+      .onConflictDoUpdate({ target: collegeAdminsTable.email, set: { collegeId, name: body.name || null } })
+      .returning();
+    res.status(201).json({ ok: true, admin, collegeId });
+  } catch (err) {
+    req.log.error({ err }, "Failed to create college admin");
+    res.status(500).json({ error: "Failed to create college admin" });
+  }
 });
 
 router.get("/admin/overview", async (_req, res) => {

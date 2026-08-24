@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { ensureDefaultTracks } from "./lib/defaultTracks";
 
 const rawPort = process.env["PORT"];
 
@@ -22,4 +23,10 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+
+  // Seed the shipped default learning tracks (idempotent). Non-fatal: a seeding
+  // failure must not take the server down.
+  ensureDefaultTracks()
+    .then(() => logger.info("Default learning tracks ensured"))
+    .catch((err) => logger.error({ err }, "Failed to ensure default tracks"));
 });

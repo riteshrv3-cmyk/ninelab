@@ -1,61 +1,47 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { collegesTable, studentsTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, ilike, asc } from "drizzle-orm";
+import { requireStudent, StudentAuthedRequest } from "../middlewares/studentAuth";
 
 const router = Router();
 
-function genCode(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let s = "";
-  for (let i = 0; i < 8; i++) s += chars[Math.floor(Math.random() * chars.length)];
-  return s;
-}
+// (The legacy unauthenticated TPO endpoints GET /tpo/my-college and
+// POST /tpo/colleges/:id/regenerate were removed — anyone could create or
+// rotate a college. College creation is now admin-only via
+// POST /admin/college-admins; invite-code rotation moves to the authenticated
+// college-admin surface if needed.)
 
-async function uniqueCode(): Promise<string> {
-  for (let i = 0; i < 8; i++) {
-    const c = genCode();
-    const [hit] = await db.select({ id: collegesTable.id }).from(collegesTable).where(eq(collegesTable.inviteCode, c));
-    if (!hit) return c;
-  }
-  return genCode() + Date.now().toString(36).slice(-3).toUpperCase();
-}
-
-// GET or auto-create the TPO's college
-router.get("/tpo/my-college", async (req, res) => {
+// PUBLIC: searchable college list for the student profile picker.
+router.get("/colleges", async (req, res) => {
   try {
-    const email = String(req.query.email || "").toLowerCase().trim();
-    const name = String(req.query.name || "").trim();
-    const collegeName = String(req.query.college || "").trim();
-    if (!email) return res.status(400).json({ error: "email required" });
-
-    const [existing] = await db.select().from(collegesTable).where(eq(collegesTable.tpoEmail, email)).limit(1);
-    if (existing) return res.json(existing);
-
-    if (!collegeName) return res.status(404).json({ error: "no college, provide college to create" });
-    const code = await uniqueCode();
-    const [created] = await db.insert(collegesTable).values({
-      name: collegeName, tpoEmail: email, tpoName: name || null, inviteCode: code,
-    }).returning();
-    return res.status(201).json(created);
+    const q = String(req.query.q || "").trim();
+    const base = db
+      .select({ id: collegesTable.id, name: collegesTable.name, city: collegesTable.city })
+      .from(collegesTable);
+    const rows = q
+      ? await base.where(ilike(collegesTable.name, `%${q}%`)).orderBy(asc(collegesTable.name)).limit(50)
+      : await base.orderBy(asc(collegesTable.name)).limit(50);
+    return res.json(rows);
   } catch (err) {
-    req.log.error({ err }, "Failed my-college");
-    return res.status(500).json({ error: "Failed to load college" });
+    req.log.error({ err }, "Failed to list colleges");
+    return res.status(500).json({ error: "Failed to list colleges" });
   }
 });
 
-// Regenerate invite code
-router.post("/tpo/colleges/:id/regenerate", async (req, res) => {
+// Set the signed-in/guest student's college (profile picker).
+router.post("/students/:id/college", requireStudent({ allowGuest: true }), async (req: StudentAuthedRequest, res) => {
+  const id = req.student!.id;
+  const collegeId = Number((req.body as { collegeId?: number }).collegeId);
+  if (!Number.isFinite(collegeId)) return res.status(400).json({ error: "collegeId required" });
   try {
-    const id = parseInt(req.params.id, 10);
-    if (!Number.isFinite(id)) return res.status(400).json({ error: "invalid id" });
-    const code = await uniqueCode();
-    const [updated] = await db.update(collegesTable).set({ inviteCode: code }).where(eq(collegesTable.id, id)).returning();
-    if (!updated) return res.status(404).json({ error: "not found" });
-    return res.json(updated);
+    const [college] = await db.select().from(collegesTable).where(eq(collegesTable.id, collegeId)).limit(1);
+    if (!college) return res.status(404).json({ error: "College not found" });
+    await db.update(studentsTable).set({ collegeId: college.id, college: college.name }).where(eq(studentsTable.id, id));
+    return res.json({ ok: true, collegeId: college.id, collegeName: college.name });
   } catch (err) {
-    req.log.error({ err }, "Failed regenerate");
-    return res.status(500).json({ error: "Failed to regenerate" });
+    req.log.error({ err }, "Failed to set college");
+    return res.status(500).json({ error: "Failed to set college" });
   }
 });
 
@@ -80,20 +66,28 @@ router.get("/invite/:code", async (req, res) => {
   }
 });
 
-// Bind a freshly-created student to a college via invite code (called right after signup)
-router.post("/invite/:code/claim", async (req, res) => {
+// Bind the student to a college via invite code (called right after signup).
+// requireStudent verifies the caller owns req.body.studentId (guest token or
+// Clerk session) — the studentId is authorization-checked, not trusted raw, so
+// a guessed id can no longer be bound to an arbitrary college.
+router.post("/invite/:code/claim", requireStudent({ allowGuest: true }), async (req: StudentAuthedRequest, res) => {
+  const studentId = req.student!.id;
+  const alreadyInCollege = req.student!.collegeId != null;
   try {
     const code = String(req.params.code || "").toUpperCase().trim();
-    const studentId = Number(req.body?.studentId);
-    if (!code || !Number.isFinite(studentId)) return res.status(400).json({ error: "code and studentId required" });
+    if (!code) return res.status(400).json({ error: "code required" });
     const [college] = await db.select().from(collegesTable).where(eq(collegesTable.inviteCode, code)).limit(1);
     if (!college) return res.status(404).json({ error: "Invalid invite" });
     await db.update(studentsTable)
       .set({ collegeId: college.id, college: college.name })
       .where(eq(studentsTable.id, studentId));
-    await db.update(collegesTable)
-      .set({ signupCount: sql`${collegesTable.signupCount} + 1` })
-      .where(eq(collegesTable.id, college.id));
+    // Only bump the counter when this student wasn't already attached to a
+    // college, so repeated claims don't inflate signupCount.
+    if (!alreadyInCollege) {
+      await db.update(collegesTable)
+        .set({ signupCount: sql`${collegesTable.signupCount} + 1` })
+        .where(eq(collegesTable.id, college.id));
+    }
     return res.json({ ok: true, collegeId: college.id, collegeName: college.name });
   } catch (err) {
     req.log.error({ err }, "Failed claim invite");
