@@ -18,6 +18,7 @@ import { isGuestSession } from "@/lib/isGuest";
 import { upgradeContent, buildAtsReport, renderPlainText } from "@workspace/resume-core";
 import { renderResumePdf, TEMPLATE_REGISTRY, resolveTemplateConfig, preloadFonts } from "@/lib/resume-pdf";
 import { renderResumeDocx } from "@/lib/resume-pdf/resume-docx";
+import { useStudentProfile } from "@/hooks/useStudentProfile";
 import { ResumePreview, ResumeThumbnail, preloadPdfjs } from "@/components/resume/ResumePreview";
 import { AtsFixList } from "@/components/resume/AtsFixList";
 import { InlineEditPreview } from "@/components/resume/InlineEditPreview";
@@ -206,27 +207,18 @@ function TargetRecommendations({
   onGenerate: (company: string, role: string) => void;
 }) {
   const [, setLocation] = useLocation();
-  const [recs, setRecs] = useState<(RoleRec & { matchPct: number })[]>([]);
-  const [hasSkills, setHasSkills] = useState(false);
-  const [loading, setLoading] = useState(true);
+  // Shared react-query profile (same key AppLayout warms on every page load):
+  // usually renders instantly from cache instead of firing a duplicate
+  // full-profile fetch. The old raw apiFetch here had no timeout or retry, so
+  // one hung request on a flaky mobile connection left this section showing
+  // its loading skeleton forever.
+  const { data: profile, isLoading, isError } = useStudentProfile(String(studentId));
+  const skills = Object.keys((profile?.skills as Record<string, number> | undefined) ?? {}).map(s => s.toLowerCase());
+  const hasSkills = skills.length > 0;
+  // isError -> generic recommendations rather than an unresolvable skeleton.
+  const recs = isLoading && !isError ? [] : getRecommendations(isError ? [] : skills);
 
-  useEffect(() => {
-    apiFetch(`/api/students/${studentId}/full-profile`)
-      .then(r => r.ok ? r.json() : null)
-      // full-profile returns skills as a Record<string, number>, not
-      // skillSections (that field only exists on a resume *document*) — this
-      // read the wrong field, so every student saw a fixed 0% list regardless
-      // of what skills they actually had.
-      .then((profile: { skills?: Record<string, number> } | null) => {
-        const skills = Object.keys(profile?.skills ?? {}).map(s => s.toLowerCase());
-        setHasSkills(skills.length > 0);
-        setRecs(getRecommendations(skills));
-      })
-      .catch(() => setRecs(getRecommendations([])))
-      .finally(() => setLoading(false));
-  }, [studentId]);
-
-  if (loading) {
+  if (isLoading && !isError) {
     return (
       <div className="space-y-2">
         <Skeleton className="h-5 w-48 rounded-lg" />
