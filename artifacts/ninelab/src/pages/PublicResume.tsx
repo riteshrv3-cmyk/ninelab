@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { upgradeContent } from "@workspace/resume-core";
-import { renderResumePdf } from "@/lib/resume-pdf";
+import { printResume } from "@/components/resume/html/printResume";
 import { ResumePreview } from "@/components/resume/ResumePreview";
 import { Download, Eye, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type jsPDF from "jspdf";
 
 interface PublicResumeData {
   id: number;
@@ -12,18 +11,6 @@ interface PublicResumeData {
   templateId: string;
   content: unknown;
   shareViews: number;
-}
-
-function openPDF(doc: jsPDF, filename: string) {
-  const blob = doc.output("blob");
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
 export default function PublicResume({ slug }: { slug: string }) {
@@ -51,8 +38,7 @@ export default function PublicResume({ slug }: { slug: string }) {
     setDownloading(true);
     try {
       const doc = upgradeContent(data.content);
-      const { doc: pdfDoc, filename } = await renderResumePdf(doc, data.templateId, { resumeName: data.name });
-      openPDF(pdfDoc, filename);
+      await printResume(doc, data.templateId, data.name);
     } finally {
       setDownloading(false);
     }

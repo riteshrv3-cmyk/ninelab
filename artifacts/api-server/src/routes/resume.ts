@@ -2,15 +2,20 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { studentsTable, studentResumesTable, applicationsTable } from "@workspace/db";
 import { eq, and, desc, sql, isNull, ilike } from "drizzle-orm";
-import { buildAtsReport, upgradeContent, type TemplateDensity, type ResumeVersion, MAX_RESUME_VERSIONS } from "@workspace/resume-core";
-import { GenerateResumeBody, UpdateResumeBody } from "@workspace/api-zod";
-import { rlResumeGen } from "../middlewares/rateLimit";
+import { createHash } from "node:crypto";
+import { buildAtsReport, buildQualityReport, renderPlainText, upgradeContent, type QuantFact, type TemplateDensity, type ResumeVersion, MAX_RESUME_VERSIONS } from "@workspace/resume-core";
+import { GenerateResumeBody, UpdateResumeBody, ImproveResumeSectionBody, QuantApplyBody } from "@workspace/api-zod";
+import { rlAiMedium, rlResumeGen } from "../middlewares/rateLimit";
 import { requireStudent } from "../middlewares/studentAuth";
 import { logEvent } from "../lib/events";
+import { cacheGetOrSet } from "../lib/aiCache";
 import { runResumePipeline } from "../lib/resume/pipeline";
-import { buildLedger } from "../lib/resume/ledger";
+import { buildLedger, parseQuantFacts, withQuantFacts } from "../lib/resume/ledger";
 import { bulletPassesGate } from "../lib/resume/gate";
 import { rewriteBullet, BULLET_REWRITE_ACTIONS, type BulletRewriteAction } from "../lib/resume/bulletRewrite";
+import { improveSection, ImproveRejectedError, IMPROVABLE_SECTIONS, type ImprovableSection } from "../lib/resume/sectionImprove";
+import { reviewResume, percentileBand } from "../lib/resume/review";
+import { generateQuantQuestions, applyQuantAnswers, ANSWER_VALUE_RE } from "../lib/resume/quantCoach";
 
 const router = Router();
 
@@ -50,7 +55,7 @@ router.get("/students/:id/resumes", requireStudent({ allowGuest: true }), async 
 
 // Stage copy is how the student "feels" the reasoning happening — shown only over SSE.
 const STAGE_COPY: Record<string, string> = {
-  jd: "Reading the job description…",
+  jd: "Understanding your target role…",
   map: "Matching it against your real work…",
   draft: "Writing your bullets…",
   critic: "Running it through an ATS screen…",
@@ -68,12 +73,24 @@ router.post("/students/:id/resumes", requireStudent({ allowGuest: true }), rlRes
   const jdText = (body.jdText ?? "").slice(0, 5000);
   const companyName = (body.companyName ?? "").slice(0, 200);
   const resumeName = body.resumeName?.slice(0, 200);
-  const roleTitle = (body.roleTitle ?? "").slice(0, 200);
-  const jobTags = (body.jobTags ?? []).slice(0, 8).map(t => t.slice(0, 40));
+  let roleTitle = (body.roleTitle ?? "").slice(0, 200);
+  let jobTags = (body.jobTags ?? []).slice(0, 8).map(t => t.slice(0, 40));
   const parentResumeId = body.parentResumeId ?? null;
 
   const [student] = await db.select().from(studentsTable).where(eq(studentsTable.id, id)).limit(1);
   if (!student) return res.status(404).json({ error: "Student not found" });
+
+  // Profile-only generation: with no JD and no tags, stage 1 would infer from
+  // nothing. Seed the target from the profile so the pipeline still gets a
+  // coherent role to write toward.
+  if (!jdText.trim() && jobTags.length === 0) {
+    if (!roleTitle.trim() && typeof student.targetRole === "string") roleTitle = student.targetRole.slice(0, 200);
+    const skills = (student.skills && typeof student.skills === "object" ? student.skills : {}) as Record<string, number>;
+    jobTags = Object.entries(skills)
+      .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
+      .slice(0, 8)
+      .map(([name]) => name.slice(0, 40));
+  }
 
   // Validate parentResumeId belongs to this student (if provided).
   if (parentResumeId) {
@@ -131,6 +148,7 @@ router.post("/students/:id/resumes", requireStudent({ allowGuest: true }), rlRes
         content: doc,
         atsScore: doc.atsMeta?.scorePct ?? null,
         atsReport: doc.atsMeta ?? null,
+        qualityScore: buildQualityReport(doc, { density: TEMPLATE_DENSITY[templateId] }).total,
         evidenceMap,
         generation,
         schemaVersion: 2,
@@ -194,7 +212,11 @@ router.patch("/students/:id/resumes/:resumeId", requireStudent({ allowGuest: tru
 
     const existingContent = (resume.content ?? {}) as Record<string, unknown>;
 
-    const allowedKeys = ["summary", "skillSections", "experience", "projects", "certifications", "achievements"] as const;
+    // Everything is editable — contact, headline, education, and section order
+    // included. The merged blob is normalized through upgradeContent before it
+    // is persisted, so a v1 row becomes v2 on its first edit and malformed
+    // shapes are coerced rather than stored raw.
+    const allowedKeys = ["contact", "headline", "summary", "order", "skillSections", "experience", "projects", "education", "certifications", "achievements"] as const;
     const patchedFields: Record<string, unknown> = {};
     for (const key of allowedKeys) {
       if (key in incoming) {
@@ -202,19 +224,22 @@ router.patch("/students/:id/resumes/:resumeId", requireStudent({ allowGuest: tru
       }
     }
 
-    const updatedContent = { ...existingContent, ...patchedFields };
+    const upgradedDoc = upgradeContent({ ...upgradeContent(existingContent), ...patchedFields });
 
-    // Recompute the deterministic ATS score against the edited content —
-    // otherwise the score shown to the student goes stale the moment they
+    // Recompute the deterministic scores against the edited content —
+    // otherwise the numbers shown to the student go stale the moment they
     // change a bullet or add a skill.
-    const upgradedDoc = upgradeContent(updatedContent);
     const jobTags = Array.isArray(resume.jobTags) ? (resume.jobTags as unknown[]).filter((t): t is string => typeof t === "string") : [];
     const atsReport = buildAtsReport({ doc: upgradedDoc, jdText: resume.jdText ?? undefined, jobTags });
+    const effectiveTemplate = (templateId ?? resume.templateId) as TemplateId;
+    const quality = buildQualityReport(upgradedDoc, { density: TEMPLATE_DENSITY[effectiveTemplate] ?? "normal" });
 
-    const setFields: { content: Record<string, unknown>; templateId?: TemplateId; atsScore?: number | null; atsReport?: unknown; versions?: ResumeVersion[]; updatedAt: Date } = {
-      content: updatedContent,
+    const setFields: { content: Record<string, unknown>; templateId?: TemplateId; atsScore?: number | null; atsReport?: unknown; qualityScore?: number; schemaVersion?: number; versions?: ResumeVersion[]; updatedAt: Date } = {
+      content: upgradedDoc as unknown as Record<string, unknown>,
       atsScore: atsReport?.scorePct ?? null,
       atsReport: atsReport ?? null,
+      qualityScore: quality.total,
+      schemaVersion: 2,
       updatedAt: new Date(),
     };
     if (templateId) setFields.templateId = templateId;
@@ -275,6 +300,7 @@ router.post("/students/:id/resumes/:resumeId/restore-version", requireStudent({ 
 
     const jobTags = Array.isArray(resume.jobTags) ? (resume.jobTags as unknown[]).filter((t): t is string => typeof t === "string") : [];
     const atsReport = buildAtsReport({ doc: target.content, jdText: resume.jdText ?? undefined, jobTags });
+    const restoredQuality = buildQualityReport(target.content, { density: TEMPLATE_DENSITY[target.templateId as TemplateId] ?? "normal" });
 
     const [updated] = await db
       .update(studentResumesTable)
@@ -283,6 +309,7 @@ router.post("/students/:id/resumes/:resumeId/restore-version", requireStudent({ 
         templateId: target.templateId as TemplateId,
         atsScore: atsReport?.scorePct ?? null,
         atsReport: atsReport ?? null,
+        qualityScore: restoredQuality.total,
         versions: newVersions,
         updatedAt: new Date(),
       })
@@ -338,7 +365,9 @@ router.post("/students/:id/resumes/:resumeId/bullet-rewrite", requireStudent({ a
     const bullet = entry?.bullets[bulletIndex];
     if (!entry || !bullet) return res.status(404).json({ error: "Bullet not found" });
 
-    const ledger = buildLedger(student);
+    // Include user-attested quant facts so a previously-quantified bullet's
+    // "UA:n" citations still resolve.
+    const ledger = withQuantFacts(buildLedger(student), parseQuantFacts(resume.quantFacts));
     const evidenceText =
       bullet.evidence
         .map((eid) => ledger.rows.find((r) => r.id === eid))
@@ -370,6 +399,221 @@ router.post("/students/:id/resumes/:resumeId/bullet-rewrite", requireStudent({ a
       return;
     }
     req.log.error({ err }, "Failed to rewrite bullet");
+    return res.status(500).json({ error: "Server error" });
+  }
+  return;
+});
+
+// ─── POST /students/:id/resumes/:resumeId/improve-section ────────────────────
+// AI-polishes ONE section against its failing quality rules. Bullet-bearing
+// sections are accepted bullet-by-bullet through the same fabrication gate as
+// generation (a failed bullet silently keeps its original text); free prose
+// runs the forbidden-term scan. The server never persists — the client applies
+// the value locally (instant undo) and saves via the normal PATCH.
+
+router.post("/students/:id/resumes/:resumeId/improve-section", requireStudent({ allowGuest: true }), rlAiMedium, async (req, res) => {
+  const id = Number(req.params.id);
+  const resumeId = Number(req.params.resumeId);
+  if (isNaN(id) || isNaN(resumeId)) return res.status(400).json({ error: "Invalid id" });
+
+  const parsedBody = ImproveResumeSectionBody.safeParse(req.body);
+  if (!parsedBody.success) return res.status(400).json({ error: parsedBody.error.message });
+  const section = parsedBody.data.section as ImprovableSection;
+  if (!IMPROVABLE_SECTIONS.includes(section)) {
+    return res.status(400).json({ error: `section must be one of: ${IMPROVABLE_SECTIONS.join(", ")}` });
+  }
+
+  const controller = new AbortController();
+  req.on("close", () => controller.abort());
+
+  try {
+    const [resume] = await db.select().from(studentResumesTable).where(eq(studentResumesTable.id, resumeId)).limit(1);
+    if (!resume || resume.studentId !== id) return res.status(404).json({ error: "Resume not found" });
+    const [student] = await db.select().from(studentsTable).where(eq(studentsTable.id, id)).limit(1);
+    if (!student) return res.status(404).json({ error: "Student not found" });
+
+    const doc = upgradeContent((resume.content ?? {}) as Record<string, unknown>);
+    const ledger = withQuantFacts(buildLedger(student), parseQuantFacts(resume.quantFacts));
+    const report = buildQualityReport(doc, { density: TEMPLATE_DENSITY[resume.templateId as TemplateId] ?? "normal" });
+
+    const result = await improveSection({ doc, section, ledger, report, signal: controller.signal });
+    return res.json(result);
+  } catch (err) {
+    if (controller.signal.aborted) {
+      if (!res.writableEnded) res.end();
+      return;
+    }
+    if (err instanceof ImproveRejectedError) {
+      return res.status(422).json({ error: err.message });
+    }
+    req.log.error({ err }, "Failed to improve section");
+    return res.status(500).json({ error: "Server error" });
+  }
+  return;
+});
+
+// ─── POST /students/:id/resumes/:resumeId/review ─────────────────────────────
+// On-demand AI judge: recruiter 7-second read, per-section notes, top fixes.
+// Content-hash cached (same content ⇒ same review, free re-open); the honest
+// percentile framing is computed server-side from the deterministic score,
+// never by the model.
+
+router.post("/students/:id/resumes/:resumeId/review", requireStudent({ allowGuest: true }), rlAiMedium, async (req, res) => {
+  const id = Number(req.params.id);
+  const resumeId = Number(req.params.resumeId);
+  if (isNaN(id) || isNaN(resumeId)) return res.status(400).json({ error: "Invalid id" });
+
+  const controller = new AbortController();
+  req.on("close", () => controller.abort());
+
+  try {
+    const [resume] = await db.select().from(studentResumesTable).where(eq(studentResumesTable.id, resumeId)).limit(1);
+    if (!resume || resume.studentId !== id) return res.status(404).json({ error: "Resume not found" });
+
+    const doc = upgradeContent((resume.content ?? {}) as Record<string, unknown>);
+    const report = buildQualityReport(doc, { density: TEMPLATE_DENSITY[resume.templateId as TemplateId] ?? "normal" });
+    const contentHash = createHash("sha256").update(renderPlainText(doc)).digest("hex").slice(0, 32);
+
+    const { value: review, cached } = await cacheGetOrSet(
+      { namespace: "resume-review-v2", keyParts: [resumeId, contentHash, report.total], ttlSeconds: 7 * 24 * 3600 },
+      () => reviewResume({ doc, report, signal: controller.signal }),
+    );
+
+    const { band, copy } = percentileBand(report.total);
+    await db.update(studentResumesTable)
+      .set({
+        aiReview: { ...review, band, percentileCopy: copy, qualityTotal: report.total },
+        aiReviewedAt: new Date(),
+        qualityScore: report.total,
+      })
+      .where(eq(studentResumesTable.id, resumeId));
+
+    logEvent(id, "resume_reviewed", resume.name, { qualityScore: report.total, cached });
+    return res.json({ review, band, percentileCopy: copy, qualityScore: report.total, cached });
+  } catch (err) {
+    if (controller.signal.aborted) {
+      if (!res.writableEnded) res.end();
+      return;
+    }
+    req.log.error({ err }, "Failed to review resume");
+    return res.status(500).json({ error: "Server error" });
+  }
+  return;
+});
+
+// ─── POST /students/:id/resumes/:resumeId/quant-questions ────────────────────
+// The quantification coach's question pass: for up to 6 unquantified bullets,
+// generate 1-2 micro-questions each whose answer is a single number the
+// student personally knows. Cached per bullet-set.
+
+router.post("/students/:id/resumes/:resumeId/quant-questions", requireStudent({ allowGuest: true }), rlAiMedium, async (req, res) => {
+  const id = Number(req.params.id);
+  const resumeId = Number(req.params.resumeId);
+  if (isNaN(id) || isNaN(resumeId)) return res.status(400).json({ error: "Invalid id" });
+
+  const controller = new AbortController();
+  req.on("close", () => controller.abort());
+
+  try {
+    const [resume] = await db.select().from(studentResumesTable).where(eq(studentResumesTable.id, resumeId)).limit(1);
+    if (!resume || resume.studentId !== id) return res.status(404).json({ error: "Resume not found" });
+
+    const doc = upgradeContent((resume.content ?? {}) as Record<string, unknown>);
+    const { items } = await generateQuantQuestions({ resumeId, doc, signal: controller.signal });
+    return res.json({ items });
+  } catch (err) {
+    if (controller.signal.aborted) {
+      if (!res.writableEnded) res.end();
+      return;
+    }
+    req.log.error({ err }, "Failed to generate quant questions");
+    return res.status(500).json({ error: "Server error" });
+  }
+  return;
+});
+
+// ─── POST /students/:id/resumes/:resumeId/quant-apply ────────────────────────
+// Applies the student's own numbers to one bullet. The values are validated as
+// plain numbers, stored as user-attested (UA) evidence on the resume row, and
+// the rewrite is verified deterministically (exact digit containment + gate) —
+// with an append fallback, so the coach never fails for the student. The
+// bullet itself is applied client-side via the normal PATCH.
+
+router.post("/students/:id/resumes/:resumeId/quant-apply", requireStudent({ allowGuest: true }), rlAiMedium, async (req, res) => {
+  const id = Number(req.params.id);
+  const resumeId = Number(req.params.resumeId);
+  if (isNaN(id) || isNaN(resumeId)) return res.status(400).json({ error: "Invalid id" });
+
+  const parsedBody = QuantApplyBody.safeParse(req.body);
+  if (!parsedBody.success) return res.status(400).json({ error: parsedBody.error.message });
+  const { section, entryIndex, bulletIndex } = parsedBody.data;
+  const answers = parsedBody.data.answers.map((a) => ({ ...a, value: a.value.replace(/,/g, "").trim() }));
+
+  if (answers.length === 0) return res.status(400).json({ error: "Provide at least one answer" });
+  for (const a of answers) {
+    if (!ANSWER_VALUE_RE.test(a.value)) {
+      return res.status(400).json({ error: "Answers must be a plain number (e.g. 120 or 42.5)" });
+    }
+  }
+
+  const controller = new AbortController();
+  req.on("close", () => controller.abort());
+
+  try {
+    const [resume] = await db.select().from(studentResumesTable).where(eq(studentResumesTable.id, resumeId)).limit(1);
+    if (!resume || resume.studentId !== id) return res.status(404).json({ error: "Resume not found" });
+    const [student] = await db.select().from(studentsTable).where(eq(studentsTable.id, id)).limit(1);
+    if (!student) return res.status(404).json({ error: "Student not found" });
+
+    const doc = upgradeContent((resume.content ?? {}) as Record<string, unknown>);
+    const entryList = section === "experience" ? doc.experience : doc.projects;
+    const bullet = entryList[entryIndex]?.bullets[bulletIndex];
+    if (!bullet) return res.status(404).json({ error: "Bullet not found" });
+
+    const bulletPath = `${section}[${entryIndex}].bullets[${bulletIndex}]`;
+    const existingFacts = parseQuantFacts(resume.quantFacts);
+    let nextUa = existingFacts.reduce((max, f) => {
+      const m = /^UA:(\d+)$/.exec(f.id);
+      return m ? Math.max(max, Number(m[1])) : max;
+    }, 0);
+    const newFacts: QuantFact[] = answers.map((a) => ({
+      id: `UA:${++nextUa}`,
+      question: a.prompt.slice(0, 200),
+      value: a.value,
+      unit: a.unit.slice(0, 30),
+      bulletPath,
+      answeredAt: new Date().toISOString(),
+    }));
+
+    const ledger = withQuantFacts(buildLedger(student), [...existingFacts, ...newFacts]);
+    const evidenceText =
+      bullet.evidence
+        .map((eid) => ledger.rows.find((r) => r.id === eid))
+        .filter((r): r is NonNullable<typeof r> => !!r)
+        .map((r) => `${r.id}. ${r.text}`)
+        .join("\n") || "(no ledger rows resolve for this bullet's evidence)";
+
+    const result = await applyQuantAnswers({
+      bullet,
+      bulletPath,
+      answers,
+      newFacts,
+      ledger,
+      evidenceText,
+      signal: controller.signal,
+    });
+
+    const quantFacts = [...existingFacts, ...newFacts];
+    await db.update(studentResumesTable).set({ quantFacts }).where(eq(studentResumesTable.id, resumeId));
+
+    logEvent(id, "resume_quantified", resume.name, { bulletPath, usedFallback: result.usedFallback });
+    return res.json({ text: result.text, evidence: result.evidence, quantFacts });
+  } catch (err) {
+    if (controller.signal.aborted) {
+      if (!res.writableEnded) res.end();
+      return;
+    }
+    req.log.error({ err }, "Failed to apply quant answers");
     return res.status(500).json({ error: "Server error" });
   }
   return;

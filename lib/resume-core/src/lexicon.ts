@@ -104,3 +104,95 @@ export function scanLexicon(text: string): string[] {
   }
   return found;
 }
+
+// ─── Writing-quality word lists ──────────────────────────────────────────────
+// Shared by the deterministic quality rules (quality.ts), the auto-fixer
+// (autofix.ts), and the drafting/rewrite prompts, so the rules that score a
+// resume and the prompts that write one can never drift apart.
+
+/** Weak bullet openers that describe presence, not action. */
+export const WEAK_OPENERS = [
+  "responsible for", "worked on", "helped", "assisted", "involved in",
+  "participated in", "was part of", "part of", "tasked with", "handled",
+] as const;
+
+/** Corporate filler verbs an engineer would never say out loud. */
+export const FILLER_VERBS = [
+  "utilized", "utilised", "leveraged", "spearheaded", "synergized",
+  "endeavored", "facilitated",
+] as const;
+
+/** Self-congratulating adjectives — claims without evidence. */
+export const SELF_ADJECTIVES = [
+  "robust", "scalable", "seamless", "cutting-edge", "state-of-the-art",
+  "world-class", "innovative", "dynamic", "efficient and effective",
+] as const;
+
+/** Phrases that appear on lakhs of resumes and carry zero signal. */
+export const CLICHES = [
+  "passionate", "highly motivated", "hardworking", "hard-working", "team player",
+  "results-driven", "result oriented", "detail-oriented", "go-getter", "self-starter",
+  "think outside the box", "proven track record", "dynamic individual", "quick learner",
+  "fast learner", "seeking an opportunity", "aspiring", "enthusiastic learner",
+  "excellent communication skills", "go the extra mile", "works well under pressure",
+  "dedicated professional",
+] as const;
+
+/** Words/marks that signal a stated outcome inside a bullet. */
+export const OUTCOME_CUES = [
+  "reduced", "increased", "improved", "cut", "saved", "grew", "accelerated",
+  "decreased", "boosted", "achieved", "shipped", "launched", "scaled",
+  "automated", "sped up", "%", "x faster",
+] as const;
+
+/**
+ * Lowercase lexicon term -> canonical display casing. Only terms in this map
+ * are ever recased by the auto-fixer; unknown terms are NEVER touched.
+ */
+export const CANONICAL_CASE: Record<string, string> = {
+  // "golang" -> "Go" would be a rename, not a recase, so it's absent.
+  "javascript": "JavaScript", "typescript": "TypeScript", "python": "Python", "java": "Java",
+  "c++": "C++", "c#": "C#", "rust": "Rust", "kotlin": "Kotlin",
+  "swift": "Swift", "ruby": "Ruby", "php": "PHP", "scala": "Scala", "dart": "Dart",
+  "sql": "SQL", "html": "HTML", "css": "CSS", "matlab": "MATLAB",
+  "react": "React", "vue": "Vue", "angular": "Angular", "svelte": "Svelte",
+  "next.js": "Next.js", "nuxt": "Nuxt", "remix": "Remix", "redux": "Redux",
+  "zustand": "Zustand", "mobx": "MobX", "tailwindcss": "TailwindCSS", "tailwind": "Tailwind",
+  "sass": "Sass", "webpack": "Webpack", "vite": "Vite", "jquery": "jQuery",
+  "graphql": "GraphQL", "apollo": "Apollo", "storybook": "Storybook",
+  "node.js": "Node.js", "express": "Express", "nestjs": "NestJS", "django": "Django",
+  "flask": "Flask", "fastapi": "FastAPI", "spring": "Spring", "spring boot": "Spring Boot",
+  "rails": "Rails", "laravel": "Laravel", "asp.net": "ASP.NET", ".net": ".NET",
+  "grpc": "gRPC", "websockets": "WebSockets", "rest apis": "REST APIs",
+  "postgresql": "PostgreSQL", "mysql": "MySQL", "mongodb": "MongoDB", "redis": "Redis",
+  "sqlite": "SQLite", "cassandra": "Cassandra", "dynamodb": "DynamoDB",
+  "elasticsearch": "Elasticsearch", "neo4j": "Neo4j", "firebase": "Firebase",
+  "firestore": "Firestore", "supabase": "Supabase", "snowflake": "Snowflake",
+  "bigquery": "BigQuery", "clickhouse": "ClickHouse", "influxdb": "InfluxDB",
+  "aws": "AWS", "gcp": "GCP", "azure": "Azure", "docker": "Docker",
+  "kubernetes": "Kubernetes", "terraform": "Terraform", "ansible": "Ansible",
+  "jenkins": "Jenkins", "github actions": "GitHub Actions", "gitlab ci": "GitLab CI",
+  "ci/cd": "CI/CD", "nginx": "Nginx", "linux": "Linux", "bash": "Bash",
+  "cloudformation": "CloudFormation", "prometheus": "Prometheus", "grafana": "Grafana",
+  "datadog": "Datadog", "kafka": "Kafka", "rabbitmq": "RabbitMQ", "sqs": "SQS",
+  "lambda": "Lambda", "ec2": "EC2", "s3": "S3", "cloudfront": "CloudFront",
+  // "render" is deliberately absent — it's a common English verb in bullets.
+  "vercel": "Vercel", "netlify": "Netlify", "heroku": "Heroku",
+  "tensorflow": "TensorFlow", "pytorch": "PyTorch", "keras": "Keras",
+  "scikit-learn": "scikit-learn", "pandas": "pandas", "numpy": "NumPy",
+  "nlp": "NLP", "opencv": "OpenCV", "spark": "Spark", "hadoop": "Hadoop",
+  "airflow": "Airflow", "dbt": "dbt", "tableau": "Tableau", "power bi": "Power BI",
+  "matplotlib": "Matplotlib", "seaborn": "Seaborn", "llm": "LLM", "rag": "RAG",
+  "langchain": "LangChain",
+  "android": "Android", "ios": "iOS", "react native": "React Native",
+  "flutter": "Flutter", "swiftui": "SwiftUI", "jetpack compose": "Jetpack Compose",
+  "xcode": "Xcode", "android studio": "Android Studio", "realm": "Realm",
+  "jest": "Jest", "mocha": "Mocha", "chai": "Chai", "cypress": "Cypress",
+  "selenium": "Selenium", "playwright": "Playwright", "junit": "JUnit",
+  "pytest": "pytest", "tdd": "TDD", "bdd": "BDD", "postman": "Postman",
+  "git": "Git", "github": "GitHub", "gitlab": "GitLab", "bitbucket": "Bitbucket",
+  "jira": "Jira", "confluence": "Confluence", "agile": "Agile", "scrum": "Scrum",
+  "kanban": "Kanban", "figma": "Figma", "dsa": "DSA", "oop": "OOP",
+  "oauth": "OAuth", "jwt": "JWT", "owasp": "OWASP", "siem": "SIEM",
+  "burp suite": "Burp Suite", "nmap": "Nmap", "wireshark": "Wireshark",
+};

@@ -44,10 +44,9 @@ const VERDICT_STYLE: Record<string, { icon: typeof ShieldCheck; label: string; c
 
 function tailorResumeFor(app: Application, setLocation: (path: string) => void) {
   sessionStorage.setItem("resumeContext", JSON.stringify({
-    company: app.company ?? "",
     role: app.role ?? "",
-    jd: app.rawText ?? "",
     tags: [],
+    name: app.company ? `${app.company}${app.role ? ` — ${app.role}` : ""}` : "",
   }));
   setLocation("/resume");
 }

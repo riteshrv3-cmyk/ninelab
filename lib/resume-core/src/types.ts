@@ -116,7 +116,19 @@ export interface ResumeDocument {
 
 // ─── Evidence ledger (deterministic, built before any LLM call) ──────────────
 
-export type LedgerRowKind = "SK" | "GL" | "GR" | "PR" | "EX" | "CE" | "ED" | "CT" | "BI" | "GO";
+export type LedgerRowKind = "SK" | "GL" | "GR" | "PR" | "EX" | "CE" | "ED" | "CT" | "BI" | "GO" | "UA";
+
+/** A metric the student personally attested to via the quantification coach.
+ * Stored on the resume row (quant_facts) and appended to the evidence ledger
+ * as a "UA" row so bullets citing it always pass the fabrication gate. */
+export interface QuantFact {
+  id: string; // "UA:1"
+  question: string;
+  value: string; // plain number as typed, e.g. "120"
+  unit: string; // "users", "%", "hours"
+  bulletPath: string; // e.g. "projects[0].bullets[1]"
+  answeredAt: string; // ISO timestamp
+}
 
 export interface LedgerRow {
   id: string; // e.g. "PR:2"

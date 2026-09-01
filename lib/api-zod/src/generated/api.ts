@@ -678,8 +678,8 @@ export const GenerateResumeParams = zod.object({
 
 export const GenerateResumeBody = zod.object({
   "templateId": zod.enum(['ats', 'classic', 'tech', 'minimal']).optional(),
-  "jdText": zod.string().optional(),
-  "companyName": zod.string().optional(),
+  "jdText": zod.string().optional().describe('No longer sent by the app (generation is profile-driven); tolerated for old clients.'),
+  "companyName": zod.string().optional().describe('No longer sent by the app; tolerated for old clients.'),
   "resumeName": zod.string().optional(),
   "roleTitle": zod.string().optional(),
   "jobTags": zod.array(zod.string()).optional(),
@@ -715,29 +715,68 @@ export const UpdateResumeParams = zod.object({
 
 export const UpdateResumeBody = zod.object({
   "content": zod.object({
+  "contact": zod.object({
+  "name": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "links": zod.array(zod.object({
+  "label": zod.string(),
+  "url": zod.string(),
+  "kind": zod.enum(['github', 'linkedin', 'portfolio', 'email', 'phone'])
+})).optional()
+}).optional(),
+  "headline": zod.string().optional(),
   "summary": zod.string().optional(),
+  "order": zod.array(zod.enum(['summary', 'experience', 'projects', 'skills', 'education', 'certifications', 'achievements'])).optional(),
   "skillSections": zod.array(zod.object({
   "category": zod.string(),
-  "items": zod.string()
+  "items": zod.union([zod.string(),zod.array(zod.string())]).describe('v1 sent a comma-joined string; v2 sends string[]. Both accepted.'),
+  "evidence": zod.array(zod.string()).optional()
 })).optional(),
   "experience": zod.array(zod.object({
   "company": zod.string(),
   "role": zod.string(),
   "period": zod.string().optional(),
-  "bullets": zod.array(zod.string()).optional()
+  "start": zod.string().optional(),
+  "end": zod.string().optional(),
+  "employmentType": zod.string().optional(),
+  "location": zod.string().optional(),
+  "bullets": zod.array(zod.union([zod.string(),zod.object({
+  "text": zod.string(),
+  "evidence": zod.array(zod.string()).optional()
+})]).describe('v1 sent plain strings; v2 sends {text, evidence}. Both accepted — upgradeContent normalizes server-side.')).optional()
 })).optional(),
   "projects": zod.array(zod.object({
   "title": zod.string(),
-  "tech": zod.string(),
-  "bullets": zod.array(zod.string()).optional()
+  "tech": zod.union([zod.string(),zod.array(zod.string())]).describe('v1 sent a comma-joined string; v2 sends string[]. Both accepted.'),
+  "link": zod.string().nullish(),
+  "bullets": zod.array(zod.union([zod.string(),zod.object({
+  "text": zod.string(),
+  "evidence": zod.array(zod.string()).optional()
+})]).describe('v1 sent plain strings; v2 sends {text, evidence}. Both accepted — upgradeContent normalizes server-side.')).optional()
+})).optional(),
+  "education": zod.array(zod.object({
+  "degree": zod.string(),
+  "institution": zod.string(),
+  "field": zod.string().optional(),
+  "location": zod.string().optional(),
+  "start": zod.string().optional(),
+  "end": zod.string().optional(),
+  "cgpa": zod.string().nullish(),
+  "coursework": zod.array(zod.string()).optional()
 })).optional(),
   "certifications": zod.array(zod.object({
   "name": zod.string(),
   "issuer": zod.string(),
-  "date": zod.string().optional()
+  "date": zod.string().nullish(),
+  "link": zod.string().nullish()
 })).optional(),
-  "achievements": zod.array(zod.string()).optional()
-}).optional().describe('Fields the current edit surface can change — see EditResumeSheet in Resume.tsx. A future edit-surface expansion will widen this.'),
+  "achievements": zod.array(zod.union([zod.string(),zod.object({
+  "text": zod.string(),
+  "evidence": zod.array(zod.string()).optional()
+})]).describe('v1 sent plain strings; v2 sends {text, evidence}. Both accepted — upgradeContent normalizes server-side.')).optional()
+}).optional().describe('Fields the edit surface can change — everything is editable, including contact, headline, education, and section order. upgradeContent coerces v1-flat shapes on the server.'),
   "templateId": zod.enum(['ats', 'classic', 'tech', 'minimal']).optional(),
   "snapshot": zod.boolean().optional().describe('If true, the resume\'s pre-edit content is pushed onto its version history (capped at 5, oldest dropped) before this patch is applied.')
 }).describe('content and\/or templateId — at least one must be provided')
@@ -771,6 +810,104 @@ export const DeleteResumeParams = zod.object({
 
 export const DeleteResumeResponse = zod.object({
   "ok": zod.boolean()
+})
+
+
+/**
+ * @summary AI-polish one section against its failing quality rules — evidence-gated, returns the new value without persisting it
+ */
+export const ImproveResumeSectionParams = zod.object({
+  "id": zod.coerce.number(),
+  "resumeId": zod.coerce.number()
+})
+
+export const ImproveResumeSectionBody = zod.object({
+  "section": zod.enum(['summary', 'headline', 'skills', 'experience', 'projects', 'achievements'])
+})
+
+export const ImproveResumeSectionResponse = zod.object({
+  "value": zod.unknown().optional().describe('Same shape as the section being improved.'),
+  "changed": zod.boolean()
+}).describe('The improved section value only — the client applies it locally (instant undo) and persists via the normal PATCH.')
+
+
+/**
+ * @summary On-demand AI judge review (recruiter 7-second read, per-section notes, top fixes) — content-hash cached, persisted on the row
+ */
+export const ReviewResumeParams = zod.object({
+  "id": zod.coerce.number(),
+  "resumeId": zod.coerce.number()
+})
+
+export const ReviewResumeResponse = zod.object({
+  "review": zod.object({
+  "sevenSecondRead": zod.string(),
+  "sectionNotes": zod.array(zod.object({
+  "section": zod.string(),
+  "severity": zod.enum(['high', 'medium', 'low']),
+  "note": zod.string()
+})),
+  "topFixes": zod.array(zod.string())
+}),
+  "band": zod.string(),
+  "percentileCopy": zod.string(),
+  "qualityScore": zod.number(),
+  "cached": zod.boolean()
+})
+
+
+/**
+ * @summary Generate micro-questions for unquantified bullets (the quantification coach) — cached per bullet-set
+ */
+export const QuantQuestionsParams = zod.object({
+  "id": zod.coerce.number(),
+  "resumeId": zod.coerce.number()
+})
+
+export const QuantQuestionsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "section": zod.enum(['experience', 'projects']),
+  "entryIndex": zod.number(),
+  "bulletIndex": zod.number(),
+  "bulletText": zod.string(),
+  "questions": zod.array(zod.object({
+  "id": zod.string(),
+  "prompt": zod.string(),
+  "unit": zod.string(),
+  "kind": zod.enum(['count', 'percent', 'duration', 'money'])
+}))
+}))
+})
+
+
+/**
+ * @summary Rewrite one bullet embedding ONLY user-attested numbers — deterministic digit verification with an append fallback, never fails for the student
+ */
+export const QuantApplyParams = zod.object({
+  "id": zod.coerce.number(),
+  "resumeId": zod.coerce.number()
+})
+
+export const quantApplyBodyAnswersMax = 2;
+
+
+
+export const QuantApplyBody = zod.object({
+  "section": zod.enum(['experience', 'projects']),
+  "entryIndex": zod.number(),
+  "bulletIndex": zod.number(),
+  "answers": zod.array(zod.object({
+  "questionId": zod.string(),
+  "prompt": zod.string(),
+  "value": zod.string().describe('Plain number as typed, e.g. \"120\" or \"42.5\".'),
+  "unit": zod.string()
+})).max(quantApplyBodyAnswersMax)
+})
+
+export const QuantApplyResponse = zod.object({
+  "text": zod.string(),
+  "evidence": zod.array(zod.string()),
+  "quantFacts": zod.array(zod.record(zod.string(), zod.unknown()))
 })
 
 

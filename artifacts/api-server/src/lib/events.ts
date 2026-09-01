@@ -13,6 +13,8 @@ export type EventAction =
   | "resume_generated"
   | "resume_shared"
   | "resume_downloaded"
+  | "resume_reviewed"
+  | "resume_quantified"
   | "goal_changed"
   | "profile_imported"
   | "opportunity_opened";

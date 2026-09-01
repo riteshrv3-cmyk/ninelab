@@ -49,7 +49,7 @@ function toContactLinks(v1: Record<string, unknown>): ContactLink[] {
   return links;
 }
 
-function shortenUrl(url: string): string {
+export function shortenUrl(url: string): string {
   try {
     const u = new URL(url.startsWith("http") ? url : `https://${url}`);
     return `${u.hostname}${u.pathname}`.replace(/\/$/, "");

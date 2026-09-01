@@ -17,6 +17,17 @@ export const studentResumesTable = pgTable("student_resumes", {
   // goes stale relative to hand-edited content.
   atsScore: integer("ats_score"),
   atsReport: jsonb("ats_report"),
+  // Deterministic quality score (see @workspace/resume-core's quality.ts) — a
+  // pure function of content, recomputed on every write like atsScore.
+  qualityScore: integer("quality_score"),
+  // Last AI-judge review (validated object + band/percentile framing) and when
+  // it ran. Content-hash cached server-side; stale relative to content is fine —
+  // the UI re-requests on the finish step.
+  aiReview: jsonb("ai_review"),
+  aiReviewedAt: timestamp("ai_reviewed_at"),
+  // User-attested metrics from the quantification coach: values the student
+  // typed themselves, kept forever so "UA:n" evidence citations stay valid.
+  quantFacts: jsonb("quant_facts").notNull().default([]),
   // Stage-2 evidence map (coverage/thesis/honestGaps) — kept so a later PATCH or
   // "regenerate" can re-use the same strategy without re-running the pipeline.
   evidenceMap: jsonb("evidence_map"),

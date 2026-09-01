@@ -22,6 +22,7 @@
     "express": "^5",
     "http-proxy-middleware": "^4.0.0",
     "pino": "^9",
+    "zod": "catalog:",
     "pino-http": "^10"
   },
   "devDependencies": {

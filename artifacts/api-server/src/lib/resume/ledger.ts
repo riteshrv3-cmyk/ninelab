@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { studentsTable } from "@workspace/db";
-import type { EvidenceLedger, LedgerRow } from "@workspace/resume-core";
+import type { EvidenceLedger, LedgerRow, QuantFact } from "@workspace/resume-core";
 import { normTerm } from "@workspace/resume-core";
 import { formatDegree } from "./fallbacks";
 
@@ -121,6 +121,36 @@ function extractCandidateTerms(text: string): string[] {
     }
   }
   return terms;
+}
+
+/**
+ * Extends a ledger with user-attested metrics from the quantification coach.
+ * Each fact becomes a "UA" row whose id ("UA:1") bullets can cite, and its
+ * numeric value joins allowedTerms so the forbidden-term scan never trips on
+ * a number the student personally typed. Every gate check on a resume with
+ * quantFacts must use this, or old UA citations would start failing.
+ */
+export function withQuantFacts(ledger: EvidenceLedger, facts: QuantFact[]): EvidenceLedger {
+  if (!facts.length) return ledger;
+  const rows = [...ledger.rows];
+  const allowedTerms = new Set(ledger.allowedTerms);
+  for (const f of facts) {
+    if (!f || typeof f.id !== "string") continue;
+    rows.push({ id: f.id, kind: "UA", text: `User-confirmed metric: ${f.question} → ${f.value} ${f.unit}`.trim() });
+    const v = normTerm(String(f.value));
+    if (v) allowedTerms.add(v);
+  }
+  return { rows, allowedTerms };
+}
+
+/** Defensive parse of the quant_facts jsonb column. */
+export function parseQuantFacts(raw: unknown): QuantFact[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((f): f is QuantFact =>
+    Boolean(f && typeof f === "object"
+      && typeof (f as QuantFact).id === "string"
+      && typeof (f as QuantFact).value === "string"),
+  );
 }
 
 export function ledgerVolume(ledger: EvidenceLedger) {

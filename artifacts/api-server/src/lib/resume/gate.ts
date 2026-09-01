@@ -1,8 +1,10 @@
 import type { EvidenceLedger, RemovedByGate, ResumeDocument } from "@workspace/resume-core";
 import { normTerm, scanLexicon } from "@workspace/resume-core";
 
-/** True if `text` names a lexicon technology term the ledger never mentions. */
-function suspiciousText(text: string, ledger: EvidenceLedger): boolean {
+/** True if `text` names a lexicon technology term the ledger never mentions.
+ * Exported for free-prose acceptance checks (section improve's summary/headline
+ * path) — bullets should use bulletPassesGate instead. */
+export function suspiciousText(text: string, ledger: EvidenceLedger): boolean {
   return scanLexicon(text).some((term) => !ledger.allowedTerms.has(normTerm(term)));
 }
 

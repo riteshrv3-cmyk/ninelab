@@ -322,7 +322,15 @@ export const GenerateResumeBodyTemplateId = {
 
 export interface GenerateResumeBody {
   templateId?: GenerateResumeBodyTemplateId;
+  /**
+     * No longer sent by the app (generation is profile-driven); tolerated for old clients.
+     * @deprecated
+     */
   jdText?: string;
+  /**
+     * No longer sent by the app; tolerated for old clients.
+     * @deprecated
+     */
   companyName?: string;
   resumeName?: string;
   roleTitle?: string;
@@ -331,40 +339,110 @@ export interface GenerateResumeBody {
   parentResumeId?: number;
 }
 
+/**
+ * v1 sent plain strings; v2 sends {text, evidence}. Both accepted — upgradeContent normalizes server-side.
+ */
+export type ResumeBullet = string | {
+  text: string;
+  evidence?: string[];
+};
+
+export type UpdateResumeContentContactLinksItemKind = typeof UpdateResumeContentContactLinksItemKind[keyof typeof UpdateResumeContentContactLinksItemKind];
+
+
+export const UpdateResumeContentContactLinksItemKind = {
+  github: 'github',
+  linkedin: 'linkedin',
+  portfolio: 'portfolio',
+  email: 'email',
+  phone: 'phone',
+} as const;
+
+export type UpdateResumeContentContactLinksItem = {
+  label: string;
+  url: string;
+  kind: UpdateResumeContentContactLinksItemKind;
+};
+
+export type UpdateResumeContentContact = {
+  name: string;
+  email: string;
+  phone?: string | null;
+  city?: string | null;
+  links?: UpdateResumeContentContactLinksItem[];
+};
+
+export type UpdateResumeContentOrderItem = typeof UpdateResumeContentOrderItem[keyof typeof UpdateResumeContentOrderItem];
+
+
+export const UpdateResumeContentOrderItem = {
+  summary: 'summary',
+  experience: 'experience',
+  projects: 'projects',
+  skills: 'skills',
+  education: 'education',
+  certifications: 'certifications',
+  achievements: 'achievements',
+} as const;
+
 export type UpdateResumeContentSkillSectionsItem = {
   category: string;
-  items: string;
+  /** v1 sent a comma-joined string; v2 sends string[]. Both accepted. */
+  items: string | string[];
+  evidence?: string[];
 };
 
 export type UpdateResumeContentExperienceItem = {
   company: string;
   role: string;
   period?: string;
-  bullets?: string[];
+  start?: string;
+  end?: string;
+  employmentType?: string;
+  location?: string;
+  bullets?: ResumeBullet[];
 };
 
 export type UpdateResumeContentProjectsItem = {
   title: string;
-  tech: string;
-  bullets?: string[];
+  /** v1 sent a comma-joined string; v2 sends string[]. Both accepted. */
+  tech: string | string[];
+  link?: string | null;
+  bullets?: ResumeBullet[];
+};
+
+export type UpdateResumeContentEducationItem = {
+  degree: string;
+  institution: string;
+  field?: string;
+  location?: string;
+  start?: string;
+  end?: string;
+  cgpa?: string | null;
+  coursework?: string[];
 };
 
 export type UpdateResumeContentCertificationsItem = {
   name: string;
   issuer: string;
-  date?: string;
+  date?: string | null;
+  link?: string | null;
 };
 
 /**
- * Fields the current edit surface can change — see EditResumeSheet in Resume.tsx. A future edit-surface expansion will widen this.
+ * Fields the edit surface can change — everything is editable, including contact, headline, education, and section order. upgradeContent coerces v1-flat shapes on the server.
  */
 export interface UpdateResumeContent {
+  contact?: UpdateResumeContentContact;
+  headline?: string;
   summary?: string;
+  order?: UpdateResumeContentOrderItem[];
   skillSections?: UpdateResumeContentSkillSectionsItem[];
   experience?: UpdateResumeContentExperienceItem[];
   projects?: UpdateResumeContentProjectsItem[];
+  education?: UpdateResumeContentEducationItem[];
   certifications?: UpdateResumeContentCertificationsItem[];
-  achievements?: string[];
+  achievements?: ResumeBullet[];
 }
 
 export type UpdateResumeBodyTemplateId = typeof UpdateResumeBodyTemplateId[keyof typeof UpdateResumeBodyTemplateId];
@@ -385,6 +463,129 @@ export interface UpdateResumeBody {
   templateId?: UpdateResumeBodyTemplateId;
   /** If true, the resume's pre-edit content is pushed onto its version history (capped at 5, oldest dropped) before this patch is applied. */
   snapshot?: boolean;
+}
+
+export type ImproveSectionBodySection = typeof ImproveSectionBodySection[keyof typeof ImproveSectionBodySection];
+
+
+export const ImproveSectionBodySection = {
+  summary: 'summary',
+  headline: 'headline',
+  skills: 'skills',
+  experience: 'experience',
+  projects: 'projects',
+  achievements: 'achievements',
+} as const;
+
+export interface ImproveSectionBody {
+  section: ImproveSectionBodySection;
+}
+
+/**
+ * The improved section value only — the client applies it locally (instant undo) and persists via the normal PATCH.
+ */
+export interface ImproveSectionResult {
+  /** Same shape as the section being improved. */
+  value?: unknown;
+  changed: boolean;
+}
+
+export type ResumeReviewReviewSectionNotesItemSeverity = typeof ResumeReviewReviewSectionNotesItemSeverity[keyof typeof ResumeReviewReviewSectionNotesItemSeverity];
+
+
+export const ResumeReviewReviewSectionNotesItemSeverity = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export type ResumeReviewReviewSectionNotesItem = {
+  section: string;
+  severity: ResumeReviewReviewSectionNotesItemSeverity;
+  note: string;
+};
+
+export type ResumeReviewReview = {
+  sevenSecondRead: string;
+  sectionNotes: ResumeReviewReviewSectionNotesItem[];
+  topFixes: string[];
+};
+
+export interface ResumeReview {
+  review: ResumeReviewReview;
+  band: string;
+  percentileCopy: string;
+  qualityScore: number;
+  cached: boolean;
+}
+
+export type QuantQuestionsResultItemsItemSection = typeof QuantQuestionsResultItemsItemSection[keyof typeof QuantQuestionsResultItemsItemSection];
+
+
+export const QuantQuestionsResultItemsItemSection = {
+  experience: 'experience',
+  projects: 'projects',
+} as const;
+
+export type QuantQuestionsResultItemsItemQuestionsItemKind = typeof QuantQuestionsResultItemsItemQuestionsItemKind[keyof typeof QuantQuestionsResultItemsItemQuestionsItemKind];
+
+
+export const QuantQuestionsResultItemsItemQuestionsItemKind = {
+  count: 'count',
+  percent: 'percent',
+  duration: 'duration',
+  money: 'money',
+} as const;
+
+export type QuantQuestionsResultItemsItemQuestionsItem = {
+  id: string;
+  prompt: string;
+  unit: string;
+  kind: QuantQuestionsResultItemsItemQuestionsItemKind;
+};
+
+export type QuantQuestionsResultItemsItem = {
+  section: QuantQuestionsResultItemsItemSection;
+  entryIndex: number;
+  bulletIndex: number;
+  bulletText: string;
+  questions: QuantQuestionsResultItemsItemQuestionsItem[];
+};
+
+export interface QuantQuestionsResult {
+  items: QuantQuestionsResultItemsItem[];
+}
+
+export type QuantApplyBodySection = typeof QuantApplyBodySection[keyof typeof QuantApplyBodySection];
+
+
+export const QuantApplyBodySection = {
+  experience: 'experience',
+  projects: 'projects',
+} as const;
+
+export type QuantApplyBodyAnswersItem = {
+  questionId: string;
+  prompt: string;
+  /** Plain number as typed, e.g. "120" or "42.5". */
+  value: string;
+  unit: string;
+};
+
+export interface QuantApplyBody {
+  section: QuantApplyBodySection;
+  entryIndex: number;
+  bulletIndex: number;
+  /** @maxItems 2 */
+  answers: QuantApplyBodyAnswersItem[];
+}
+
+export type QuantApplyResultQuantFactsItem = { [key: string]: unknown };
+
+export interface QuantApplyResult {
+  text: string;
+  evidence: string[];
+  quantFacts: QuantApplyResultQuantFactsItem[];
 }
 
 export type CourseEnrollmentCourseData = { [key: string]: unknown } | null;

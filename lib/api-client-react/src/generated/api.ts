@@ -44,6 +44,8 @@ import type {
   GenerateRoadmapBody,
   GetCollegeLeaderboardParams,
   HealthStatus,
+  ImproveSectionBody,
+  ImproveSectionResult,
   InterviewEvaluation,
   InterviewFeedbackBody,
   InterviewQuestionResponse,
@@ -53,9 +55,13 @@ import type {
   LeaderboardEntry,
   ListQuestsParams,
   PublicCertificate,
+  QuantApplyBody,
+  QuantApplyResult,
+  QuantQuestionsResult,
   Quest,
   QuizResult,
   Resume,
+  ResumeReview,
   RoadmapResult,
   SendAnthropicMessageBody,
   SetCertificateResumeFlagBody,
@@ -2490,6 +2496,300 @@ export const useDeleteResume = <TError = ErrorType<Error>,
         TContext
       > => {
       return useMutation(getDeleteResumeMutationOptions(options));
+    }
+
+export const getImproveResumeSectionUrl = (id: number,
+    resumeId: number,) => {
+
+
+
+
+  return `/api/students/${id}/resumes/${resumeId}/improve-section`
+}
+
+/**
+ * @summary AI-polish one section against its failing quality rules — evidence-gated, returns the new value without persisting it
+ */
+export const improveResumeSection = async (id: number,
+    resumeId: number,
+    improveSectionBody: ImproveSectionBody, options?: RequestInit): Promise<ImproveSectionResult> => {
+
+  return customFetch<ImproveSectionResult>(getImproveResumeSectionUrl(id,resumeId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(improveSectionBody)
+  }
+);}
+
+
+
+
+
+export const getImproveResumeSectionMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof improveResumeSection>>, TError,{id: number;resumeId: number;data: BodyType<ImproveSectionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof improveResumeSection>>, TError,{id: number;resumeId: number;data: BodyType<ImproveSectionBody>}, TContext> => {
+
+const mutationKey = ['improveResumeSection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof improveResumeSection>>, {id: number;resumeId: number;data: BodyType<ImproveSectionBody>}> = (props) => {
+          const {id,resumeId,data} = props ?? {};
+
+          return  improveResumeSection(id,resumeId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImproveResumeSectionMutationResult = NonNullable<Awaited<ReturnType<typeof improveResumeSection>>>
+    export type ImproveResumeSectionMutationBody = BodyType<ImproveSectionBody>
+    export type ImproveResumeSectionMutationError = ErrorType<Error>
+
+    /**
+ * @summary AI-polish one section against its failing quality rules — evidence-gated, returns the new value without persisting it
+ */
+export const useImproveResumeSection = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof improveResumeSection>>, TError,{id: number;resumeId: number;data: BodyType<ImproveSectionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof improveResumeSection>>,
+        TError,
+        {id: number;resumeId: number;data: BodyType<ImproveSectionBody>},
+        TContext
+      > => {
+      return useMutation(getImproveResumeSectionMutationOptions(options));
+    }
+
+export const getReviewResumeUrl = (id: number,
+    resumeId: number,) => {
+
+
+
+
+  return `/api/students/${id}/resumes/${resumeId}/review`
+}
+
+/**
+ * @summary On-demand AI judge review (recruiter 7-second read, per-section notes, top fixes) — content-hash cached, persisted on the row
+ */
+export const reviewResume = async (id: number,
+    resumeId: number, options?: RequestInit): Promise<ResumeReview> => {
+
+  return customFetch<ResumeReview>(getReviewResumeUrl(id,resumeId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getReviewResumeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewResume>>, TError,{id: number;resumeId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewResume>>, TError,{id: number;resumeId: number}, TContext> => {
+
+const mutationKey = ['reviewResume'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewResume>>, {id: number;resumeId: number}> = (props) => {
+          const {id,resumeId} = props ?? {};
+
+          return  reviewResume(id,resumeId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewResumeMutationResult = NonNullable<Awaited<ReturnType<typeof reviewResume>>>
+
+    export type ReviewResumeMutationError = ErrorType<unknown>
+
+    /**
+ * @summary On-demand AI judge review (recruiter 7-second read, per-section notes, top fixes) — content-hash cached, persisted on the row
+ */
+export const useReviewResume = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewResume>>, TError,{id: number;resumeId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reviewResume>>,
+        TError,
+        {id: number;resumeId: number},
+        TContext
+      > => {
+      return useMutation(getReviewResumeMutationOptions(options));
+    }
+
+export const getQuantQuestionsUrl = (id: number,
+    resumeId: number,) => {
+
+
+
+
+  return `/api/students/${id}/resumes/${resumeId}/quant-questions`
+}
+
+/**
+ * @summary Generate micro-questions for unquantified bullets (the quantification coach) — cached per bullet-set
+ */
+export const quantQuestions = async (id: number,
+    resumeId: number, options?: RequestInit): Promise<QuantQuestionsResult> => {
+
+  return customFetch<QuantQuestionsResult>(getQuantQuestionsUrl(id,resumeId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getQuantQuestionsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quantQuestions>>, TError,{id: number;resumeId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof quantQuestions>>, TError,{id: number;resumeId: number}, TContext> => {
+
+const mutationKey = ['quantQuestions'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof quantQuestions>>, {id: number;resumeId: number}> = (props) => {
+          const {id,resumeId} = props ?? {};
+
+          return  quantQuestions(id,resumeId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type QuantQuestionsMutationResult = NonNullable<Awaited<ReturnType<typeof quantQuestions>>>
+
+    export type QuantQuestionsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Generate micro-questions for unquantified bullets (the quantification coach) — cached per bullet-set
+ */
+export const useQuantQuestions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quantQuestions>>, TError,{id: number;resumeId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof quantQuestions>>,
+        TError,
+        {id: number;resumeId: number},
+        TContext
+      > => {
+      return useMutation(getQuantQuestionsMutationOptions(options));
+    }
+
+export const getQuantApplyUrl = (id: number,
+    resumeId: number,) => {
+
+
+
+
+  return `/api/students/${id}/resumes/${resumeId}/quant-apply`
+}
+
+/**
+ * @summary Rewrite one bullet embedding ONLY user-attested numbers — deterministic digit verification with an append fallback, never fails for the student
+ */
+export const quantApply = async (id: number,
+    resumeId: number,
+    quantApplyBody: QuantApplyBody, options?: RequestInit): Promise<QuantApplyResult> => {
+
+  return customFetch<QuantApplyResult>(getQuantApplyUrl(id,resumeId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(quantApplyBody)
+  }
+);}
+
+
+
+
+
+export const getQuantApplyMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quantApply>>, TError,{id: number;resumeId: number;data: BodyType<QuantApplyBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof quantApply>>, TError,{id: number;resumeId: number;data: BodyType<QuantApplyBody>}, TContext> => {
+
+const mutationKey = ['quantApply'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof quantApply>>, {id: number;resumeId: number;data: BodyType<QuantApplyBody>}> = (props) => {
+          const {id,resumeId,data} = props ?? {};
+
+          return  quantApply(id,resumeId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type QuantApplyMutationResult = NonNullable<Awaited<ReturnType<typeof quantApply>>>
+    export type QuantApplyMutationBody = BodyType<QuantApplyBody>
+    export type QuantApplyMutationError = ErrorType<Error>
+
+    /**
+ * @summary Rewrite one bullet embedding ONLY user-attested numbers — deterministic digit verification with an append fallback, never fails for the student
+ */
+export const useQuantApply = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quantApply>>, TError,{id: number;resumeId: number;data: BodyType<QuantApplyBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof quantApply>>,
+        TError,
+        {id: number;resumeId: number;data: BodyType<QuantApplyBody>},
+        TContext
+      > => {
+      return useMutation(getQuantApplyMutationOptions(options));
     }
 
 export const getEnrollCourseUrl = (id: number,) => {
