@@ -77,15 +77,25 @@ export function GenerateSheet({
       .catch(() => setProfileStep("generate"));
   }, [studentId]);
 
+  const [captureError, setCaptureError] = useState<string | null>(null);
+
   const handleCaptureContinue = async () => {
     setCaptureSubmitting(true);
+    setCaptureError(null);
     try {
       if (captureResumeText) {
-        await apiFetch(`/api/students/${studentId}/profile/import-resume`, {
+        // Field name must be `resumeText` — the route ignores anything else
+        // and 400s, which used to fail silently behind the old escape hatch.
+        const importRes = await apiFetch(`/api/students/${studentId}/profile/import-resume`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: captureResumeText }),
+          body: JSON.stringify({ resumeText: captureResumeText }),
         });
+        if (!importRes.ok) {
+          const err = await importRes.json().catch(() => ({})) as { error?: string };
+          setCaptureError(err.error ?? "We couldn't read that resume file. Try the GitHub import or type your skills instead.");
+          return;
+        }
       }
       if (skillTags.length > 0) {
         const skillsMap = Object.fromEntries(skillTags.map(s => [s.trim(), 50]));
@@ -95,11 +105,24 @@ export function GenerateSheet({
           body: JSON.stringify({ skills: skillsMap }),
         });
       }
+      // Re-read the profile rather than trusting local state: the GitHub
+      // import writes server-side, and an upload may have parsed nothing.
+      const r = await apiFetch(`/api/students/${studentId}/full-profile`);
+      const p = r.ok ? await r.json() as { skills?: Record<string, number>; projects?: unknown[]; experience?: unknown[]; certifications?: unknown[] } : null;
+      const substance =
+        Object.keys(p?.skills ?? {}).length +
+        (p?.projects ?? []).length +
+        (p?.experience ?? []).length +
+        (p?.certifications ?? []).length;
+      if (substance === 0) {
+        setCaptureError("We still have nothing to write from. Import your GitHub, upload a resume, or type a few skills above.");
+        return;
+      }
+      setProfileStep("generate");
     } catch {
-      // Non-fatal — proceed with whatever we already saved
+      setCaptureError("Couldn't save that — check your connection and try again.");
     } finally {
       setCaptureSubmitting(false);
-      setProfileStep("generate");
     }
   };
 
@@ -174,7 +197,14 @@ export function GenerateSheet({
         signal: abortCtrl.signal,
       });
       if (!r.ok || !r.body) {
-        const err = await r.json().catch(() => ({})) as { error?: string };
+        const err = await r.json().catch(() => ({})) as { error?: string; code?: string };
+        // The server's substance gate — send them back to add real material
+        // instead of showing a generic failure toast.
+        if (r.status === 422 && err.code === "EMPTY_PROFILE") {
+          setCaptureError(err.error ?? "Add your skills, a project, or an internship first.");
+          setProfileStep("capture");
+          return;
+        }
         throw new Error(err.error ?? "Failed to generate");
       }
 
@@ -468,6 +498,10 @@ export function GenerateSheet({
               )}
             </div>
 
+            {captureError && (
+              <p className="text-[12px] text-danger text-center">{captureError}</p>
+            )}
+
             <Button
               onClick={handleCaptureContinue}
               disabled={captureSubmitting}
@@ -480,17 +514,12 @@ export function GenerateSheet({
               )}
             </Button>
 
-            <div className="text-center">
-              <button
-                onClick={() => setProfileStep("generate")}
-                className="text-[12px] text-ink-muted hover:text-ink underline underline-offset-2"
-              >
-                Generate a starter template anyway
-              </button>
-              <p className="text-[11px] text-ink-muted mt-1">
-                Without your real work this will be a near-empty template — nothing to show a recruiter yet.
-              </p>
-            </div>
+            {/* No "generate anyway" escape hatch: with nothing on the profile
+                the output is a name and a degree, which helps nobody and makes
+                the score meaningless. */}
+            <p className="text-[11px] text-ink-muted text-center">
+              We write only from what's on your profile — nothing invented. Any one of the three above is enough to start.
+            </p>
           </>
 
         ) : (

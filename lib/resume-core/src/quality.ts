@@ -4,6 +4,7 @@
 // receives this report as context and adds prose on top; it never re-derives
 // the number.
 
+import { MONTH_YEAR_RE, YEAR_RE, isDateFixable, isIndianMobileFixable } from "./dates";
 import { estimateLayout } from "./layoutEstimate";
 import {
   CANONICAL_CASE,
@@ -30,9 +31,12 @@ export interface QualityRuleResult {
   points: number;
   earned: number; // graded rules earn fractions of `points`
   passed: boolean;
-  hint: string | null; // exact user-facing copy; null when passed
+  hint: string | null; // exact user-facing copy; null when passed or vacuous
   autoFixable: boolean;
   targets: string[]; // doc paths of offenders, e.g. "experience[0].bullets[1]"
+  /** The rule had nothing to check because the content doesn't exist yet.
+   * Scores zero and shows no hint — see `vacuous()`. */
+  vacuous: boolean;
 }
 
 export interface QualitySubScore {
@@ -129,9 +133,6 @@ export function isQuantifiedBullet(text: string): boolean {
  * curly quotes, and the bullet glyph. */
 const ATS_SAFE_RE = /^[\x20-\x7E–—‘’“”•\n\r\t]*$/;
 
-const MONTH_YEAR_RE = /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{4}$/;
-const YEAR_RE = /^\d{4}$/;
-
 export const UNPROFESSIONAL_EMAIL_TOKENS = ["cool", "boy", "girl", "cute", "killer", "don", "bhai"];
 
 const EMAIL_RE = /^[a-z0-9][a-z0-9._+-]*@[a-z0-9.-]+\.[a-z]{2,}$/i;
@@ -167,7 +168,15 @@ type RuleInput = {
   layout: LayoutEstimate;
 };
 
-type RuleFn = (input: RuleInput) => Omit<QualityRuleResult, "id" | "subScore" | "section" | "points" | "autoFixable">;
+type RuleOutcome = Omit<QualityRuleResult, "id" | "subScore" | "section" | "points" | "autoFixable" | "vacuous">
+  & {
+    vacuous?: boolean;
+    /** Overrides the rule's default: set false when THIS failure mode can't be
+     * repaired mechanically (e.g. a missing phone can be reformatted, not invented). */
+    autoFixable?: boolean;
+  };
+
+type RuleFn = (input: RuleInput) => RuleOutcome;
 
 interface RuleDef {
   id: string;
@@ -178,8 +187,21 @@ interface RuleDef {
   run: RuleFn;
 }
 
-function pass(): ReturnType<RuleFn> {
+function pass(): RuleOutcome {
   return { earned: 0, passed: true, hint: null, targets: [] };
+}
+
+/**
+ * The rule has nothing to check because the content doesn't exist yet — a
+ * resume with no bullets has no weak openers, no filler verbs, no bad
+ * punctuation. That is NOT the same as being well written, so it scores zero:
+ * an empty resume must never bank points for content it doesn't have. It stays
+ * silent (no hint, never auto-fixable) because the completeness rules already
+ * carry the real "add your work" message — otherwise an empty resume would
+ * show a wall of meaningless checklist items.
+ */
+function vacuous(): RuleOutcome {
+  return { earned: 0, passed: false, hint: null, targets: [], vacuous: true };
 }
 
 // ─── Rule definitions ────────────────────────────────────────────────────────
@@ -208,7 +230,7 @@ const RULES: RuleDef[] = [
   {
     id: "IMP-02", subScore: "impact", section: "overall", points: 6, autoFixable: false,
     run: ({ bullets }) => {
-      if (bullets.length === 0) return pass();
+      if (bullets.length === 0) return vacuous();
       const weak = bullets.filter((b) => WEAK_OPENERS.some((w) => startsWithPhrase(b.text, w)));
       if (weak.length === 0) return pass();
       const frac = (bullets.length - weak.length) / bullets.length;
@@ -222,6 +244,7 @@ const RULES: RuleDef[] = [
   {
     id: "IMP-03", subScore: "impact", section: "overall", points: 4, autoFixable: false,
     run: ({ bullets }) => {
+      if (bullets.length === 0) return vacuous();
       const hits = bullets.filter((b) => FILLER_VERBS.some((v) => containsWord(b.text, v)));
       if (hits.length === 0) return pass();
       return {
@@ -238,7 +261,8 @@ const RULES: RuleDef[] = [
         ...bullets.map((b) => ({ text: b.text, path: b.path })),
         { text: doc.summary, path: "summary" },
         { text: doc.headline, path: "headline" },
-      ];
+      ].filter((f) => f.text.trim());
+      if (fields.length === 0) return vacuous();
       const hits = fields.filter((f) => SELF_ADJECTIVES.some((a) => containsPhrase(f.text, a)));
       if (hits.length === 0) return pass();
       return {
@@ -264,7 +288,7 @@ const RULES: RuleDef[] = [
   {
     id: "BRV-01", subScore: "brevity", section: "overall", points: 6, autoFixable: false,
     run: ({ bullets }) => {
-      if (bullets.length === 0) return pass();
+      if (bullets.length === 0) return vacuous();
       const bad = bullets.filter((b) => {
         const w = wordCount(b.text);
         return w < 8 || w > 28;
@@ -283,7 +307,7 @@ const RULES: RuleDef[] = [
   {
     id: "BRV-02", subScore: "brevity", section: "summary", points: 3, autoFixable: false,
     run: ({ doc }) => {
-      if (!doc.summary.trim()) return { earned: 0, passed: false, hint: null, targets: [] }; // CMP-09 carries the hint
+      if (!doc.summary.trim()) return vacuous(); // CMP-09 carries the "write one" hint
       const w = wordCount(doc.summary);
       if (w >= 15 && w <= 45) return pass();
       return {
@@ -329,7 +353,10 @@ const RULES: RuleDef[] = [
   {
     id: "STY-01", subScore: "style", section: "experience", points: 3, autoFixable: false,
     run: ({ bullets }) => {
-      const pastBullets = bullets.filter((b) => b.fromExperience && b.pastRole);
+      const experienceBullets = bullets.filter((b) => b.fromExperience);
+      if (experienceBullets.length === 0) return vacuous(); // no experience yet
+      const pastBullets = experienceBullets.filter((b) => b.pastRole);
+      // Real experience, but all of it current — tense is correct by default.
       if (pastBullets.length === 0) return pass();
       const bad = pastBullets.filter((b) => {
         const first = b.text.trim().split(/\s+/)[0]?.toLowerCase() ?? "";
@@ -347,7 +374,8 @@ const RULES: RuleDef[] = [
   {
     id: "STY-02", subScore: "style", section: "overall", points: 2, autoFixable: true,
     run: ({ bullets }) => {
-      if (bullets.length < 2) return pass();
+      if (bullets.length === 0) return vacuous();
+      if (bullets.length < 2) return pass(); // a single bullet is trivially consistent
       const withDot = bullets.filter((b) => b.text.trimEnd().endsWith("."));
       if (withDot.length === 0 || withDot.length === bullets.length) return pass();
       const minority = withDot.length <= bullets.length / 2 ? withDot : bullets.filter((b) => !b.text.trimEnd().endsWith("."));
@@ -367,14 +395,19 @@ const RULES: RuleDef[] = [
         if (e.end) dates.push({ v: e.end, path: `experience[${i}].end` });
       });
       const real = dates.filter((d) => d.v.trim().toLowerCase() !== "present");
-      if (real.length === 0) return pass();
+      if (real.length === 0) return vacuous();
       const allMonYear = real.every((d) => MONTH_YEAR_RE.test(d.v.trim()));
       const allYear = real.every((d) => YEAR_RE.test(d.v.trim()));
       if (allMonYear || allYear) return pass();
       const offenders = real.filter((d) => !MONTH_YEAR_RE.test(d.v.trim()));
+      // Only advertise a one-tap fix when the fixer can actually rewrite one
+      // of them — a bare "2024" has no month to recover, so that's manual.
+      const fixable = offenders.some((d) => isDateFixable(d.v));
       return {
-        earned: 0, passed: false,
-        hint: "Your dates mix formats ('June 2024' vs '2024'). Recruiters and ATS parsers both prefer 'Jun 2024'.",
+        earned: 0, passed: false, autoFixable: fixable,
+        hint: fixable
+          ? "Your dates mix formats ('June 2024' vs '2024'). Recruiters and ATS parsers both prefer 'Jun 2024'."
+          : "Your dates mix formats. Write each one as 'Jun 2024' — add the month where only a year is given.",
         targets: offenders.map((d) => d.path),
       };
     },
@@ -402,8 +435,9 @@ const RULES: RuleDef[] = [
           }
         }
       }
+      if (occurrences === 0) return vacuous(); // no known tech named anywhere yet
       if (wrong === 0) return pass();
-      const frac = occurrences > 0 ? (occurrences - wrong) / occurrences : 0;
+      const frac = (occurrences - wrong) / occurrences;
       return {
         earned: Math.round(3 * frac * 10) / 10, passed: false,
         hint: `${wrong} technology name${wrong > 1 ? "s are" : " is"} miscased ('javascript' → 'JavaScript'). Correct casing signals attention to detail.`,
@@ -414,7 +448,9 @@ const RULES: RuleDef[] = [
   {
     id: "STY-05", subScore: "style", section: "overall", points: 3, autoFixable: false,
     run: ({ doc, bullets }) => {
-      const fields = [{ text: doc.summary, path: "summary" }, ...bullets.map((b) => ({ text: b.text, path: b.path }))];
+      const fields = [{ text: doc.summary, path: "summary" }, ...bullets.map((b) => ({ text: b.text, path: b.path }))]
+        .filter((f) => f.text.trim());
+      if (fields.length === 0) return vacuous();
       const hits = fields.filter((f) => /\b(i|my|me|we|our)\b/i.test(f.text));
       if (hits.length === 0) return pass();
       return {
@@ -428,6 +464,7 @@ const RULES: RuleDef[] = [
     id: "STY-06", subScore: "style", section: "overall", points: 4, autoFixable: false,
     run: ({ doc, bullets }) => {
       const scan = [doc.summary, doc.headline, ...bullets.map((b) => b.text)].join("\n").toLowerCase();
+      if (!scan.trim()) return vacuous();
       const found = CLICHES.filter((c) => scan.includes(c));
       if (found.length === 0) return pass();
       return {
@@ -440,7 +477,9 @@ const RULES: RuleDef[] = [
   {
     id: "STY-07", subScore: "style", section: "overall", points: 1, autoFixable: true,
     run: (input) => {
-      const hits = textFields(input.doc).filter((f) => /\s{2,}/.test(f.text) || f.text !== f.text.trim());
+      const fields = textFields(input.doc);
+      if (fields.length === 0) return vacuous();
+      const hits = fields.filter((f) => /\s{2,}/.test(f.text) || f.text !== f.text.trim());
       if (hits.length === 0) return pass();
       return { earned: 0, passed: false, hint: "Extra spaces found — we'll clean them up.", targets: hits.map((f) => f.path) };
     },
@@ -448,6 +487,7 @@ const RULES: RuleDef[] = [
   {
     id: "STY-08", subScore: "style", section: "skills", points: 1, autoFixable: true,
     run: ({ doc }) => {
+      if (doc.skillSections.every((s) => s.items.length === 0)) return vacuous();
       const seen = new Map<string, string>();
       let dupe: string | null = null;
       const targets: string[] = [];
@@ -486,7 +526,7 @@ const RULES: RuleDef[] = [
     id: "CMP-02", subScore: "completeness", section: "contact", points: 2, autoFixable: false,
     run: ({ doc }) => {
       const email = doc.contact.email.trim();
-      if (!email) return { earned: 0, passed: false, hint: null, targets: [] }; // CMP-01 carries the hint
+      if (!email) return vacuous(); // CMP-01 carries the "add your email" hint
       const local = email.split("@")[0]?.toLowerCase() ?? "";
       const ok = EMAIL_RE.test(email)
         && /[a-z]{3,}/.test(local)
@@ -503,11 +543,23 @@ const RULES: RuleDef[] = [
     id: "CMP-03", subScore: "completeness", section: "contact", points: 1, autoFixable: true,
     run: ({ doc }) => {
       const phone = doc.contact.phone?.trim();
-      if (!phone) return pass(); // phone is optional; absence isn't penalized here
+      if (!phone) {
+        // Not auto-fixable: the fixer reformats a phone, it cannot invent one.
+        return { earned: 0, passed: false, autoFixable: false, hint: "Add your phone number — Indian recruiters usually call before they email.", targets: ["contact.phone"] };
+      }
       const digits = phone.replace(/\D/g, "");
       const ok = /^(91)?[6-9]\d{9}$/.test(digits) || (phone.startsWith("+") && digits.length >= 10 && digits.length <= 14);
       if (ok) return pass();
-      return { earned: 0, passed: false, hint: "Format your phone as +91 XXXXX XXXXX so it's unambiguous internationally.", targets: ["contact.phone"] };
+      // Reformattable only when the digits actually form an Indian mobile;
+      // "09876543" is simply wrong and needs the student to retype it.
+      const fixable = isIndianMobileFixable(phone);
+      return {
+        earned: 0, passed: false, autoFixable: fixable,
+        hint: fixable
+          ? "Format your phone as +91 XXXXX XXXXX so it's unambiguous internationally."
+          : "That phone number looks incomplete — check the digits and write it as +91 XXXXX XXXXX.",
+        targets: ["contact.phone"],
+      };
     },
   },
   {
@@ -567,7 +619,7 @@ const RULES: RuleDef[] = [
   {
     id: "CMP-10", subScore: "completeness", section: "education", points: 1, autoFixable: false,
     run: ({ doc }) => {
-      if (doc.education.length === 0) return { earned: 0, passed: false, hint: null, targets: [] }; // CMP-06 carries the hint
+      if (doc.education.length === 0) return vacuous(); // CMP-06 carries the hint
       if (doc.education.some((e) => e.cgpa && e.cgpa.trim())) return pass();
       return { earned: 0, passed: false, hint: "Indian recruiters filter on CGPA. Add yours if it's 7.0+; leave off only if below.", targets: ["education"] };
     },
@@ -575,7 +627,7 @@ const RULES: RuleDef[] = [
   {
     id: "CMP-11", subScore: "completeness", section: "projects", points: 1, autoFixable: false,
     run: ({ doc }) => {
-      if (doc.projects.length === 0) return { earned: 0, passed: false, hint: null, targets: [] }; // CMP-08 covers substance
+      if (doc.projects.length === 0) return vacuous(); // CMP-08 covers substance
       if (doc.projects.some((p) => p.link && p.link.trim())) return pass();
       return { earned: 0, passed: false, hint: "Add a GitHub or live link to at least one project — proof beats description.", targets: ["projects"] };
     },
@@ -586,6 +638,8 @@ const RULES: RuleDef[] = [
     id: "ATS-01", subScore: "ats", section: "overall", points: 3, autoFixable: true,
     run: ({ doc }) => {
       const order = doc.order;
+      // Ordering nothing correctly is not an achievement.
+      if (order.every((k) => isSectionEmpty(doc, k))) return vacuous();
       const problems: string[] = [];
       if (order[0] !== "summary") problems.push("summary");
       const expIdx = order.indexOf("experience");
@@ -624,7 +678,9 @@ const RULES: RuleDef[] = [
     run: (input) => {
       // Deliberately NOT applied to contact.name — Devanagari or other scripts
       // in a person's name are correct, not an ATS defect.
-      const hits = textFields(input.doc).filter((f) => !ATS_SAFE_RE.test(f.text));
+      const fields = textFields(input.doc);
+      if (fields.length === 0) return vacuous();
+      const hits = fields.filter((f) => !ATS_SAFE_RE.test(f.text));
       if (hits.length === 0) return pass();
       return {
         earned: 0, passed: false,
@@ -654,6 +710,7 @@ const RULES: RuleDef[] = [
   {
     id: "ATS-05", subScore: "ats", section: "contact", points: 2, autoFixable: true,
     run: ({ doc }) => {
+      if (doc.contact.links.length === 0) return vacuous(); // CMP-04/05 ask for the links
       const bad: string[] = [];
       doc.contact.links.forEach((l, i) => {
         try {
@@ -671,6 +728,7 @@ const RULES: RuleDef[] = [
   {
     id: "ATS-06", subScore: "ats", section: "overall", points: 2, autoFixable: true,
     run: ({ bullets }) => {
+      if (bullets.length === 0) return vacuous();
       const hits = bullets.filter((b) => b.text.includes("\t") || b.text.includes("|"));
       if (hits.length === 0) return pass();
       return {
@@ -696,6 +754,7 @@ export function buildQualityReport(
 
   const rules: QualityRuleResult[] = RULES.map((def) => {
     const r = def.run(input);
+    const isVacuous = r.vacuous === true;
     return {
       id: def.id,
       subScore: def.subScore,
@@ -704,8 +763,12 @@ export function buildQualityReport(
       earned: r.passed ? def.points : Math.min(def.points, Math.max(0, r.earned)),
       passed: r.passed,
       hint: r.hint,
-      autoFixable: def.autoFixable && !r.passed,
+      // A vacuous rule has nothing to fix, so it must never inflate the
+      // "Fix N formatting issues" chip into a no-op. Rules may also opt out
+      // per-failure when that specific failure isn't mechanically repairable.
+      autoFixable: def.autoFixable && !r.passed && !isVacuous && r.autoFixable !== false,
       targets: r.targets,
+      vacuous: isVacuous,
     };
   });
 

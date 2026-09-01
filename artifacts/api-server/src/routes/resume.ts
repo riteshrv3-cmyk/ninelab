@@ -10,7 +10,7 @@ import { requireStudent } from "../middlewares/studentAuth";
 import { logEvent } from "../lib/events";
 import { cacheGetOrSet } from "../lib/aiCache";
 import { runResumePipeline } from "../lib/resume/pipeline";
-import { buildLedger, parseQuantFacts, withQuantFacts } from "../lib/resume/ledger";
+import { buildLedger, ledgerVolume, parseQuantFacts, withQuantFacts } from "../lib/resume/ledger";
 import { bulletPassesGate } from "../lib/resume/gate";
 import { rewriteBullet, BULLET_REWRITE_ACTIONS, type BulletRewriteAction } from "../lib/resume/bulletRewrite";
 import { improveSection, ImproveRejectedError, IMPROVABLE_SECTIONS, type ImprovableSection } from "../lib/resume/sectionImprove";
@@ -79,6 +79,21 @@ router.post("/students/:id/resumes", requireStudent({ allowGuest: true }), rlRes
 
   const [student] = await db.select().from(studentsTable).where(eq(studentsTable.id, id)).limit(1);
   if (!student) return res.status(404).json({ error: "Student not found" });
+
+  // Substance gate. With an empty ledger the pipeline still runs and the
+  // fabrication gate strips every unsupported bullet, so what comes out is a
+  // name, a degree, and a one-line summary — a document that looks like a
+  // resume and helps nobody. Refuse instead: a resume can only be as real as
+  // the profile behind it, and the student is better served by the capture
+  // step than by a hollow PDF. (Client-side gating is UX; this is the rule.)
+  const volume = ledgerVolume(buildLedger(student));
+  const substance = volume.skillCount + volume.projectCount + volume.experienceCount + volume.certificationCount;
+  if (substance === 0) {
+    return res.status(422).json({
+      error: "Add your skills, a project, or an internship first — we only write from what's actually on your profile.",
+      code: "EMPTY_PROFILE",
+    });
+  }
 
   // Profile-only generation: with no JD and no tags, stage 1 would infer from
   // nothing. Seed the target from the profile so the pipeline still gets a

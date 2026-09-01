@@ -220,10 +220,13 @@ describe("completeness rules", () => {
     expect(rule(d, "CMP-03").passed).toBe(false);
   });
 
-  it("CMP-03 passes when phone is absent (optional)", () => {
+  it("CMP-03 asks for a phone number when absent", () => {
     const d = clone(strong);
     d.contact.phone = null;
-    expect(rule(d, "CMP-03").passed).toBe(true);
+    const r = rule(d, "CMP-03");
+    expect(r.passed).toBe(false);
+    expect(r.hint).toContain("phone");
+    expect(r.vacuous).toBe(false);
   });
 
   it("CMP-04 fails without LinkedIn", () => {
