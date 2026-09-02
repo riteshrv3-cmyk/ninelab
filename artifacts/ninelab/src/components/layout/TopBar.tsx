@@ -80,7 +80,7 @@ export function TopBar({ initials, streakCount, onProfileClick }: TopBarProps) {
                   aria-label={`${streakCount} day streak`}
                 >
                   <Flame className="w-3.5 h-3.5 text-highlight" fill="currentColor" />
-                  <span className="text-[12px] font-bold text-highlight tabular-nums">{streakCount}</span>
+                  <span className="text-[13px] font-bold text-highlight tabular-nums">{streakCount}</span>
                 </motion.button>
               )}
               <motion.button
@@ -92,7 +92,7 @@ export function TopBar({ initials, streakCount, onProfileClick }: TopBarProps) {
                 {firstName && (
                   <span className="text-[13px] font-bold text-ink max-w-[80px] truncate">{firstName}</span>
                 )}
-                <span className="w-9 h-9 rounded-full bg-brand-soft flex items-center justify-center text-brand font-bold text-[12px]">
+                <span className="w-9 h-9 rounded-full bg-brand-soft flex items-center justify-center text-brand font-bold text-[13px]">
                   {initials}
                 </span>
               </motion.button>

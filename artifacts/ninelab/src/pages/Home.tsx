@@ -93,11 +93,11 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-2 mb-4">
-            {goal && <span className="text-[12px] text-white/70">{goal}</span>}
+            {goal && <span className="text-[13px] text-white/70">{goal}</span>}
             {streakCount > 0 && (
               <>
                 {goal && <span className="text-white/40">·</span>}
-                <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-white">
+                <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-white">
                   <Flame className="w-3.5 h-3.5 text-highlight" fill="currentColor" />
                   {streakCount} day{streakCount === 1 ? "" : "s"} in a row
                 </span>
@@ -106,8 +106,8 @@ export default function Home() {
           </div>
 
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-white/50">Level {level}</span>
-            <span className="text-[11px] font-semibold text-white/50 tabular-nums">{xpIntoLevel} / {XP_PER_LEVEL} xp</span>
+            <span className="text-[12px] font-bold uppercase tracking-wider text-white/50">Level {level}</span>
+            <span className="text-[13px] font-semibold text-white/50 tabular-nums">{xpIntoLevel} / {XP_PER_LEVEL} xp</span>
           </div>
           <div className="h-1.5 rounded-full bg-white/20 overflow-hidden">
             <motion.div
@@ -130,7 +130,7 @@ export default function Home() {
           {isError && (
             <div className="bg-paper rounded-2xl shadow-soft p-4 mb-4">
               <p className="text-[14px] font-bold text-danger">Couldn't load today's tasks</p>
-              <p className="text-[12px] text-ink-muted mt-1">Pull down to try again, or check back shortly.</p>
+              <p className="text-[13px] text-ink-muted mt-1">Pull down to try again, or check back shortly.</p>
             </div>
           )}
 
@@ -159,7 +159,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setLocation("/notebook")}
-                className="text-[11px] font-bold text-brand mt-2 ml-11"
+                className="text-[13px] font-bold text-brand mt-2 ml-11"
               >
                 See everything Toko has noticed →
               </button>
@@ -173,7 +173,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setLocation("/practice")}
-                className="text-[12px] font-bold text-brand mt-1"
+                className="text-[13px] font-bold text-brand mt-1"
               >
                 Head to Prep to get started →
               </button>
@@ -205,7 +205,7 @@ export default function Home() {
             <div className="py-8 flex flex-col items-center text-center">
               <Toko pose="cheer" size={72} className="mb-2" />
               <p className="text-[14px] font-bold text-ink">All done for today.</p>
-              <p className="text-[12px] text-ink-muted mt-0.5">Come back tomorrow to keep the streak going.</p>
+              <p className="text-[13px] text-ink-muted mt-0.5">Come back tomorrow to keep the streak going.</p>
             </div>
           )}
         </div>

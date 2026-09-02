@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, type MouseEvent } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ChevronRight, ExternalLink, Target, Loader2, Search, X, Mic } from "lucide-react";
+import { ArrowLeft, ChevronRight, ExternalLink, Target, Loader2, Search, X, Mic, MapPin, Briefcase, GraduationCap, Globe, Building2, ChevronDown, type LucideIcon } from "lucide-react";
 import { useCreateInterviewSession } from "@workspace/api-client-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { Toko } from "@/components/ninelab/Toko";
 import { useStudentId } from "@/hooks/useStudentId";
 import { useNameGate } from "@/components/NameGate";
 import { DemoSurface } from "@/components/DemoBanner";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHeader, PAGE_CONTAINER } from "@/components/PageHeader";
 import { scoreBadgeClass } from "@/lib/scoreTone";
 import { DEMO_MATCHED_TEASER, DEMO_STUDENT_NAME } from "@/data/demoStudent";
 
@@ -53,20 +53,18 @@ interface MatchedFeed {
   }[];
 }
 
-const GROUP_EMOJI: Record<string, string> = { jobs: "💼", internship: "🎓", freelancing: "🌍" };
+/**
+ * The domain grid opens collapsed: 2 rows of 3 on mobile. All 20 tiles ahead of
+ * the promo cards pushed the first real job card ~1300px down the page.
+ */
+const DOMAIN_PREVIEW_COUNT = 6;
 
-function emojiFor(source: string): string {
-  const s = source.toLowerCase();
-  if (s.includes("remote")) return "🌐";
-  if (s.includes("naukri")) return "🇮🇳";
-  if (s.includes("linkedin")) return "💼";
-  if (s.includes("internshala")) return "🎓";
-  if (s.includes("upwork")) return "💚";
-  if (s.includes("toptal")) return "💎";
-  if (s.includes("freelancer")) return "🛠";
-  if (s.includes("fiverr")) return "🟢";
-  return "✨";
-}
+/** Outline icons, one per opportunity kind — matches the app's lucide set. */
+const GROUP_ICON: Record<string, LucideIcon> = {
+  jobs: Briefcase,
+  internship: GraduationCap,
+  freelancing: Globe,
+};
 
 /**
  * The locked card anatomy, shared by the role-drilldown feed and the
@@ -97,7 +95,7 @@ function OpportunityCard({
             target="_blank"
             rel="noopener noreferrer"
             onClick={onApply}
-            className="absolute top-4 right-4 h-8 px-3.5 rounded-full font-bold text-[12px] bg-brand text-white flex items-center gap-1"
+            className="absolute top-4 right-4 h-8 px-3.5 rounded-full font-bold text-[13px] bg-brand text-white flex items-center gap-1"
           >
             {o.isSearchLink ? "Search" : "Apply"} <ExternalLink className="w-3 h-3" />
           </motion.a>
@@ -105,10 +103,14 @@ function OpportunityCard({
           <div className="flex items-center gap-2 min-w-0 mb-2 pr-20">
             {o.logo
               ? <img src={o.logo} alt={o.company} className="w-9 h-9 rounded-lg object-cover border border-line flex-shrink-0" onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-              : <span className="text-2xl flex-shrink-0">{emojiFor(o.source)}</span>
+              : (
+                <span className="w-9 h-9 rounded-lg bg-brand-soft flex items-center justify-center flex-shrink-0">
+                  <Building2 className="w-[18px] h-[18px] text-brand" strokeWidth={1.75} aria-hidden />
+                </span>
+              )
             }
             <div className="min-w-0">
-              <p className="text-[11px] text-ink-muted truncate">
+              <p className="text-[13px] text-ink-muted truncate">
                 {o.isNew && <span className="text-brand font-bold">New · </span>}
                 {o.company} · {o.source}
               </p>
@@ -123,14 +125,17 @@ function OpportunityCard({
             </div>
           </div>
 
-          <p className="text-[12px] text-ink-muted mb-3">
-            📍 {o.location}{o.postedAt ? ` · ${o.postedAt}` : ""}
-            {o.pay && ` · ${o.pay}`}
-            {o.isSearchLink && " · Opens this platform's search — not a specific posting"}
+          <p className="text-[13px] text-ink-muted mb-3 flex items-start gap-1.5">
+            <MapPin className="w-3.5 h-3.5 text-ink-muted shrink-0 mt-0.5" strokeWidth={1.75} aria-hidden />
+            <span>
+              {o.location}{o.postedAt ? ` · ${o.postedAt}` : ""}
+              {o.pay && ` · ${o.pay}`}
+              {o.isSearchLink && " · Opens this platform's search — not a specific posting"}
+            </span>
           </p>
           <div className="flex flex-wrap gap-1.5 mb-3">
             {(o.tags.length ? o.tags : fallbackSkills).slice(0, 4).map(s => (
-              <span key={s} className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-brand-soft text-brand">
+              <span key={s} className="text-[13px] font-semibold px-2 py-0.5 rounded-full bg-brand-soft text-brand">
                 {s}
               </span>
             ))}
@@ -141,7 +146,7 @@ function OpportunityCard({
               <Button
                 onClick={onPrepare}
                 variant="outline"
-                className="flex-1 h-11 rounded-full font-bold text-[12px] border border-line text-brand bg-paper"
+                className="flex-1 h-11 rounded-full font-bold text-[13px] border border-line text-brand bg-paper"
               >
                 <Target className="w-3.5 h-3.5 mr-1.5" /> Prepare
               </Button>
@@ -150,7 +155,7 @@ function OpportunityCard({
               onClick={onPractice}
               disabled={practicing}
               variant="outline"
-              className="flex-1 h-11 rounded-full font-bold text-[12px] border border-line text-brand bg-paper"
+              className="flex-1 h-11 rounded-full font-bold text-[13px] border border-line text-brand bg-paper"
             >
               {practicing
                 ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
@@ -193,6 +198,8 @@ export default function Opportunities() {
   // expanded state into an unrelated feed.
   const [showGlobal, setShowGlobal] = useState(false);
   useEffect(() => { setShowGlobal(false); }, [activeTab, selectedSubDomain]);
+  const [showAllDomains, setShowAllDomains] = useState(false);
+  const visibleDomains = showAllDomains ? DOMAINS : DOMAINS.slice(0, DOMAIN_PREVIEW_COUNT);
 
   const createInterview = useCreateInterviewSession();
 
@@ -352,7 +359,6 @@ export default function Opportunities() {
       domainName: d.name,
       domainColor: d.color,
       domainBg: d.bg,
-      domainEmoji: d.emoji,
       skills: s.skills,
     }));
     setLocation("/opportunities/course");
@@ -367,10 +373,10 @@ export default function Opportunities() {
     }
   };
 
-  const TABS: { id: OpportunityType; label: string; emoji: string }[] = [
-    { id: "jobs", label: "Jobs", emoji: "💼" },
-    { id: "internship", label: "Internship", emoji: "🎓" },
-    { id: "freelancing", label: "Freelancing", emoji: "🌍" },
+  const TABS: { id: OpportunityType; label: string; Icon: LucideIcon }[] = [
+    { id: "jobs", label: "Jobs", Icon: Briefcase },
+    { id: "internship", label: "Internship", Icon: GraduationCap },
+    { id: "freelancing", label: "Freelancing", Icon: Globe },
   ];
 
   const skillsParam = selectedSubDomain?.skills.join(",") ?? "";
@@ -395,7 +401,7 @@ export default function Opportunities() {
       return (
         <div className="flex flex-col items-center justify-center py-12 gap-2">
           <Loader2 className="w-6 h-6 animate-spin text-ink" />
-          <p className="text-[12px] text-ink-muted">Fetching live {activeTab}…</p>
+          <p className="text-[13px] text-ink-muted">Fetching live {activeTab}…</p>
         </div>
       );
     }
@@ -405,7 +411,7 @@ export default function Opportunities() {
       return (
         <div className="text-center py-10">
           <p className="text-[14px] text-ink">No live results</p>
-          <p className="text-[12px] text-ink-muted mt-1">Try another specialisation.</p>
+          <p className="text-[13px] text-ink-muted mt-1">Try another specialisation.</p>
         </div>
       );
     }
@@ -448,14 +454,14 @@ export default function Opportunities() {
             {indiaItems.length > 0 && (
               <button
                 onClick={() => setShowGlobal(s => !s)}
-                className="w-full flex items-center justify-between text-[12px] font-bold text-ink-muted"
+                className="w-full flex items-center justify-between text-[13px] font-bold text-ink-muted"
               >
                 <span>Global remote ({globalItems.length})</span>
                 <ChevronRight className={cn("w-4 h-4 transition-transform", globalIsExpanded && "rotate-90")} />
               </button>
             )}
             {indiaItems.length === 0 && (
-              <p className="text-[12px] text-ink-muted">No India listings right now — showing global remote.</p>
+              <p className="text-[13px] text-ink-muted">No India listings right now — showing global remote.</p>
             )}
             {globalIsExpanded && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -483,11 +489,12 @@ export default function Opportunities() {
           domain is open (back button + tabs stay page-owned). */}
       {!selectedDomain ? (
         <PageHeader
+          wide
           title="Opportunities"
           subtitle="Real jobs, internships and freelance work — updated daily"
         />
       ) : (
-        <div className="sticky top-0 z-10 bg-paper px-4 pt-4 pb-2 border-b border-line">
+        <div className={cn("sticky top-0 z-10 bg-paper pt-4 pb-2 border-b border-line", PAGE_CONTAINER)}>
           <div className="flex items-center gap-2 mb-1">
             <button
               onClick={goBack}
@@ -515,13 +522,13 @@ export default function Opportunities() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "flex-1 py-2 rounded-xl text-[13px] font-bold border transition-colors",
+                    "flex-1 py-2 rounded-xl text-[13px] font-bold border transition-colors inline-flex items-center justify-center gap-1.5",
                     activeTab === tab.id
                       ? "bg-brand text-white border-brand"
                       : "bg-paper text-ink-muted border-line"
                   )}
                 >
-                  {tab.emoji} {tab.label}
+                  <tab.Icon className="w-4 h-4" strokeWidth={1.75} aria-hidden /> {tab.label}
                 </button>
               ))}
             </div>
@@ -530,7 +537,7 @@ export default function Opportunities() {
       )}
 
       {/* Page sheet below the canopy at the top level; plain flow in drilldowns. */}
-      <div className={cn("px-4", !selectedDomain ? "bg-paper rounded-t-3xl -mt-6 pt-5 min-h-[60vh]" : "pt-2")}>
+      <div className={cn(PAGE_CONTAINER, !selectedDomain ? "bg-paper rounded-t-3xl -mt-6 pt-5 min-h-[60vh]" : "pt-2")}>
         {/* mode="wait" requires exactly ONE child at a time. Level 0's search bar
             and domain grid are therefore wrapped in a single keyed child — as two
             sibling children they deadlocked the exit queue, leaving the outgoing
@@ -572,7 +579,7 @@ export default function Opportunities() {
                   {searchResults.length === 0 ? (
                     <div className="px-4 py-6 text-center">
                       <p className="text-[14px] text-ink">No matches</p>
-                      <p className="text-[12px] text-ink-muted mt-1">Try "React", "Data", "Cloud", or browse all domains below.</p>
+                      <p className="text-[13px] text-ink-muted mt-1">Try "React", "Data", "Cloud", or browse all domains below.</p>
                     </div>
                   ) : (
                     searchResults.map(({ domain, sub, matchedSkill }, i) => (
@@ -588,12 +595,12 @@ export default function Opportunities() {
                         )}
                         data-testid={`search-result-${sub.id}`}
                       >
-                        <div className="w-10 h-10 rounded-xl bg-brand-soft flex items-center justify-center text-xl shrink-0">
-                          {domain.emoji}
+                        <div className="w-10 h-10 rounded-xl bg-brand-soft flex items-center justify-center shrink-0">
+                          <domain.icon className="w-5 h-5 text-brand" strokeWidth={1.75} aria-hidden />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-ink text-[14px] truncate">{sub.name}</p>
-                          <p className="text-[11px] text-ink-muted truncate">
+                          <p className="text-[13px] text-ink-muted truncate">
                             <span>{domain.name}</span>
                             {matchedSkill && (
                               <span> · {matchedSkill}</span>
@@ -610,6 +617,69 @@ export default function Opportunities() {
 
             {!searchQuery.trim() && (
             <div>
+              {/* Explore mode: the sample-student payoff, FIRST. Explore mode
+                  has no studentId, so the live matched feed below is disabled
+                  and this is the only real proof on the page — burying it under
+                  two promo cards and 20 domain tiles put it ~1300px down. Full
+                  width and stacked on mobile (a horizontal scroller cut the
+                  first card off), 2-up on lg. */}
+              {isDemo && (
+                <div className="mb-6">
+                  <DemoSurface className="mb-3">
+                    <p className="text-display text-[15px] font-extrabold text-ink mb-1 px-1">
+                      Sample matches for {DEMO_STUDENT_NAME.split(" ")[0]}
+                    </p>
+                    <p className="text-[13px] text-ink-muted mb-3 px-1">
+                      What your feed looks like once your profile is in — tap any
+                      card to start your own.
+                    </p>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {DEMO_MATCHED_TEASER.map((m, i) => (
+                        <motion.button
+                          key={`${m.company}-${i}`}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: Math.min(i, 8) * 0.04 }}
+                          onClick={() =>
+                            requireStudent(() => {}, {
+                              title: `Applying to ${m.company}`,
+                            })
+                          }
+                          className="w-full text-left bg-paper rounded-2xl shadow-soft p-4"
+                          data-testid={`card-demo-match-${i}`}
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-1.5">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="w-9 h-9 rounded-lg bg-brand-soft flex items-center justify-center shrink-0">
+                                <Building2 className="w-[18px] h-[18px] text-brand" strokeWidth={1.75} aria-hidden />
+                              </span>
+                              <div className="min-w-0">
+                                <p className="type-micro text-ink-muted truncate">{m.company}</p>
+                                <p className="type-caption font-bold text-ink leading-tight line-clamp-2">{m.role}</p>
+                              </div>
+                            </div>
+                            <span className={cn("type-micro font-bold px-2 py-0.5 rounded-full shrink-0", scoreBadgeClass(m.matchPct))}>
+                              {m.matchPct}% match
+                            </span>
+                          </div>
+                          <p className="type-micro text-ink-muted flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-ink-muted shrink-0" strokeWidth={1.75} aria-hidden />
+                            {m.location}
+                          </p>
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {m.tags.slice(0, 3).map(t => (
+                              <span key={t} className="text-[13px] font-semibold px-2 py-0.5 rounded-full bg-brand-soft text-brand">
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </DemoSurface>
+                </div>
+              )}
+
               {/* Matched for you — the payoff feed. Real work for this
                   student's own role, before any browsing decision is asked
                   of them. Grouped, never scored: the locked spec is
@@ -623,7 +693,7 @@ export default function Opportunities() {
                 <div className="mb-6" data-testid="matched-feed-skeleton">
                   <div className="flex items-center gap-2.5 mb-4 px-1">
                     <Toko pose="think" size={30} className="shrink-0" />
-                    <p className="text-[12px] text-ink-muted">Toko is checking the boards…</p>
+                    <p className="text-[13px] text-ink-muted">Toko is checking the boards…</p>
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-ink-muted" />
                   </div>
                   {[0, 1].map((g) => (
@@ -648,24 +718,26 @@ export default function Opportunities() {
                       <p className="text-display text-[15px] font-extrabold text-ink">
                         {feed.isGuess ? "A place to start" : "Matched for you"}
                         {feed.newCount > 0 && (
-                          <span className="ml-2 text-[11px] font-bold text-brand bg-brand-soft rounded-full px-2 py-0.5 align-middle">
+                          <span className="ml-2 text-[13px] font-bold text-brand bg-brand-soft rounded-full px-2 py-0.5 align-middle">
                             {feed.newCount} new
                           </span>
                         )}
                       </p>
-                      <p className="text-[11px] text-ink-muted">{feed.role}</p>
+                      <p className="text-[13px] text-ink-muted">{feed.role}</p>
                     </div>
 
                     {/* An inferred role is never presented as a match. Saying
                         so is what makes the fix honest rather than just
                         non-empty. */}
-                    <p className="text-[12px] text-ink-muted mb-3 px-1">
+                    <p className="text-[13px] text-ink-muted mb-3 px-1">
                       {feed.isGuess
                         ? <>Showing {feed.role} work while you decide. <button onClick={() => setLocation("/profile")} className="text-brand font-semibold underline">Pick your goal</button> to sharpen this.</>
                         : <>Live {feed.role} openings, updated daily.</>}
                     </p>
 
-                    {feed.groups.map(group => (
+                    {feed.groups.map(group => {
+                      const GroupIcon = GROUP_ICON[group.kind] ?? Briefcase;
+                      return (
                       <div key={group.kind} className="mb-4">
                         <button
                           onClick={() => {
@@ -676,8 +748,9 @@ export default function Opportunities() {
                           }}
                           className="w-full flex items-center justify-between py-3.5 px-1 text-left"
                         >
-                          <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider">
-                            {GROUP_EMOJI[group.kind]} {group.label}
+                          <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider inline-flex items-center gap-1.5">
+                            <GroupIcon className="w-3.5 h-3.5 text-ink-muted" strokeWidth={1.75} aria-hidden />
+                            {group.label}
                           </p>
                           {dest && group.items.length > 0 && <ChevronRight className="w-4 h-4 text-ink-muted" />}
                         </button>
@@ -707,7 +780,7 @@ export default function Opportunities() {
                             <p className="text-[13px] text-ink font-semibold mb-1">
                               No {group.label.toLowerCase()} for {feed.role} today.
                             </p>
-                            <p className="text-[12px] text-ink-muted">
+                            <p className="text-[13px] text-ink-muted">
                               We check every day — this fills up as new postings appear.
                               {group.searchLinks.length > 0 && " Meanwhile, search directly on "}
                               {group.searchLinks.map((l, i) => (
@@ -724,10 +797,11 @@ export default function Opportunities() {
                           </div>
                         )}
                       </div>
-                    ))}
+                      );
+                    })}
 
                     {totalReal === 0 && (
-                      <p className="text-[12px] text-ink-muted px-1">
+                      <p className="text-[13px] text-ink-muted px-1">
                         Nothing live for {feed.role} right now. Explore the domains below to find a role with more openings.
                       </p>
                     )}
@@ -750,12 +824,12 @@ export default function Opportunities() {
                 className="w-full mb-4 flex items-center gap-3 px-4 py-3 rounded-2xl bg-paper shadow-soft text-left transition-colors"
                 data-testid="link-practice-prep"
               >
-                <div className="w-10 h-10 rounded-xl bg-brand-soft flex items-center justify-center text-lg shrink-0">
-                  🎤
+                <div className="w-10 h-10 rounded-xl bg-brand-soft flex items-center justify-center shrink-0">
+                  <Mic className="w-5 h-5 text-brand" strokeWidth={1.75} aria-hidden />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-ink text-[14px]">Practice for these interviews</p>
-                  <p className="text-[11px] text-ink-muted">Found a fit? Rehearse it with a mock interview in Prep</p>
+                  <p className="text-[13px] text-ink-muted">Found a fit? Rehearse it with a mock interview in Prep</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-ink-muted shrink-0" />
               </button>
@@ -765,8 +839,8 @@ export default function Opportunities() {
                 className="w-full mb-4 flex items-center gap-3 px-4 py-3 rounded-2xl bg-paper shadow-soft text-left transition-colors"
                 data-testid="link-my-pipeline"
               >
-                <div className="w-10 h-10 rounded-xl bg-brand-soft flex items-center justify-center text-lg shrink-0">
-                  🎯
+                <div className="w-10 h-10 rounded-xl bg-brand-soft flex items-center justify-center shrink-0">
+                  <Target className="w-5 h-5 text-brand" strokeWidth={1.75} aria-hidden />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-ink type-body">My Pipeline</p>
@@ -779,63 +853,36 @@ export default function Opportunities() {
                 Explore {DOMAINS.length} domains
               </p>
               <div className="grid grid-cols-3 lg:grid-cols-6 gap-3">
-                {DOMAINS.map((domain, i) => (
+                {visibleDomains.map((domain, i) => (
                   <motion.button
                     key={domain.id}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.04 }}
+                    transition={{ delay: Math.min(i, DOMAIN_PREVIEW_COUNT) * 0.04 }}
                     whileTap={{ scale: 0.94 }}
                     onClick={() => setSelectedDomain(domain)}
                     className="rounded-2xl p-3 flex flex-col items-center text-center gap-1.5 bg-brand-soft transition-colors"
+                    data-testid={`card-domain-${domain.id}`}
                   >
-                    <span className="text-3xl">{domain.emoji}</span>
-                    <span className="text-[11px] font-bold leading-tight text-brand">
+                    <domain.icon className="w-6 h-6 text-brand" strokeWidth={1.75} aria-hidden />
+                    <span className="text-[13px] font-bold leading-tight text-brand">
                       {domain.name}
                     </span>
                   </motion.button>
                 ))}
               </div>
 
-              {/* Explore mode: a believable "matched for you" strip from
-                  fixtures. Lives BELOW the live explore grid — real content
-                  wins the fold — compressed to one horizontal-scroll row.
-                  DemoSurface carries the banner + demo signposting here. */}
-              {isDemo && (
-                <div className="mt-8">
-                  <DemoSurface className="mb-4">
-                    <p className="text-display type-body font-extrabold text-ink mb-3 px-1">
-                      Sample matches for {DEMO_STUDENT_NAME.split(" ")[0]}
-                    </p>
-                    <div className="-mx-4 px-4 flex gap-3 overflow-x-auto snap-x pb-2">
-                      {DEMO_MATCHED_TEASER.map((m, i) => (
-                        <motion.button
-                          key={`${m.company}-${i}`}
-                          initial={{ opacity: 0, y: 12 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: Math.min(i, 8) * 0.04 }}
-                          onClick={() =>
-                            requireStudent(() => {}, {
-                              title: `Applying to ${m.company}`,
-                            })
-                          }
-                          className="snap-start shrink-0 w-[240px] text-left bg-paper rounded-2xl shadow-soft border border-line p-4"
-                        >
-                          <div className="flex items-start justify-between gap-2 mb-1.5">
-                            <div className="min-w-0">
-                              <p className="type-micro text-ink-muted truncate">{m.company}</p>
-                              <p className="type-caption font-bold text-ink leading-tight line-clamp-2">{m.role}</p>
-                            </div>
-                            <span className={cn("type-micro font-bold px-2 py-0.5 rounded-full shrink-0", scoreBadgeClass(m.matchPct))}>
-                              {m.matchPct}% match
-                            </span>
-                          </div>
-                          <p className="type-micro text-ink-muted">📍 {m.location}</p>
-                        </motion.button>
-                      ))}
-                    </div>
-                  </DemoSurface>
-                </div>
+              {DOMAINS.length > DOMAIN_PREVIEW_COUNT && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllDomains(v => !v)}
+                  aria-expanded={showAllDomains}
+                  className="mt-3 mx-auto flex items-center gap-1.5 rounded-full bg-paper text-brand border border-line px-5 py-2.5 text-[13px] font-bold"
+                  data-testid="button-toggle-domains"
+                >
+                  {showAllDomains ? "Show fewer" : `Show all ${DOMAINS.length} domains`}
+                  <ChevronDown className={cn("w-4 h-4 transition-transform", showAllDomains && "rotate-180")} strokeWidth={1.75} aria-hidden />
+                </button>
               )}
               </>
               )}
@@ -855,11 +902,13 @@ export default function Opportunities() {
             >
               {/* Domain banner */}
               <div className="rounded-2xl bg-paper shadow-soft p-4 mb-4 flex items-center gap-3">
-                <span className="text-4xl">{selectedDomain.emoji}</span>
+                <span className="w-12 h-12 rounded-2xl bg-brand-soft flex items-center justify-center shrink-0">
+                  <selectedDomain.icon className="w-6 h-6 text-brand" strokeWidth={1.75} aria-hidden />
+                </span>
                 <div>
-                  <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider">Domain</p>
+                  <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider">Domain</p>
                   <p className="text-[18px] font-extrabold text-ink">{selectedDomain.name}</p>
-                  <p className="text-[12px] text-ink-muted">{selectedDomain.subDomains.length} specialisations</p>
+                  <p className="text-[13px] text-ink-muted">{selectedDomain.subDomains.length} specialisations</p>
                 </div>
               </div>
 
@@ -915,12 +964,19 @@ export default function Opportunities() {
             >
               {/* Sub-domain + type badge */}
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-2xl">{selectedDomain!.emoji}</span>
+                {(() => {
+                  const DomainIcon = selectedDomain!.icon;
+                  return (
+                    <span className="w-9 h-9 rounded-xl bg-brand-soft flex items-center justify-center shrink-0">
+                      <DomainIcon className="w-5 h-5 text-brand" strokeWidth={1.75} aria-hidden />
+                    </span>
+                  );
+                })()}
                 <div>
-                  <p className="text-[12px] font-bold text-ink">
+                  <p className="text-[13px] font-bold text-ink">
                     {selectedDomain!.name} › {selectedSubDomain.name}
                   </p>
-                  <p className="text-[11px] text-ink-muted">
+                  <p className="text-[13px] text-ink-muted">
                     {activeTab === "jobs" ? "Full-time roles" : activeTab === "internship" ? "Internship openings" : "Freelance gigs"}
                   </p>
                 </div>

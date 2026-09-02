@@ -76,7 +76,7 @@ export default function InterviewHistory() {
           </button>
           <div>
             <h1 className="text-display text-[30px] lg:text-[36px] font-extrabold text-ink leading-[1.06] tracking-tight">Interview History</h1>
-            <p className="text-[12px] text-ink-muted">Track your improvement over time</p>
+            <p className="text-[13px] text-ink-muted">Track your improvement over time</p>
           </div>
         </div>
       </div>
@@ -85,7 +85,7 @@ export default function InterviewHistory() {
         {error && (
           <div className="bg-paper rounded-2xl shadow-soft p-4">
             <p className="text-[14px] font-bold text-danger">Couldn't load history</p>
-            <p className="text-[12px] text-ink-muted mt-1">{error}</p>
+            <p className="text-[13px] text-ink-muted mt-1">{error}</p>
           </div>
         )}
 
@@ -98,7 +98,7 @@ export default function InterviewHistory() {
         {items && items.length === 0 && (
           <div className="py-12 text-center">
             <p className="text-[14px] text-ink">No interviews yet.</p>
-            <p className="text-[12px] text-ink-muted mt-1 mb-5">Finish your first mock interview to start tracking your progress.</p>
+            <p className="text-[13px] text-ink-muted mt-1 mb-5">Finish your first mock interview to start tracking your progress.</p>
             <Button
               onClick={() => setLocation("/practice")}
               className="rounded-full bg-brand text-white font-bold px-4 py-3 hover:bg-brand/90"
@@ -114,15 +114,15 @@ export default function InterviewHistory() {
             <div className="grid grid-cols-3 divide-x divide-line bg-paper rounded-2xl shadow-soft">
               <div className="px-3 py-4 text-center">
                 <div className="text-[26px] font-extrabold text-ink leading-none">{stats.avg}</div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mt-1.5">Average</div>
+                <div className="text-[12px] font-bold uppercase tracking-wider text-ink-muted mt-1.5">Average</div>
               </div>
               <div className="px-3 py-4 text-center">
                 <div className="text-[26px] font-extrabold text-ink leading-none">{stats.best}</div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mt-1.5">Best</div>
+                <div className="text-[12px] font-bold uppercase tracking-wider text-ink-muted mt-1.5">Best</div>
               </div>
               <div className="px-3 py-4 text-center">
                 <div className="text-[26px] font-extrabold text-ink leading-none">{stats.total}</div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mt-1.5">Sessions</div>
+                <div className="text-[12px] font-bold uppercase tracking-wider text-ink-muted mt-1.5">Sessions</div>
               </div>
             </div>
 
@@ -131,7 +131,7 @@ export default function InterviewHistory() {
               <div className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">Score Trend</p>
+                    <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">Score Trend</p>
                     <p className="text-[14px] font-bold text-ink">
                       {stats.delta > 0 && <span>+{stats.delta} pts since start</span>}
                       {stats.delta < 0 && <span>{stats.delta} pts since start</span>}
@@ -183,7 +183,7 @@ export default function InterviewHistory() {
 
             {/* Session list */}
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mb-1">All Sessions</p>
+              <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted mb-1">All Sessions</p>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-4">
                 {[...items].reverse().map((it, i) => (
                   <motion.button
@@ -201,11 +201,11 @@ export default function InterviewHistory() {
                       </div>
                       <div className="min-w-0">
                         <p className="font-bold text-ink text-[14px] truncate">{it.company}</p>
-                        <p className="text-[12px] text-ink-muted truncate">
+                        <p className="text-[13px] text-ink-muted truncate">
                           {it.interviewType}
                           {it.overallRating ? ` · ${it.overallRating}` : ""}
                         </p>
-                        <p className="text-[12px] text-ink-muted mt-0.5 flex items-center gap-1">
+                        <p className="text-[13px] text-ink-muted mt-0.5 flex items-center gap-1">
                           <Calendar className="w-3 h-3" /> {fmtDateLong(it.createdAt)}
                         </p>
                       </div>

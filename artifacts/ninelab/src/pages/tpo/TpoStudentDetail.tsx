@@ -38,10 +38,10 @@ export default function TpoStudentDetail({ id }: { id: string }) {
         <div>
           <h1 className="text-[22px] font-extrabold text-ink leading-tight" style={{ fontFamily: "var(--font-display)" }}>{student.name}</h1>
           <p className="text-[13px] text-ink-muted">{student.email}</p>
-          <p className="text-[12px] text-ink-muted mt-0.5">{student.field} · Year {student.year}{student.targetRole ? ` · ${student.targetRole}` : ""}</p>
+          <p className="text-[13px] text-ink-muted mt-0.5">{student.field} · Year {student.year}{student.targetRole ? ` · ${student.targetRole}` : ""}</p>
         </div>
         <div className="text-right shrink-0">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">Readiness</p>
+          <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">Readiness</p>
           <p className="text-[30px] font-extrabold text-brand tabular-nums leading-none">{readiness.score}</p>
         </div>
       </div>
@@ -52,11 +52,11 @@ export default function TpoStudentDetail({ id }: { id: string }) {
         <div className="space-y-2">
           {BREAKDOWN.map(({ key, label }) => (
             <div key={key} className="flex items-center gap-3">
-              <span className="text-[12px] text-ink-muted w-28 shrink-0">{label}</span>
+              <span className="text-[13px] text-ink-muted w-28 shrink-0">{label}</span>
               <div className="h-1.5 rounded-full bg-canvas overflow-hidden flex-1">
                 <div className="h-full bg-brand rounded-full" style={{ width: `${readiness.breakdown[key]}%` }} />
               </div>
-              <span className="text-[11px] font-semibold text-ink-muted tabular-nums w-8 text-right">{readiness.breakdown[key]}</span>
+              <span className="text-[13px] font-semibold text-ink-muted tabular-nums w-8 text-right">{readiness.breakdown[key]}</span>
             </div>
           ))}
         </div>
@@ -67,7 +67,7 @@ export default function TpoStudentDetail({ id }: { id: string }) {
         <div className="bg-paper rounded-2xl shadow-soft p-4">
           <div className="flex items-center justify-between mb-3">
             <p className="text-[13px] font-bold text-ink">{track.track.name}</p>
-            <p className="text-[12px] font-semibold text-ink-muted">{track.done} of {track.total}</p>
+            <p className="text-[13px] font-semibold text-ink-muted">{track.done} of {track.total}</p>
           </div>
           <div className="space-y-2">
             {track.milestones.map((m) => (

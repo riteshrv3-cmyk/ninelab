@@ -12,7 +12,7 @@ function readinessPill(score: number): string {
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="bg-paper rounded-2xl shadow-soft p-4">
-      <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">{label}</p>
+      <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">{label}</p>
       <p className="text-[26px] font-extrabold text-ink tabular-nums leading-tight mt-1">{value}</p>
     </div>
   );
@@ -82,7 +82,7 @@ export default function TpoDashboard() {
           <div className="bg-amber-400 h-full" style={{ width: `${(dist.amber / distTotal) * 100}%` }} />
           <div className="bg-emerald-400 h-full" style={{ width: `${(dist.green / distTotal) * 100}%` }} />
         </div>
-        <div className="flex gap-4 mt-2 text-[11px] font-semibold">
+        <div className="flex gap-4 mt-2 text-[13px] font-semibold">
           <span className="text-rose-600">At risk {dist.red}</span>
           <span className="text-amber-600">Developing {dist.amber}</span>
           <span className="text-emerald-600">Ready {dist.green}</span>
@@ -93,13 +93,13 @@ export default function TpoDashboard() {
       {data.college && (
         <div className="bg-brand-soft rounded-2xl p-4 flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[12px] font-bold text-ink">Invite students</p>
-            <p className="text-[12px] text-ink-muted truncate">{inviteUrl}</p>
+            <p className="text-[13px] font-bold text-ink">Invite students</p>
+            <p className="text-[13px] text-ink-muted truncate">{inviteUrl}</p>
           </div>
           <button
             type="button"
             onClick={copyInvite}
-            className="shrink-0 inline-flex items-center gap-1.5 bg-brand text-white text-[12px] font-bold px-3 py-2 rounded-xl"
+            className="shrink-0 inline-flex items-center gap-1.5 bg-brand text-white text-[13px] font-bold px-3 py-2 rounded-xl"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             {copied ? "Copied" : "Copy link"}
@@ -126,7 +126,7 @@ export default function TpoDashboard() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="text-[11px] font-bold uppercase tracking-wider text-ink-muted border-b border-line">
+                <tr className="text-[12px] font-bold uppercase tracking-wider text-ink-muted border-b border-line">
                   <th className="px-4 py-3">Name</th>
                   <th className="px-4 py-3">Year</th>
                   <th className="px-4 py-3">Track</th>
@@ -143,13 +143,13 @@ export default function TpoDashboard() {
                   >
                     <td className="px-4 py-3">
                       <p className="text-[14px] font-semibold text-ink">{s.name}</p>
-                      <p className="text-[11px] text-ink-muted">{s.field}</p>
+                      <p className="text-[13px] text-ink-muted">{s.field}</p>
                     </td>
                     <td className="px-4 py-3 text-[13px] text-ink-muted">{s.year}</td>
                     <td className="px-4 py-3 text-[13px] text-ink-muted tabular-nums">{s.milestonesDone}/{s.milestonesTotal}</td>
                     <td className="px-4 py-3 text-[13px] text-ink-muted tabular-nums">{s.mockCount}</td>
                     <td className="px-4 py-3 text-right">
-                      <span className={`inline-block px-2.5 py-1 rounded-full text-[12px] font-bold tabular-nums ${readinessPill(s.readinessScore)}`}>
+                      <span className={`inline-block px-2.5 py-1 rounded-full text-[13px] font-bold tabular-nums ${readinessPill(s.readinessScore)}`}>
                         {s.readinessScore}
                       </span>
                     </td>

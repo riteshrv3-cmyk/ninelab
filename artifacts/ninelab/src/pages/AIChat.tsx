@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, RefreshCw, CheckCircle, Zap, Mic, Volume2 } from "lucide-react";
+import {
+  Send, RefreshCw, CheckCircle, Zap, Mic, Volume2,
+  Flame, PenLine, Rocket, Map, Briefcase, MapPin, Trophy, TrendingUp, Target,
+  Handshake, Link, Check, Pencil, FileText, Palette, Brain, Lightbulb, Search,
+  Award, BookOpen, Wallet, BarChart3, Globe,
+  type LucideIcon,
+} from "lucide-react";
 import { Toko } from "@/components/ninelab/Toko";
 import { Confetti } from "@/components/ninelab/Confetti";
 import { useToast } from "@/hooks/use-toast";
@@ -59,29 +65,31 @@ declare global {
 
 // ── Contextual suggestion chips ────────────────────────────────────────────────
 
-const GLOBAL_CHIPS = [
-  { emoji: "🔥", label: "Rate my profile" },
-  { emoji: "✍️", label: "Write my bio" },
-  { emoji: "🚀", label: "Add a project" },
-  { emoji: "🗺️", label: "Placement roadmap" },
-  { emoji: "💼", label: "FAANG prep tips" },
-  { emoji: "📍", label: "Set my preferred cities" },
-  { emoji: "🏆", label: "How to get into a unicorn?" },
-  { emoji: "📈", label: "Boost my profile score" },
-  { emoji: "🎯", label: "What to focus on this month?" },
-  { emoji: "🤝", label: "I got a new certification" },
+interface Chip { Icon: LucideIcon; label: string }
+
+const GLOBAL_CHIPS: Chip[] = [
+  { Icon: Flame, label: "Rate my profile" },
+  { Icon: PenLine, label: "Write my bio" },
+  { Icon: Rocket, label: "Add a project" },
+  { Icon: Map, label: "Placement roadmap" },
+  { Icon: Briefcase, label: "FAANG prep tips" },
+  { Icon: MapPin, label: "Set my preferred cities" },
+  { Icon: Trophy, label: "How to get into a unicorn?" },
+  { Icon: TrendingUp, label: "Boost my profile score" },
+  { Icon: Target, label: "What to focus on this month?" },
+  { Icon: Handshake, label: "I got a new certification" },
 ];
 
-function getSuggestions(text: string): { emoji: string; label: string }[] {
+function getSuggestions(text: string): Chip[] {
   const t = text.toLowerCase();
-  if (t.includes("project")) return [{ emoji: "🚀", label: "Add another project" }, { emoji: "🔗", label: "Add GitHub link" }];
-  if (t.includes("bio")) return [{ emoji: "✅", label: "Looks good, save it" }, { emoji: "✏️", label: "Make it shorter" }];
-  if (t.includes("resume")) return [{ emoji: "📄", label: "Generate a resume" }, { emoji: "🎨", label: "Try Tech template" }];
-  if (t.includes("interview") || t.includes("dsa")) return [{ emoji: "🧠", label: "Start mock interview" }, { emoji: "💡", label: "DSA study plan" }];
-  if (t.includes("score") || t.includes("profile")) return [{ emoji: "📈", label: "How to score higher?" }, { emoji: "🔍", label: "What's missing?" }];
-  if (t.includes("cert") || t.includes("aws") || t.includes("course")) return [{ emoji: "🏅", label: "Add certification" }, { emoji: "📚", label: "Which cert next?" }];
-  if (t.includes("salary") || t.includes("lpa") || t.includes("package")) return [{ emoji: "💰", label: "Set my salary expectation" }, { emoji: "📊", label: "Market rates for my skills" }];
-  if (t.includes("location") || t.includes("city") || t.includes("bangalore") || t.includes("mumbai")) return [{ emoji: "📍", label: "Update my locations" }, { emoji: "🌐", label: "Set remote preference" }];
+  if (t.includes("project")) return [{ Icon: Rocket, label: "Add another project" }, { Icon: Link, label: "Add GitHub link" }];
+  if (t.includes("bio")) return [{ Icon: Check, label: "Looks good, save it" }, { Icon: Pencil, label: "Make it shorter" }];
+  if (t.includes("resume")) return [{ Icon: FileText, label: "Generate a resume" }, { Icon: Palette, label: "Try Tech template" }];
+  if (t.includes("interview") || t.includes("dsa")) return [{ Icon: Brain, label: "Start mock interview" }, { Icon: Lightbulb, label: "DSA study plan" }];
+  if (t.includes("score") || t.includes("profile")) return [{ Icon: TrendingUp, label: "How to score higher?" }, { Icon: Search, label: "What's missing?" }];
+  if (t.includes("cert") || t.includes("aws") || t.includes("course")) return [{ Icon: Award, label: "Add certification" }, { Icon: BookOpen, label: "Which cert next?" }];
+  if (t.includes("salary") || t.includes("lpa") || t.includes("package")) return [{ Icon: Wallet, label: "Set my salary expectation" }, { Icon: BarChart3, label: "Market rates for my skills" }];
+  if (t.includes("location") || t.includes("city") || t.includes("bangalore") || t.includes("mumbai")) return [{ Icon: MapPin, label: "Update my locations" }, { Icon: Globe, label: "Set remote preference" }];
   const shuffled = [...GLOBAL_CHIPS].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, 2);
 }
@@ -160,7 +168,7 @@ function AIBubble({
           <div className="bg-brand text-white rounded-2xl rounded-bl-md px-4 py-3">
             {msg.streaming && !displayText ? (
               <div className="flex items-center gap-2 py-0.5">
-                <span className="text-[12px] text-white/70 italic">toko is on it</span>
+                <span className="text-[13px] text-white/70 italic">toko is on it</span>
                 <div className="flex gap-0.5">
                   {[0, 1, 2].map((i) => (
                     <motion.div
@@ -226,7 +234,7 @@ function AIBubble({
             className="flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-line rounded-xl self-start"
           >
             <CheckCircle className="w-3 h-3 text-done" />
-            <span className="text-[10px] font-black text-ink">Profile updated! purrfect 😎</span>
+            <span className="text-[10px] font-black text-ink">saved to your profile</span>
           </motion.div>
         )}
 
@@ -236,7 +244,7 @@ function AIBubble({
           >
             {msg.suggestions.map((s) => (
               <button key={s} onClick={() => !streaming && onSuggestion(s)} disabled={streaming}
-                className="text-[12px] font-semibold bg-brand-soft text-brand px-3 py-1.5 rounded-full active:scale-95 transition-transform disabled:opacity-40 whitespace-nowrap"
+                className="text-[13px] font-semibold bg-brand-soft text-brand px-3 py-1.5 rounded-full active:scale-95 transition-transform disabled:opacity-40 whitespace-nowrap"
               >{s}</button>
             ))}
           </motion.div>
@@ -283,15 +291,15 @@ function ResumeBanner({ onContinue, onFresh }: { onContinue: () => void; onFresh
     >
       <TokoAvatar />
       <div className="flex-1 min-w-0">
-        <p className="text-[12px] font-black text-ink">Continue where we left off? 🐾</p>
+        <p className="text-[13px] font-black text-ink">Continue where we left off?</p>
         <p className="text-[10px] text-ink-muted">toko remembers your last chat</p>
       </div>
       <div className="flex gap-2 shrink-0">
         <button onClick={onContinue}
-          className="text-[11px] font-bold bg-brand text-white px-3 py-1.5 rounded-full active:scale-95 transition-transform"
+          className="text-[13px] font-bold bg-brand text-white px-3 py-1.5 rounded-full active:scale-95 transition-transform"
         >Yes!</button>
         <button onClick={onFresh}
-          className="text-[11px] font-bold border border-line text-brand px-3 py-1.5 rounded-full active:scale-95 transition-transform"
+          className="text-[13px] font-bold border border-line text-brand px-3 py-1.5 rounded-full active:scale-95 transition-transform"
         >Fresh start</button>
       </div>
     </motion.div>
@@ -305,17 +313,17 @@ function WelcomeChips({ onSelect, disabled }: { onSelect: (s: string) => void; d
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
       className="flex flex-wrap gap-2 pt-1 pb-2"
     >
-      {GLOBAL_CHIPS.slice(0, 6).map(({ emoji, label }) => (
+      {GLOBAL_CHIPS.slice(0, 6).map(({ Icon, label }) => (
         <button key={label} onClick={() => onSelect(label)} disabled={disabled}
-          className="flex items-center gap-1.5 text-[12px] font-semibold bg-brand-soft text-brand px-3 py-1.5 rounded-full active:scale-95 transition-transform disabled:opacity-40"
+          className="flex items-center gap-1.5 text-[13px] font-semibold bg-brand-soft text-brand px-3 py-1.5 rounded-full active:scale-95 transition-transform disabled:opacity-40"
         >
-          <span className="text-base leading-none">{emoji}</span>{label}
+          <Icon className="w-3.5 h-3.5 text-brand shrink-0" strokeWidth={1.75} aria-hidden />{label}
         </button>
       ))}
       <button
         onClick={() => { const p = GLOBAL_CHIPS[Math.floor(Math.random() * GLOBAL_CHIPS.length)]; onSelect(p.label); }}
         disabled={disabled}
-        className="flex items-center gap-1.5 text-[12px] font-semibold bg-brand-soft text-brand px-3 py-1.5 rounded-full active:scale-95 transition-transform disabled:opacity-40"
+        className="flex items-center gap-1.5 text-[13px] font-semibold bg-brand-soft text-brand px-3 py-1.5 rounded-full active:scale-95 transition-transform disabled:opacity-40"
       >
         <Zap className="w-3.5 h-3.5 text-brand" />Surprise me!
       </button>
@@ -510,7 +518,7 @@ export default function AIChat() {
       const displayText = accumulated.includes(UPDATE_MARKER)
         ? accumulated.slice(0, accumulated.indexOf(UPDATE_MARKER)).trim()
         : accumulated;
-      const suggestions = getSuggestions(displayText).map((s) => `${s.emoji} ${s.label}`);
+      const suggestions = getSuggestions(displayText).map((s) => s.label);
 
       setMessages((prev) => prev.map((m) => m.id === aiId ? { ...m, streaming: false, profileUpdated, suggestions } : m));
       setTokoMood(profileUpdated ? "happy" : "normal");
@@ -522,7 +530,7 @@ export default function AIChat() {
       }
     } catch {
       setMessages((prev) => prev.map((m) =>
-        m.id === aiId ? { ...m, text: "Ugh, something went wrong 😿 Try again in a sec?", streaming: false, suggestions: [] } : m
+        m.id === aiId ? { ...m, text: "Ugh, something went wrong. Try again in a sec?", streaming: false, suggestions: [] } : m
       ));
       setTokoMood("error");
       setTimeout(() => setTokoMood("normal"), 2000);
@@ -644,7 +652,7 @@ export default function AIChat() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="text-[11px] text-ink-muted italic mb-1.5 px-1"
+                className="text-[13px] text-ink-muted italic mb-1.5 px-1"
               >
                 "{interimText}"
               </motion.p>
@@ -684,7 +692,7 @@ export default function AIChat() {
                   e.target.style.height = Math.min(e.target.scrollHeight, 96) + "px";
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder={listening ? "Listening... 🎤" : "ask toko anything…"}
+                placeholder={listening ? "Listening…" : "ask toko anything…"}
                 rows={1}
                 disabled={streaming}
                 className={`w-full resize-none text-[13px] text-ink placeholder:text-ink-muted bg-paper rounded-2xl px-4 py-2.5 outline-none border transition-all max-h-[96px] disabled:opacity-60 ${

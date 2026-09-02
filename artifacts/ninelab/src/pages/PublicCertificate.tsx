@@ -68,7 +68,7 @@ export default function PublicCertificate({ slug }: { slug: string }) {
             <h1 className="text-display text-[26px] lg:text-[32px] font-extrabold text-ink leading-tight tracking-tight mt-6">
               Certificate of Completion
             </h1>
-            <p className="text-[12px] text-ink-muted mt-2">This is to certify that</p>
+            <p className="text-[13px] text-ink-muted mt-2">This is to certify that</p>
 
             {/* Student name */}
             <p className="text-display text-[30px] lg:text-[40px] font-extrabold text-ink mt-3 leading-[1.1]">
@@ -87,7 +87,7 @@ export default function PublicCertificate({ slug }: { slug: string }) {
 
             {/* Skills covered */}
             {data.skillsCovered.length > 0 && (
-              <p className="text-[12px] text-ink-muted mt-5 max-w-lg mx-auto leading-relaxed">
+              <p className="text-[13px] text-ink-muted mt-5 max-w-lg mx-auto leading-relaxed">
                 <span className="font-bold text-ink">Skills covered:</span>{" "}
                 {data.skillsCovered.join(" · ")}
               </p>
@@ -100,16 +100,16 @@ export default function PublicCertificate({ slug }: { slug: string }) {
                 Final exam score {data.finalExamScore}%
               </span>
             </div>
-            <p className="text-[11px] text-ink-muted mt-3 max-w-md mx-auto leading-relaxed">
+            <p className="text-[13px] text-ink-muted mt-3 max-w-md mx-auto leading-relaxed">
               Passed a 70% final exam and an AI-evaluated mock interview
             </p>
 
             {/* Footer meta */}
             <div className="mt-8 pt-6 border-t border-line flex flex-col lg:flex-row items-center justify-center gap-1.5 lg:gap-8">
-              <p className="text-[12px] text-ink-muted">
+              <p className="text-[13px] text-ink-muted">
                 Issued <span className="font-semibold text-ink">{issued}</span>
               </p>
-              <p className="text-[12px] text-ink-muted">
+              <p className="text-[13px] text-ink-muted">
                 Certificate ID <span className="font-semibold text-ink font-mono">{data.certificateCode}</span>
               </p>
             </div>
@@ -117,7 +117,7 @@ export default function PublicCertificate({ slug }: { slug: string }) {
         </div>
       </motion.div>
 
-      <p className="mt-6 text-[11px] text-ink-muted text-center">
+      <p className="mt-6 text-[13px] text-ink-muted text-center">
         Verified by NINELAB — AI-powered career platform for students
       </p>
       <a

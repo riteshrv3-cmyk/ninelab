@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import type { ElementType, ReactNode } from "react";
 import { ClaimOnSignIn } from "@/components/ClaimOnSignIn";
-import { PageHeader } from "@/components/PageHeader";
+import { cn } from "@/lib/utils";
+import { PageHeader, PAGE_CONTAINER, PAGE_GRID } from "@/components/PageHeader";
 import { DemoSurface } from "@/components/DemoBanner";
 import { PressableCard } from "@/components/PressableCard";
 import { PeekSheet } from "@/components/PeekSheet";
@@ -216,6 +217,7 @@ export default function ExploreHome() {
       <ClaimOnSignIn />
 
       <PageHeader
+        wide
         title="Everything for placement season."
         subtitle="Free for students. Explore first — no signup needed."
       />
@@ -224,7 +226,7 @@ export default function ExploreHome() {
           first element INSIDE the cards container, not overlapping the canopy
           edge. DemoSurface also suppresses per-card SampleChips — one demo
           signal per surface; Priya's state lines stay in text-brand instead. */}
-      <div className="px-4 -mt-6 max-w-md lg:max-w-2xl mx-auto space-y-3">
+      <div className={cn(PAGE_CONTAINER, "-mt-6 space-y-3")}>
         {/* Continue chip — real mode only, from the last feature page visited. */}
         {lastActivity && (
           <PressableCard
@@ -274,7 +276,7 @@ export default function ExploreHome() {
           </PressableCard>
 
           {/* Remaining features — secondary weight, 2-up on desktop. */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <div className={PAGE_GRID}>
             {rest.map((card) => {
               const Icon = card.icon;
               return (

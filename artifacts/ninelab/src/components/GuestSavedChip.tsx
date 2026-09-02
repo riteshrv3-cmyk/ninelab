@@ -19,7 +19,7 @@ export function GuestSavedChip({ className = "" }: { className?: string }) {
         <span className="block text-[13px] font-semibold text-ink leading-tight">
           Saved on this device
         </span>
-        <span className="block text-[12px] text-ink-muted leading-tight">
+        <span className="block text-[13px] text-ink-muted leading-tight">
           Sign up free to keep your progress everywhere.
         </span>
       </span>

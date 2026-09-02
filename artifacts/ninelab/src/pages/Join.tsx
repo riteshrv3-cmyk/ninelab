@@ -84,7 +84,7 @@ export default function Join({ code }: { code: string }) {
           initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.15 }}
           className="bg-brand-soft rounded-full px-4 py-1.5 mb-4 inline-flex items-center"
         >
-          <span className="text-[11px] font-bold uppercase tracking-wider text-brand">Official college invite</span>
+          <span className="text-[12px] font-bold uppercase tracking-wider text-brand">Official college invite</span>
         </motion.div>
 
         <motion.h1
@@ -114,7 +114,7 @@ export default function Join({ code }: { code: string }) {
             initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4 }}
             className="bg-paper rounded-2xl shadow-soft px-4 py-2.5 mb-6"
           >
-            <p className="text-[12px] font-bold text-ink-muted">
+            <p className="text-[13px] font-bold text-ink-muted">
               {college.signupCount} {college.signupCount === 1 ? "student" : "students"} from your college already joined
             </p>
           </motion.div>
@@ -148,7 +148,7 @@ export default function Join({ code }: { code: string }) {
         >
           Join {college.name.split(" ").slice(0, 3).join(" ")} →
         </Button>
-        <p className="text-[11px] text-ink-muted mt-3">Free forever · 60-second setup</p>
+        <p className="text-[13px] text-ink-muted mt-3">Free forever · 60-second setup</p>
       </motion.div>
     </div>
   );

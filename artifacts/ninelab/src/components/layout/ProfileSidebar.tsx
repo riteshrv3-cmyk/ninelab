@@ -132,15 +132,15 @@ export function ProfileSidebar({ onClose }: { onClose: () => void }) {
             </div>
             <div className="flex-1 min-w-0">
               <h2 className="text-[20px] font-extrabold text-white leading-tight truncate">{profile?.name || (isDemo ? "Explore mode" : "Loading...")}</h2>
-              <p className="text-[12px] text-white/70 mt-0.5 truncate">{profile?.college}</p>
-              <p className="text-[11px] text-white/70">{profile?.field} · Year {profile?.year}</p>
+              <p className="text-[13px] text-white/70 mt-0.5 truncate">{profile?.college}</p>
+              <p className="text-[13px] text-white/70">{profile?.field} · Year {profile?.year}</p>
             </div>
           </div>
 
           {profile?.openToWork && (
             <div className="mt-3 inline-flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1">
               <span className="w-1.5 h-1.5 rounded-full bg-done" />
-              <span className="text-[11px] font-bold text-white">Open to Opportunities</span>
+              <span className="text-[13px] font-bold text-white">Open to Opportunities</span>
             </div>
           )}
         </div>
@@ -224,7 +224,7 @@ export function ProfileSidebar({ onClose }: { onClose: () => void }) {
                   <div key={i} className="flex items-center gap-2">
                     <Icon className="w-4 h-4 shrink-0 text-ink" />
                     <a href={value.startsWith("http") ? value : `https://${value}`} target="_blank" rel="noopener noreferrer"
-                      className="text-[12px] font-bold text-ink truncate flex-1">
+                      className="text-[13px] font-bold text-ink truncate flex-1">
                       {value.replace(/^https?:\/\/(www\.)?/, "")}
                       <ExternalLink className="w-2.5 h-2.5 inline-block ml-0.5" />
                     </a>
@@ -239,7 +239,7 @@ export function ProfileSidebar({ onClose }: { onClose: () => void }) {
             <div className="px-4 pt-3">
               <div className="bg-paper rounded-2xl shadow-soft p-4">
                 <h3 className="text-[14px] font-extrabold text-ink mb-2">About</h3>
-                <p className="text-[12px] text-ink-muted leading-relaxed">{profile.bio}</p>
+                <p className="text-[13px] text-ink-muted leading-relaxed">{profile.bio}</p>
               </div>
             </div>
           )}
@@ -255,7 +255,7 @@ export function ProfileSidebar({ onClose }: { onClose: () => void }) {
                 <div className="space-y-2">
                   {topSkills.map(([skill, val]) => (
                     <div key={skill} className="flex items-center gap-2">
-                      <span className="text-[12px] font-bold text-ink w-20 shrink-0 truncate">{skill}</span>
+                      <span className="text-[13px] font-bold text-ink w-20 shrink-0 truncate">{skill}</span>
                       <div className="flex-1 h-1.5 bg-line rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}

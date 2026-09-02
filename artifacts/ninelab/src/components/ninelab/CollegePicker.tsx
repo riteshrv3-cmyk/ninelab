@@ -51,7 +51,7 @@ export function CollegePicker({ studentId, onPicked }: { studentId: string | num
 
   return (
     <div className="space-y-1.5">
-      <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider">Find your college (links you to your TPO)</p>
+      <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider">Find your college (links you to your TPO)</p>
       <div className="relative">
         <Search className="w-4 h-4 text-ink-muted absolute left-3 top-1/2 -translate-y-1/2" />
         <input
@@ -75,7 +75,7 @@ export function CollegePicker({ studentId, onPicked }: { studentId: string | num
                 className="w-full text-left px-3 py-2 hover:bg-canvas disabled:opacity-60"
               >
                 <p className="text-[14px] font-semibold text-ink">{c.name}</p>
-                {c.city && <p className="text-[11px] text-ink-muted">{c.city}</p>}
+                {c.city && <p className="text-[13px] text-ink-muted">{c.city}</p>}
               </button>
             ))}
           </div>

@@ -157,7 +157,7 @@ export default function Pipeline() {
             rows={6}
             className="w-full rounded-2xl border border-line bg-paper px-4 py-3 text-[14px] text-ink placeholder:text-ink-muted focus:outline-none focus:border-brand resize-none"
           />
-          {error && <p className="text-[12px] text-danger mt-2">{error}</p>}
+          {error && <p className="text-[13px] text-danger mt-2">{error}</p>}
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={analyze}
@@ -168,7 +168,7 @@ export default function Pipeline() {
             {analyzing ? "Analyzing…" : "Analyze"}
           </motion.button>
 
-          <button onClick={() => setLocation("/drive-check")} className="mt-2 text-[12px] text-ink-muted underline">
+          <button onClick={() => setLocation("/drive-check")} className="mt-2 text-[13px] text-ink-muted underline">
             Just want a quick scam check? Use Drive Check
           </button>
         </div>
@@ -187,7 +187,7 @@ export default function Pipeline() {
               {result.company ?? "Unknown company"}{result.role ? ` · ${result.role}` : ""}
             </p>
             {result.scamVerdict && (
-              <span className={cn("text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1", VERDICT_STYLE[result.scamVerdict].className)}>
+              <span className={cn("text-[13px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1", VERDICT_STYLE[result.scamVerdict].className)}>
                 {VERDICT_STYLE[result.scamVerdict].label}
               </span>
             )}
@@ -196,19 +196,19 @@ export default function Pipeline() {
           {result.scamReasons && result.scamReasons.length > 0 && (
             <ul className="mb-4 space-y-1">
               {result.scamReasons.map((r, i) => (
-                <li key={i} className="text-[12px] text-ink-muted">• {r}</li>
+                <li key={i} className="text-[13px] text-ink-muted">• {r}</li>
               ))}
             </ul>
           )}
 
           {result.gates && Object.keys(result.gates).length > 0 && (
             <div className="mb-4">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mb-2">
+              <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted mb-2">
                 Eligibility {result.gatesOpen}/{result.gatesTotal}
               </p>
               <div className="space-y-1.5">
                 {Object.entries(result.gates).map(([key, gate]) => (
-                  <div key={key} className="flex items-center gap-2 text-[12px]">
+                  <div key={key} className="flex items-center gap-2 text-[13px]">
                     <span className={cn("w-2 h-2 rounded-full shrink-0", gate.open ? "bg-done" : "bg-danger")} />
                     <span className="text-ink">{gate.label}</span>
                   </div>
@@ -219,34 +219,34 @@ export default function Pipeline() {
 
           {result.fitScore !== null && (
             <div className="mb-4">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mb-1">
+              <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted mb-1">
                 Fit score: {result.fitScore}/100
               </p>
               {result.fitSummary && <p className="text-[13px] text-ink">{result.fitSummary}</p>}
               {result.have && result.have.length > 0 && (
-                <p className="text-[12px] text-ink-muted mt-1">Have: {result.have.join(", ")}</p>
+                <p className="text-[13px] text-ink-muted mt-1">Have: {result.have.join(", ")}</p>
               )}
               {result.missing && result.missing.length > 0 && (
-                <p className="text-[12px] text-ink-muted mt-0.5">Missing: {result.missing.join(", ")}</p>
+                <p className="text-[13px] text-ink-muted mt-0.5">Missing: {result.missing.join(", ")}</p>
               )}
             </div>
           )}
 
           {result.suggestedPrep && result.suggestedPrep.length > 0 && (
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mb-2">Suggested prep</p>
+              <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted mb-2">Suggested prep</p>
               {result.suggestedPrep.map((item, i) => {
                 const key = item.hours * 1000 + item.title.length;
                 return (
                   <div key={i} className="flex items-center justify-between gap-2 py-2 border-t border-line first:border-t-0">
                     <div className="min-w-0">
                       <p className="text-[13px] font-semibold text-ink truncate">{item.title}</p>
-                      <p className="text-[11px] text-ink-muted">{item.hours}h · {item.action}</p>
+                      <p className="text-[13px] text-ink-muted">{item.hours}h · {item.action}</p>
                     </div>
                     <button
                       onClick={() => addPrepToTomorrow(item)}
                       disabled={addedPrep.has(key)}
-                      className="shrink-0 text-[11px] font-bold text-brand disabled:text-ink-muted"
+                      className="shrink-0 text-[13px] font-bold text-brand disabled:text-ink-muted"
                     >
                       {addedPrep.has(key) ? "Added ✓" : "Add to tomorrow"}
                     </button>
@@ -260,7 +260,7 @@ export default function Pipeline() {
 
       {applications.length > 0 && (
         <div className="mt-8">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mb-3">Tracked ({applications.length})</p>
+          <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted mb-3">Tracked ({applications.length})</p>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
             {applications.map((app, i) => (
               <motion.div
@@ -280,7 +280,7 @@ export default function Pipeline() {
                   <select
                     value={app.status}
                     onChange={(e) => updateStatus(app.id, e.target.value)}
-                    className="text-[12px] font-semibold text-brand bg-brand-soft rounded-lg px-2 py-1 border-0 focus:outline-none"
+                    className="text-[13px] font-semibold text-brand bg-brand-soft rounded-lg px-2 py-1 border-0 focus:outline-none"
                   >
                     {STATUS_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -288,7 +288,7 @@ export default function Pipeline() {
                   </select>
                   <button
                     onClick={() => tailorResumeFor(app, setLocation)}
-                    className="shrink-0 flex items-center gap-1 text-[12px] font-bold text-brand"
+                    className="shrink-0 flex items-center gap-1 text-[13px] font-bold text-brand"
                   >
                     <FileText className="w-3.5 h-3.5" /> Tailor resume
                   </button>

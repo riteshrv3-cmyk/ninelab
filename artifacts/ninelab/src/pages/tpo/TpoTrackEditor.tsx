@@ -55,8 +55,8 @@ export default function TpoTrackEditor() {
           {data.templates.map((t: TrackTemplate) => (
             <div key={t.templateKey} className="bg-paper rounded-2xl shadow-soft p-4 flex flex-col">
               <p className="text-[15px] font-extrabold text-ink">{t.name}</p>
-              <p className="text-[12px] text-ink-muted mt-1 flex-1">{t.description}</p>
-              <p className="text-[11px] text-ink-muted mt-2">{t.milestones.length} milestones</p>
+              <p className="text-[13px] text-ink-muted mt-1 flex-1">{t.description}</p>
+              <p className="text-[13px] text-ink-muted mt-2">{t.milestones.length} milestones</p>
               <button
                 type="button"
                 disabled={create.isPending}
@@ -114,11 +114,11 @@ export default function TpoTrackEditor() {
 
       <div className="bg-paper rounded-2xl shadow-soft p-4 space-y-3">
         <div>
-          <label className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">Track name</label>
+          <label className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">Track name</label>
           <input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 w-full h-10 px-3 rounded-xl bg-canvas border border-line text-[14px] text-ink focus:outline-none focus:ring-2 focus:ring-brand/30" />
         </div>
         <div>
-          <label className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">Description</label>
+          <label className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">Description</label>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="mt-1 w-full px-3 py-2 rounded-xl bg-canvas border border-line text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-brand/30" />
         </div>
       </div>
@@ -133,7 +133,7 @@ export default function TpoTrackEditor() {
             <span className="text-[13px] font-bold text-ink-muted tabular-nums w-5 text-center">{i + 1}</span>
             <div className="flex-1 min-w-0">
               <input value={m.title} onChange={(e) => update(i, { title: e.target.value })} className="w-full h-9 px-2 rounded-lg bg-canvas border border-line text-[14px] font-semibold text-ink focus:outline-none focus:ring-2 focus:ring-brand/30" />
-              <p className="text-[11px] text-ink-muted mt-1 ml-1">{KIND_LABELS[m.kind] ?? m.kind}</p>
+              <p className="text-[13px] text-ink-muted mt-1 ml-1">{KIND_LABELS[m.kind] ?? m.kind}</p>
             </div>
             <button type="button" onClick={() => remove(i)} className="text-rose-500 shrink-0 p-1"><Trash2 className="w-4 h-4" /></button>
           </div>

@@ -11,9 +11,13 @@ const HIDDEN_PREFIXES = ["/practice/interview/"];
  * Floating action button that opens Toko chat. Hidden on /chat itself and
  * fullscreen routes.
  *
- * Placement: seated ABOVE the BottomNav on mobile (nav h-16 + safe-area +
- * 8px) so it never covers page content behind the nav; 44px on mobile,
- * full-size on lg+ where there is no bottom nav and it sits in the corner.
+ * Placement: seated ABOVE the BottomNav on mobile (nav h-16 = 4rem, plus
+ * safe-area, plus a 1rem/16px clearance gap above the nav's top edge) so it
+ * never covers page content or the nav; 48px on mobile (the BottomNav
+ * breakpoint — `lg`, matching BottomNav's own `lg:hidden` — not the generic
+ * 768px "desktop" cutoff, since the tab bar stays visible up to `lg`), full
+ * 56px on lg+ where there is no bottom nav and it sits in the corner with a
+ * 24px bottom/right margin.
  *
  * Scroll behavior: hides while the user scrolls down (content is what they
  * came for), reappears on scroll-up or after ~800ms of idle. Passive
@@ -55,13 +59,15 @@ export function TokoBubble() {
   return (
     <button
       type="button"
+      data-testid="toko-bubble"
       onClick={() => setLocation("/chat")}
       aria-label="Chat with Toko"
       className={cn(
-        // Mobile: 44px, seated above BottomNav (h-16 = 4rem, + 8px gap).
-        // Desktop (no bottom nav): full 56px, corner offset.
-        "fixed right-4 z-30 w-11 h-11 lg:w-14 lg:h-14 rounded-full bg-brand flex items-center justify-center shadow-[0_10px_28px_rgba(74,85,199,0.35)] active:scale-95",
-        "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] lg:bottom-6",
+        // Mobile: 48px, seated above BottomNav (h-16 = 4rem + safe-area)
+        // with a 1rem/16px clearance gap above the nav's top edge.
+        // Desktop (no bottom nav): full 56px, 24px bottom/right corner offset.
+        "fixed right-4 lg:right-6 z-30 w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-brand flex items-center justify-center shadow-[0_10px_28px_rgba(74,85,199,0.35)] active:scale-95",
+        "bottom-[calc(5rem+2px+env(safe-area-inset-bottom))] lg:bottom-6",
         !reduced && "transition-[transform,opacity] duration-200",
         hidden && "translate-y-24 opacity-0 pointer-events-none",
       )}

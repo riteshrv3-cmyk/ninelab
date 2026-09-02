@@ -26,7 +26,7 @@ function TpoNav() {
       <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-[15px] font-extrabold text-ink" style={{ fontFamily: "var(--font-display)" }}>ninelab</span>
-          <span className="text-[11px] font-bold uppercase tracking-wider text-brand bg-brand-soft px-2 py-0.5 rounded-full">TPO</span>
+          <span className="text-[12px] font-bold uppercase tracking-wider text-brand bg-brand-soft px-2 py-0.5 rounded-full">TPO</span>
         </div>
         <nav className="flex items-center gap-1">
           {item("/", "Dashboard", LayoutDashboard, onDashboard)}

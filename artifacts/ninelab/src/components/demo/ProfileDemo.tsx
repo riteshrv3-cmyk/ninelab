@@ -43,8 +43,8 @@ export default function ProfileDemo({ onStart }: { onStart: () => void }) {
         <h1 className="text-display text-[30px] lg:text-[36px] font-extrabold text-white leading-[1.06] tracking-tight mt-3">
           {p.name}
         </h1>
-        <p className="text-[12px] text-white/70 mt-1">{p.college}</p>
-        <p className="text-[12px] text-white/70 mt-0.5">
+        <p className="text-[13px] text-white/70 mt-1">{p.college}</p>
+        <p className="text-[13px] text-white/70 mt-0.5">
           {p.field} · Year {p.year} · {p.city}
         </p>
       </div>
@@ -62,7 +62,7 @@ export default function ProfileDemo({ onStart }: { onStart: () => void }) {
               </h3>
             </div>
             <p className="text-[18px] font-extrabold text-ink">{p.targetRole}</p>
-            <p className="text-[12px] text-ink-muted mt-0.5">
+            <p className="text-[13px] text-ink-muted mt-0.5">
               Batch of {p.targetBatch} · {p.githubUrl}
             </p>
           </div>
@@ -84,7 +84,7 @@ export default function ProfileDemo({ onStart }: { onStart: () => void }) {
                 >
                   <div className="flex items-baseline justify-between mb-1">
                     <span className="text-[13px] font-semibold text-ink">{name}</span>
-                    <span className="text-[12px] font-bold text-ink-muted tabular-nums">
+                    <span className="text-[13px] font-bold text-ink-muted tabular-nums">
                       {value}%
                     </span>
                   </div>
@@ -106,7 +106,7 @@ export default function ProfileDemo({ onStart }: { onStart: () => void }) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[14px] font-bold text-ink">Built from her GitHub</p>
-              <p className="text-[12px] text-ink-muted">
+              <p className="text-[13px] text-ink-muted">
                 Projects, skills and scores fill in automatically once you connect yours.
               </p>
             </div>
@@ -122,7 +122,7 @@ export default function ProfileDemo({ onStart }: { onStart: () => void }) {
               Start my own profile
             </Button>
           </motion.div>
-          <p className="text-center text-[12px] text-ink-muted -mt-2">
+          <p className="text-center text-[13px] text-ink-muted -mt-2">
             Add your GitHub or a resume — your profile builds itself.
           </p>
         </div>

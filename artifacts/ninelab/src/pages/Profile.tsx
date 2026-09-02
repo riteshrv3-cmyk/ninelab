@@ -29,6 +29,7 @@ import { useStudentId } from "@/hooks/useStudentId";
 import { useNameGate } from "@/components/NameGate";
 import { useIsGuest, GuestSavedChip } from "@/components/GuestSavedChip";
 import ProfileDemo from "@/components/demo/ProfileDemo";
+import { Footer } from "@/components/ninelab/Footer";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -210,7 +211,7 @@ function ActivityCard({ studentId }: { studentId: number }) {
         <Sparkles className="w-4 h-4 text-ink" /> Your activity
       </h3>
       {total === 0 ? (
-        <p className="text-[12px] text-ink-muted">
+        <p className="text-[13px] text-ink-muted">
           Nothing yet. Practice an interview or generate a resume — it shows up here automatically.
         </p>
       ) : (
@@ -259,13 +260,13 @@ function InstallCard() {
         <Share className="w-4 h-4 text-ink" /> Add to home screen
       </h3>
       {platform === "ios" ? (
-        <p className="text-[12px] text-ink-muted">
+        <p className="text-[13px] text-ink-muted">
           Tap the Share button in Safari, then choose <span className="font-semibold text-ink">Add to Home Screen</span> to
           open ninelab like an app.
         </p>
       ) : (
         <>
-          <p className="text-[12px] text-ink-muted mb-3">
+          <p className="text-[13px] text-ink-muted mb-3">
             Install ninelab for the full app experience — fullscreen, faster, on your home screen.
           </p>
           <button
@@ -304,7 +305,7 @@ function MyResumesCard({ studentId, onNavigate }: { studentId: number; onNavigat
           <h3 className="text-[14px] font-bold text-ink flex items-center gap-2">
             <FileText className="w-4 h-4 text-ink" /> My Resumes
           </h3>
-          <button onClick={onNavigate} className="text-[11px] font-bold text-ink flex items-center gap-0.5">
+          <button onClick={onNavigate} className="text-[13px] font-bold text-ink flex items-center gap-0.5">
             Open <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -317,7 +318,7 @@ function MyResumesCard({ studentId, onNavigate }: { studentId: number; onNavigat
         ) : resumes.length === 0 ? (
           <div className="flex flex-col items-center gap-2 text-center">
             <Sparkles className="w-5 h-5 text-ink-muted" />
-            <p className="text-[12px] text-ink-muted">AI-tailored to any JD · 4 templates</p>
+            <p className="text-[13px] text-ink-muted">AI-tailored to any JD · 4 templates</p>
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={onNavigate}
@@ -401,7 +402,7 @@ function CertificatesCard({ studentId }: { studentId: number }) {
         </h3>
 
         {!certs || certs.length === 0 ? (
-          <p className="text-[12px] text-ink-muted">Complete a course to earn a verified certificate.</p>
+          <p className="text-[13px] text-ink-muted">Complete a course to earn a verified certificate.</p>
         ) : (
           <div>
             {certs.map(cert => {
@@ -419,8 +420,8 @@ function CertificatesCard({ studentId }: { studentId: number }) {
                       >
                         {cert.subDomainName} <ExternalLink className="w-3 h-3 shrink-0" />
                       </a>
-                      <p className="text-[12px] text-ink-muted mt-0.5">{cert.domainName} · {issued}</p>
-                      <p className="text-[11px] text-ink-muted mt-0.5 font-mono">{cert.certificateCode}</p>
+                      <p className="text-[13px] text-ink-muted mt-0.5">{cert.domainName} · {issued}</p>
+                      <p className="text-[13px] text-ink-muted mt-0.5 font-mono">{cert.certificateCode}</p>
                     </div>
                     <div className="w-8 h-8 rounded-full bg-brand-soft flex items-center justify-center shrink-0">
                       <Award className="w-4 h-4 text-brand" />
@@ -428,7 +429,7 @@ function CertificatesCard({ studentId }: { studentId: number }) {
                   </div>
                   <button
                     onClick={() => toggle(cert)}
-                    className="mt-2.5 flex items-center gap-2 text-[12px] font-semibold text-ink"
+                    className="mt-2.5 flex items-center gap-2 text-[13px] font-semibold text-ink"
                   >
                     <span className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${checked ? "bg-brand border-brand" : "border-line bg-paper"}`}>
                       {checked && <Check className="w-3 h-3 text-white" />}
@@ -738,11 +739,14 @@ export default function Profile() {
   // through the NameGate, which creates a guest row and flips isDemo off.
   if (isDemo) {
     return (
-      <ProfileDemo
-        onStart={() =>
-          requireStudent(() => {}, { title: "Start your profile" })
-        }
-      />
+      <>
+        <ProfileDemo
+          onStart={() =>
+            requireStudent(() => {}, { title: "Start your profile" })
+          }
+        />
+        <Footer />
+      </>
     );
   }
 
@@ -816,7 +820,7 @@ export default function Profile() {
         {/* Edit profile button top-right */}
         <button
           onClick={() => setEditSection(isEditingBasic ? null : "basic")}
-          className="absolute top-6 right-6 flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1.5 text-[11px] font-bold text-white"
+          className="absolute top-6 right-6 flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1.5 text-[13px] font-bold text-white"
         >
           {isEditingBasic ? <X className="w-3.5 h-3.5" /> : <Edit2 className="w-3.5 h-3.5" />}
           {isEditingBasic ? "Cancel" : "Edit Profile"}
@@ -858,16 +862,16 @@ export default function Profile() {
         </div>
 
         <h1 className="text-display text-[30px] lg:text-[36px] font-extrabold text-white leading-[1.06] tracking-tight mt-3">{profile.name}</h1>
-        {profile.college !== "Not set" && <p className="text-[12px] text-white/70 mt-1">{profile.college}</p>}
+        {profile.college !== "Not set" && <p className="text-[13px] text-white/70 mt-1">{profile.college}</p>}
         {profile.field !== "Not set" && (
-          <p className="text-[12px] text-white/70 mt-0.5">
+          <p className="text-[13px] text-white/70 mt-0.5">
             {profile.field} · Year {profile.year}{profile.city && profile.city !== "Not set" ? ` · ${profile.city}` : ""}
           </p>
         )}
-        {profile.cgpa && <p className="text-[12px] text-white/70 mt-0.5">CGPA {profile.cgpa}</p>}
+        {profile.cgpa && <p className="text-[13px] text-white/70 mt-0.5">CGPA {profile.cgpa}</p>}
 
         {profile.openToWork && (
-          <p className="mt-2 text-[12px] font-semibold text-white/90">Open to Opportunities</p>
+          <p className="mt-2 text-[13px] font-semibold text-white/90">Open to Opportunities</p>
         )}
       </div>
 
@@ -895,7 +899,7 @@ export default function Profile() {
           <div className="bg-paper rounded-2xl shadow-soft mx-4 px-4 py-3 flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[14px] font-bold text-ink">Exploring as Guest</p>
-              <p className="text-[12px] text-ink-muted">Sign in to save your real profile</p>
+              <p className="text-[13px] text-ink-muted">Sign in to save your real profile</p>
             </div>
             <motion.button
               whileTap={{ scale: 0.97 }}
@@ -930,7 +934,7 @@ export default function Profile() {
 
                   {/* Photo URL */}
                   <div className="space-y-1.5">
-                    <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider flex items-center gap-1">
+                    <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider flex items-center gap-1">
                       <Camera className="w-3 h-3" /> Profile Photo URL
                     </p>
                     <div className="flex gap-2 items-center">
@@ -957,7 +961,7 @@ export default function Profile() {
 
                   {/* Name */}
                   <div className="space-y-1.5">
-                    <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider">Full Name</p>
+                    <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider">Full Name</p>
                     <Input
                       placeholder="Your full name"
                       value={basicForm.name}
@@ -972,7 +976,7 @@ export default function Profile() {
                     onPicked={(name) => setBasicForm(f => ({ ...f, college: name }))}
                   />
                   <div className="space-y-1.5">
-                    <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider flex items-center gap-1">
+                    <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider flex items-center gap-1">
                       <Building2 className="w-3 h-3" /> College
                     </p>
                     <Input
@@ -983,7 +987,7 @@ export default function Profile() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider flex items-center gap-1">
+                    <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider flex items-center gap-1">
                       <MapPin className="w-3 h-3" /> City
                     </p>
                     <Input
@@ -997,7 +1001,7 @@ export default function Profile() {
                   {/* Year + Field */}
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1.5">
-                      <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider">Year</p>
+                      <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider">Year</p>
                       <div className="flex gap-1 flex-wrap">
                         {YEAR_OPTIONS.map(y => (
                           <button
@@ -1011,7 +1015,7 @@ export default function Profile() {
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider">CGPA</p>
+                      <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider">CGPA</p>
                       <Input
                         placeholder="e.g. 8.5"
                         value={basicForm.cgpa}
@@ -1024,7 +1028,7 @@ export default function Profile() {
 
                   {/* Field of study */}
                   <div className="space-y-1.5">
-                    <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider flex items-center gap-1">
+                    <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider flex items-center gap-1">
                       <BookOpen className="w-3 h-3" /> Field of Study
                     </p>
                     <div className="flex flex-wrap gap-1.5">
@@ -1032,7 +1036,7 @@ export default function Profile() {
                         <button
                           key={f}
                           onClick={() => setBasicForm(prev => ({ ...prev, field: f }))}
-                          className={`text-[11px] font-bold px-2.5 py-1 rounded-full transition-colors ${basicForm.field === f ? "bg-brand text-white" : "border border-line text-ink-muted"}`}
+                          className={`text-[13px] font-bold px-2.5 py-1 rounded-full transition-colors ${basicForm.field === f ? "bg-brand text-white" : "border border-line text-ink-muted"}`}
                         >
                           {f}
                         </button>
@@ -1066,7 +1070,7 @@ export default function Profile() {
         >
           <div>
             <h3 className="text-[14px] font-bold text-brand">Toko's Notebook</h3>
-            <p className="text-[11px] text-ink/70 mt-0.5">Everything Toko has noticed about your journey</p>
+            <p className="text-[13px] text-ink/70 mt-0.5">Everything Toko has noticed about your journey</p>
           </div>
           <span className="text-brand text-[13px] font-bold">→</span>
         </button>
@@ -1074,7 +1078,7 @@ export default function Profile() {
         {isProfileEmpty && (
           <div className="mx-4 bg-brand rounded-2xl shadow-soft p-5 space-y-3">
             <h3 className="text-display text-[15px] font-extrabold text-white">Start here</h3>
-            <p className="text-[12px] text-white/70 -mt-2">
+            <p className="text-[13px] text-white/70 -mt-2">
               Give Toko something real to work from — everything else on this page builds on this.
             </p>
             <div className="space-y-2">
@@ -1082,21 +1086,21 @@ export default function Profile() {
                 onClick={() => { setEditSection("links"); document.getElementById("links-section")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
                 className="w-full flex items-center gap-2 bg-white/15 rounded-xl px-3.5 py-2.5 text-left"
               >
-                <span className="w-5 h-5 rounded-full bg-white/20 text-white text-[11px] font-bold flex items-center justify-center shrink-0">1</span>
+                <span className="w-5 h-5 rounded-full bg-white/20 text-white text-[13px] font-bold flex items-center justify-center shrink-0">1</span>
                 <span className="text-[13px] font-semibold text-white">Add your GitHub URL</span>
               </button>
               <button
                 onClick={() => document.getElementById("import-resume-section")?.scrollIntoView({ behavior: "smooth", block: "start" })}
                 className="w-full flex items-center gap-2 bg-white/15 rounded-xl px-3.5 py-2.5 text-left"
               >
-                <span className="w-5 h-5 rounded-full bg-white/20 text-white text-[11px] font-bold flex items-center justify-center shrink-0">2</span>
+                <span className="w-5 h-5 rounded-full bg-white/20 text-white text-[13px] font-bold flex items-center justify-center shrink-0">2</span>
                 <span className="text-[13px] font-semibold text-white">Or upload your resume</span>
               </button>
               <button
                 onClick={() => setLocation("/resume")}
                 className="w-full flex items-center gap-2 bg-white rounded-xl px-3.5 py-2.5 text-left"
               >
-                <span className="w-5 h-5 rounded-full bg-brand-soft text-brand text-[11px] font-bold flex items-center justify-center shrink-0">3</span>
+                <span className="w-5 h-5 rounded-full bg-brand-soft text-brand text-[13px] font-bold flex items-center justify-center shrink-0">3</span>
                 <span className="text-[13px] font-bold text-brand">Generate your first resume</span>
               </button>
             </div>
@@ -1123,16 +1127,16 @@ export default function Profile() {
                 {strengthTips.length > 0 ? (
                   <ul className="mt-1 space-y-0.5">
                     {strengthTips.slice(0, 2).map((tip, i) => (
-                      <li key={i} className="text-[11px] text-ink-muted flex items-center gap-1">
+                      <li key={i} className="text-[13px] text-ink-muted flex items-center gap-1">
                         <span className="text-ink-muted">+</span> {tip}
                       </li>
                     ))}
                     {strengthTips.length > 2 && (
-                      <li className="text-[11px] text-ink-muted">+{strengthTips.length - 2} more</li>
+                      <li className="text-[13px] text-ink-muted">+{strengthTips.length - 2} more</li>
                     )}
                   </ul>
                 ) : (
-                  <p className="text-[12px] text-ink font-semibold mt-1">Profile complete!</p>
+                  <p className="text-[13px] text-ink font-semibold mt-1">Profile complete!</p>
                 )}
               </div>
             </div>
@@ -1275,14 +1279,14 @@ export default function Profile() {
                 {profile.githubStats.topLanguages.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {profile.githubStats.topLanguages.map(lang => (
-                      <Badge key={lang} className="text-[11px] bg-paper border-line text-ink-muted font-bold">{lang}</Badge>
+                      <Badge key={lang} className="text-[13px] bg-paper border-line text-ink-muted font-bold">{lang}</Badge>
                     ))}
                   </div>
                 )}
                 {profile.githubStats.topRepos.length > 0 && (
                   <div className="mt-3">
                     {profile.githubStats.topRepos.map(repo => (
-                      <div key={repo.name} className="flex items-center justify-between text-[12px] py-2 border-t border-line first:border-t-0">
+                      <div key={repo.name} className="flex items-center justify-between text-[13px] py-2 border-t border-line first:border-t-0">
                         <span className="font-semibold text-ink truncate">{repo.name}</span>
                         <span className="flex items-center gap-1 text-ink-muted ml-2 shrink-0"><Star className="w-3 h-3" />{repo.stars}</span>
                       </div>
@@ -1303,10 +1307,10 @@ export default function Profile() {
                   </Badge>
                 </div>
                 {profile.linkedinData.recruitersWillNotice && (
-                  <p className="text-[12px] text-ink-muted italic mb-2">"{profile.linkedinData.recruitersWillNotice}"</p>
+                  <p className="text-[13px] text-ink-muted italic mb-2">"{profile.linkedinData.recruitersWillNotice}"</p>
                 )}
                 {profile.linkedinData.improvements?.slice(0, 2).map((tip: string, i: number) => (
-                  <p key={i} className="text-[11px] text-ink-muted flex items-start gap-1"><span>→</span>{tip}</p>
+                  <p key={i} className="text-[13px] text-ink-muted flex items-start gap-1"><span>→</span>{tip}</p>
                 ))}
               </motion.div>
             )}
@@ -1349,7 +1353,7 @@ export default function Profile() {
           <div className="p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[14px] font-bold text-ink flex items-center gap-2"><BookOpen className="w-4 h-4 text-ink" /> Education</h3>
-              <button onClick={openAddEducation} className="flex items-center gap-1 text-[12px] font-bold text-ink">
+              <button onClick={openAddEducation} className="flex items-center gap-1 text-[13px] font-bold text-ink">
                 {showAddEducation ? <X className="w-4 h-4" /> : <><Plus className="w-4 h-4" /> Add</>}
               </button>
             </div>
@@ -1381,7 +1385,7 @@ export default function Profile() {
             {profile.education.length === 0 && !showAddEducation && (
               <div className="text-center">
                 <p className="text-[14px] text-ink">No education added yet</p>
-                <p className="text-[12px] text-ink-muted mt-0.5">Your degree, college and CGPA for the resume</p>
+                <p className="text-[13px] text-ink-muted mt-0.5">Your degree, college and CGPA for the resume</p>
                 <motion.button whileTap={{ scale: 0.97 }} onClick={openAddEducation} className="w-full mt-3 bg-brand text-white text-[13px] font-bold rounded-full px-4 py-3">
                   Add your education
                 </motion.button>
@@ -1395,10 +1399,10 @@ export default function Profile() {
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                   <h4 className="text-[14px] font-semibold text-ink pr-6">{ed.degree}</h4>
-                  <p className="text-[12px] text-ink-muted mt-0.5">
+                  <p className="text-[13px] text-ink-muted mt-0.5">
                     {ed.institution}{ed.field ? ` · ${ed.field}` : ""}
                   </p>
-                  <p className="text-[11px] text-ink-muted mt-0.5">
+                  <p className="text-[13px] text-ink-muted mt-0.5">
                     {[ed.start, ed.end].filter(Boolean).join(" – ")}{ed.cgpa ? ` · CGPA ${ed.cgpa}` : ""}
                   </p>
                 </motion.div>
@@ -1412,7 +1416,7 @@ export default function Profile() {
           <div className="p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[14px] font-bold text-ink flex items-center gap-2"><Building2 className="w-4 h-4 text-ink" /> Experience</h3>
-              <button onClick={() => setShowAddExperience(!showAddExperience)} className="flex items-center gap-1 text-[12px] font-bold text-ink">
+              <button onClick={() => setShowAddExperience(!showAddExperience)} className="flex items-center gap-1 text-[13px] font-bold text-ink">
                 {showAddExperience ? <X className="w-4 h-4" /> : <><Plus className="w-4 h-4" /> Add</>}
               </button>
             </div>
@@ -1449,7 +1453,7 @@ export default function Profile() {
                   {newExperience.bullets.length > 0 && (
                     <ul className="space-y-1">
                       {newExperience.bullets.map((b, i) => (
-                        <li key={i} className="flex items-start gap-2 text-[12px] text-ink-muted">
+                        <li key={i} className="flex items-start gap-2 text-[13px] text-ink-muted">
                           <span className="flex-1">{b}</span>
                           <button onClick={() => setNewExperience(x => ({ ...x, bullets: x.bullets.filter((_, j) => j !== i) }))} className="text-danger shrink-0">
                             <Trash2 className="w-3 h-3" />
@@ -1468,7 +1472,7 @@ export default function Profile() {
             {profile.experience.length === 0 && !showAddExperience && (
               <div className="text-center">
                 <p className="text-[14px] text-ink">No experience yet</p>
-                <p className="text-[12px] text-ink-muted mt-0.5">Internships, part-time work, freelance — anything real</p>
+                <p className="text-[13px] text-ink-muted mt-0.5">Internships, part-time work, freelance — anything real</p>
                 <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowAddExperience(true)} className="w-full mt-3 bg-brand text-white text-[13px] font-bold rounded-full px-4 py-3">
                   Add your first experience
                 </motion.button>
@@ -1482,11 +1486,11 @@ export default function Profile() {
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                   <h4 className="text-[14px] font-semibold text-ink pr-6">{exp.role}</h4>
-                  <p className="text-[12px] text-ink-muted mt-0.5">{exp.company}{exp.period ? ` · ${exp.period}` : ""}</p>
+                  <p className="text-[13px] text-ink-muted mt-0.5">{exp.company}{exp.period ? ` · ${exp.period}` : ""}</p>
                   {exp.bullets.length > 0 && (
                     <ul className="mt-2 space-y-1">
                       {exp.bullets.map((b, i) => (
-                        <li key={i} className="text-[12px] text-ink-muted leading-relaxed">– {b}</li>
+                        <li key={i} className="text-[13px] text-ink-muted leading-relaxed">– {b}</li>
                       ))}
                     </ul>
                   )}
@@ -1501,7 +1505,7 @@ export default function Profile() {
           <div className="p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[14px] font-bold text-ink flex items-center gap-2"><Code2 className="w-4 h-4 text-ink" /> Projects</h3>
-              <button onClick={() => setShowAddProject(!showAddProject)} className="flex items-center gap-1 text-[12px] font-bold text-ink">
+              <button onClick={() => setShowAddProject(!showAddProject)} className="flex items-center gap-1 text-[13px] font-bold text-ink">
                 {showAddProject ? <X className="w-4 h-4" /> : <><Plus className="w-4 h-4" /> Add</>}
               </button>
             </div>
@@ -1544,7 +1548,7 @@ export default function Profile() {
             {profile.projects.length === 0 && !showAddProject && (
               <div className="text-center">
                 <p className="text-[14px] text-ink">No projects yet</p>
-                <p className="text-[12px] text-ink-muted mt-0.5">Recruiters love seeing real work</p>
+                <p className="text-[13px] text-ink-muted mt-0.5">Recruiters love seeing real work</p>
                 <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowAddProject(true)} className="w-full mt-3 bg-brand text-white text-[13px] font-bold rounded-full px-4 py-3">
                   Add your first project
                 </motion.button>
@@ -1558,15 +1562,15 @@ export default function Profile() {
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                   <h4 className="text-[14px] font-semibold text-ink pr-6">{proj.title}</h4>
-                  {proj.description && <p className="text-[12px] text-ink-muted mt-1 leading-relaxed">{proj.description}</p>}
+                  {proj.description && <p className="text-[13px] text-ink-muted mt-1 leading-relaxed">{proj.description}</p>}
                   {proj.techStack.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">
                       {proj.techStack.map(t => <Badge key={t} className="text-[10px] bg-paper text-ink-muted border-line">{t}</Badge>)}
                     </div>
                   )}
                   <div className="flex gap-3 mt-2">
-                    {proj.githubUrl && <a href={proj.githubUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-ink flex items-center gap-1"><Github className="w-3 h-3" /> Code</a>}
-                    {proj.liveUrl && <a href={proj.liveUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-ink flex items-center gap-1"><ExternalLink className="w-3 h-3" /> Live</a>}
+                    {proj.githubUrl && <a href={proj.githubUrl} target="_blank" rel="noopener noreferrer" className="text-[13px] font-bold text-ink flex items-center gap-1"><Github className="w-3 h-3" /> Code</a>}
+                    {proj.liveUrl && <a href={proj.liveUrl} target="_blank" rel="noopener noreferrer" className="text-[13px] font-bold text-ink flex items-center gap-1"><ExternalLink className="w-3 h-3" /> Live</a>}
                   </div>
                 </motion.div>
               ))}
@@ -1579,7 +1583,7 @@ export default function Profile() {
           <div className="p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[14px] font-bold text-ink flex items-center gap-2"><Award className="w-4 h-4 text-ink" /> Certifications</h3>
-              <button onClick={() => setShowAddCert(!showAddCert)} className="flex items-center gap-1 text-[12px] font-bold text-ink">
+              <button onClick={() => setShowAddCert(!showAddCert)} className="flex items-center gap-1 text-[13px] font-bold text-ink">
                 {showAddCert ? <X className="w-4 h-4" /> : <><Plus className="w-4 h-4" /> Add</>}
               </button>
             </div>
@@ -1601,7 +1605,7 @@ export default function Profile() {
             {profile.certifications.length === 0 && !showAddCert && (
               <div className="text-center">
                 <p className="text-[14px] text-ink">No certifications yet</p>
-                <p className="text-[12px] text-ink-muted mt-0.5">AWS, Google, Coursera, etc.</p>
+                <p className="text-[13px] text-ink-muted mt-0.5">AWS, Google, Coursera, etc.</p>
                 <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowAddCert(true)} className="w-full mt-3 bg-brand text-white text-[13px] font-bold rounded-full px-4 py-3">
                   Add a certification
                 </motion.button>
@@ -1616,7 +1620,7 @@ export default function Profile() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[14px] font-semibold text-ink truncate">{cert.name}</p>
-                    <p className="text-[12px] text-ink-muted">{cert.issuer}{cert.date ? ` · ${cert.date}` : ""}</p>
+                    <p className="text-[13px] text-ink-muted">{cert.issuer}{cert.date ? ` · ${cert.date}` : ""}</p>
                   </div>
                   <button onClick={() => removeCert(cert.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-ink-muted shrink-0">
                     <Trash2 className="w-3.5 h-3.5" />
@@ -1643,7 +1647,7 @@ export default function Profile() {
             {editSection === "prefs" ? (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                 <div>
-                  <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider mb-2">Work Mode</p>
+                  <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider mb-2">Work Mode</p>
                   <div className="grid grid-cols-3 gap-2">
                     {WORK_MODES.map(mode => (
                       <button
@@ -1657,11 +1661,11 @@ export default function Profile() {
                   </div>
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider mb-1">Preferred Cities</p>
+                  <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider mb-1">Preferred Cities</p>
                   <Input placeholder="Bangalore, Mumbai, Remote..." value={prefsForm.preferredLocations} onChange={e => setPrefsForm(f => ({ ...f, preferredLocations: e.target.value }))} className="text-sm" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider mb-1">Expected Salary (LPA)</p>
+                  <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider mb-1">Expected Salary (LPA)</p>
                   <Input placeholder="e.g. 8-12 LPA" value={prefsForm.expectedSalary} onChange={e => setPrefsForm(f => ({ ...f, expectedSalary: e.target.value }))} className="text-sm" />
                 </div>
                 <Button
@@ -1750,7 +1754,7 @@ export default function Profile() {
           <h3 className="text-[14px] font-bold text-ink mb-1 flex items-center gap-2">
             <FileText className="w-4 h-4 text-ink" /> Import from resume
           </h3>
-          <p className="text-[12px] text-ink-muted mb-3">
+          <p className="text-[13px] text-ink-muted mb-3">
             Upload an existing resume and we'll fill in projects, skills and certifications for you.
           </p>
           <ResumeImport
@@ -1781,6 +1785,8 @@ export default function Profile() {
             <FileText className="w-4 h-4 mr-2" /> Resume
           </Button>
         </div>
+
+        <Footer />
       </div>
       </div>
     </div>

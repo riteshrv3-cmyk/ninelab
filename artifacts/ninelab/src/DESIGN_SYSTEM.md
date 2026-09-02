@@ -10,7 +10,7 @@ spec) — v1's non-negotiables (styling only, no logic changes) still apply.
 | Tailwind class | Value | Use for |
 |---|---|---|
 | `text-ink` / `bg-ink` | `#1a1d2e` | Headings, primary body text |
-| `text-ink-muted` | `#9aa0ae` | Secondary text, captions, placeholders, inactive icons |
+| `text-ink-muted` | `#5d6474` | Secondary text, captions, placeholders, inactive icons |
 | `bg-paper` / `text-paper` | `#ffffff` | Sheets, cards, text on brand/ink surfaces |
 | `bg-canvas` | `#f4f5f7` | Page background behind the white sheet |
 | `border-line` / `bg-line` | `#ecedf3` | Hairline dividers, inactive track fills, input borders |
@@ -67,8 +67,13 @@ plain shadcn component defaults is usually correct without extra classes.
    border-t border-line first:border-t-0` — don't force every row into a card.
 6. **Type scale:** page title `text-[26px]/[30px] font-extrabold text-ink
    leading-[1.06] tracking-tight` (white on canopy, ink on sheet); section
-   label `text-[11px] font-bold uppercase tracking-wider text-ink-muted`;
-   body `text-[14px] text-ink`; caption `text-[12px] text-ink-muted`.
+   label `text-[12px] font-bold uppercase tracking-wider text-ink-muted`;
+   body `text-[14px] text-ink`; caption `text-[13px] text-ink-muted`.
+   Type floor: 13px minimum for any text; only uppercase eyebrows with
+   letter-spacing may be 12px. Muted grey is #5d6474 (ink-muted) — never
+   lighter on white. The shared `index.css` type-scale utilities follow the
+   same floor: `.type-micro` (chips, eyebrows, nav labels) is 13px/1.35,
+   same as `.type-caption` — the old 11px value is gone.
 7. **Icons / decorative elements:** functional icons (lucide) use `text-brand`
    when they represent an active/primary state, `text-ink-muted` otherwise.
    Domain tiles / category chips get `bg-brand-soft text-brand` instead of the

@@ -7,6 +7,7 @@ import {
   XCircle, RotateCcw, Star, AlertTriangle, Trophy, ChevronRight,
   ChevronDown, PlayCircle, FileText, PenLine, Hammer, ExternalLink,
   Clock, Lock, X, Loader2, Eye, Award, Download, Sparkles, Mic,
+  Rocket, Frown, Meh, ThumbsUp, Smile,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,7 @@ interface CourseContext {
   domainName: string;
   domainColor: string;
   domainBg: string;
-  domainEmoji: string;
+  domainEmoji?: string;
   skills: string[];
 }
 
@@ -557,6 +558,10 @@ export default function Course() {
 
   if (!ctx) return null;
 
+  // domains.ts carries the domain icon; courseContext only has the domain name.
+  const domain = DOMAINS.find(d => d.subDomains.some(s => s.id === ctx.subDomainId));
+  const DomainIcon = domain?.icon ?? BookOpen;
+
   const isLoading = !dataReady || !animReady;
 
   // ── Live-generation animation ──────────────────────────────────────────────
@@ -573,19 +578,20 @@ export default function Course() {
       <div className="min-h-screen bg-paper flex flex-col px-6 pb-28 pt-16 lg:max-w-2xl lg:mx-auto">
         {/* Domain pill */}
         <div className="flex justify-center mb-8">
-          <span className="text-xs font-extrabold px-3 py-1 rounded-full border border-line text-ink-muted">
-            {ctx.domainEmoji} {ctx.domainName}
+          <span className="text-xs font-extrabold px-3 py-1 rounded-full border border-line text-ink-muted inline-flex items-center gap-1.5">
+            <DomainIcon className="w-5 h-5 text-brand" strokeWidth={1.75} aria-hidden />
+            {ctx.domainName}
           </span>
         </div>
 
-        {/* Pulsing emoji */}
+        {/* Pulsing domain icon */}
         <div className="flex justify-center mb-6">
           <motion.div
             animate={{ scale: [1, 1.15, 1], opacity: [0.85, 1, 0.85] }}
             transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-            className="w-24 h-24 rounded-3xl flex items-center justify-center text-5xl border border-line bg-paper"
+            className="w-24 h-24 rounded-2xl flex items-center justify-center bg-brand-soft"
           >
-            {ctx.domainEmoji}
+            <DomainIcon className="w-8 h-8 text-brand" strokeWidth={1.75} aria-hidden />
           </motion.div>
         </div>
 
@@ -604,7 +610,7 @@ export default function Course() {
             transition={{ duration: 0.5, ease: "easeOut" }}
           />
         </div>
-        <p className="text-[11px] font-extrabold text-center mb-8 text-ink">{progressPct}%</p>
+        <p className="text-[13px] font-extrabold text-center mb-8 text-ink">{progressPct}%</p>
 
         {/* Rotating message */}
         <div className="h-8 flex items-center justify-center mb-10">
@@ -825,7 +831,10 @@ export default function Course() {
             <ArrowLeft className="w-5 h-5 text-ink" />
           </button>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted truncate">{ctx.domainEmoji} {ctx.domainName}</p>
+            <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted truncate flex items-center gap-1.5">
+              <DomainIcon className="w-5 h-5 text-brand shrink-0" strokeWidth={1.75} aria-hidden />
+              <span className="truncate">{ctx.domainName}</span>
+            </p>
             <h1 className="text-display text-[18px] font-extrabold text-ink truncate">{ctx.subDomainName}</h1>
           </div>
         </div>
@@ -835,7 +844,7 @@ export default function Course() {
             const active = activeTab === tab.id;
             return (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={cn("flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-extrabold transition-colors",
+                className={cn("flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[13px] font-extrabold transition-colors",
                   active ? "bg-brand text-paper" : "text-ink-muted border border-line")}>
                 <Icon className="w-3.5 h-3.5" />{tab.label}
               </button>
@@ -858,7 +867,7 @@ export default function Course() {
                   <DemoBanner />
                   <div className="flex items-center gap-2 rounded-xl border border-line bg-paper px-3.5 py-2.5">
                     <SampleChip />
-                    <p className="text-[12px] font-semibold text-ink">
+                    <p className="text-[13px] font-semibold text-ink">
                       {DEMO_STUDENT_NAME} · {DEMO_ENROLLMENT.subDomainName} {DEMO_ENROLLMENT.progressPct}%
                     </p>
                   </div>
@@ -883,8 +892,8 @@ export default function Course() {
                   </div>
                   <div>
                     <p className="font-extrabold text-base leading-tight text-ink">{ctx.subDomainName} Course</p>
-                    <p className="text-[12px] text-ink-muted mt-0.5">{completedCount} / {totalLessons} lessons complete</p>
-                    <p className="text-[11px] text-ink-muted mt-1">{courseData.modules.length} modules · {ctx.skills.slice(0, 2).join(", ")}</p>
+                    <p className="text-[13px] text-ink-muted mt-0.5">{completedCount} / {totalLessons} lessons complete</p>
+                    <p className="text-[13px] text-ink-muted mt-1">{courseData.modules.length} modules · {ctx.skills.slice(0, 2).join(", ")}</p>
                   </div>
                 </div>
               </div>
@@ -902,14 +911,14 @@ export default function Course() {
                 data-testid="cta-build-project"
                 className="w-full mb-4 rounded-2xl p-4 text-left bg-paper shadow-soft hover:shadow-md transition-shadow flex items-center gap-3 group"
               >
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border border-line text-lg">
-                  🚀
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-brand-soft">
+                  <Rocket className="w-5 h-5 text-brand" strokeWidth={1.75} aria-hidden />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-extrabold text-ink text-[14px] leading-tight">
                     {overallPct === 100 ? "Course complete! Ship a project →" : "Build a project with what you've learned →"}
                   </p>
-                  <p className="text-[11px] text-ink-muted mt-0.5 truncate">
+                  <p className="text-[13px] text-ink-muted mt-0.5 truncate">
                     Add a {ctx.subDomainName} project to your profile — recruiters &amp; TPOs will see it
                   </p>
                 </div>
@@ -947,7 +956,7 @@ export default function Course() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-2">
                                 <div>
-                                  <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">
+                                  <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">
                                     Module {modIdx + 1}
                                   </p>
                                   <p className="font-extrabold text-ink text-[14px] leading-tight">{mod.title}</p>
@@ -1054,7 +1063,7 @@ export default function Course() {
                                                     {lesson.keyPoints.map((pt, i) => (
                                                       <div key={i} className="flex items-start gap-2">
                                                         <div className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 bg-brand" />
-                                                        <p className="text-[12px] text-ink font-bold leading-snug">{pt}</p>
+                                                        <p className="text-[13px] text-ink font-bold leading-snug">{pt}</p>
                                                       </div>
                                                     ))}
                                                   </div>
@@ -1068,7 +1077,7 @@ export default function Course() {
                                                       /* Playing — show close button */
                                                       <button
                                                         onClick={() => setPlayingVideoId(null)}
-                                                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-[12px] border border-line text-ink"
+                                                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-[13px] border border-line text-ink"
                                                       >
                                                         <X className="w-4 h-4" /> Close video
                                                       </button>
@@ -1097,7 +1106,7 @@ export default function Course() {
                                                             }
                                                           }}
                                                           disabled={videoLoading === lesson.id}
-                                                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-[12px] bg-brand text-paper disabled:opacity-70"
+                                                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-[13px] bg-brand text-paper disabled:opacity-70"
                                                         >
                                                           {videoLoading === lesson.id
                                                             ? <><Loader2 className="w-4 h-4 animate-spin" /> Loading…</>
@@ -1108,7 +1117,7 @@ export default function Course() {
                                                             href={`https://www.youtube.com/results?search_query=${encodeURIComponent(lesson.searchQuery || lesson.title)}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="flex items-center gap-1 text-[11px] font-semibold text-ink underline underline-offset-2 whitespace-nowrap self-center"
+                                                            className="flex items-center gap-1 text-[13px] font-semibold text-ink underline underline-offset-2 whitespace-nowrap self-center"
                                                           >
                                                             Search on YouTube <ExternalLink className="w-3 h-3" />
                                                           </a>
@@ -1141,7 +1150,7 @@ export default function Course() {
                                                               else window.location.href = a.fallback;
                                                             }
                                                           }}
-                                                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-[12px] bg-brand text-paper"
+                                                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-[13px] bg-brand text-paper"
                                                         >
                                                           <ExternalLink className="w-4 h-4" />
                                                           {a.label}
@@ -1153,7 +1162,7 @@ export default function Course() {
                                                   <button
                                                     onClick={() => toggleLesson(lesson.id)}
                                                     className={cn(
-                                                      "flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-bold text-[12px] border transition-colors",
+                                                      "flex items-center gap-1.5 px-3 py-2.5 rounded-xl font-bold text-[13px] border transition-colors",
                                                       done
                                                         ? "bg-line border-line text-ink"
                                                         : "bg-paper border-line text-ink"
@@ -1186,12 +1195,12 @@ export default function Course() {
                                                           transition={{ delay: 0.4 }}
                                                           className="mt-2 flex items-center justify-between gap-2 bg-paper rounded-xl px-3 py-2.5 border border-line"
                                                         >
-                                                          <p className="text-[12px] font-bold text-ink leading-tight">
+                                                          <p className="text-[13px] font-bold text-ink leading-tight">
                                                             Mark this lesson done?
                                                           </p>
                                                           <button
                                                             onClick={() => toggleLesson(lesson.id)}
-                                                            className="flex items-center gap-1 text-[11px] font-extrabold px-3 py-1.5 rounded-lg bg-brand text-paper flex-shrink-0"
+                                                            className="flex items-center gap-1 text-[13px] font-extrabold px-3 py-1.5 rounded-lg bg-brand text-paper flex-shrink-0"
                                                           >
                                                             <CheckCircle2 className="w-3.5 h-3.5" /> Done
                                                           </button>
@@ -1279,7 +1288,7 @@ export default function Course() {
                                         <motion.div initial={reduced ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
                                           <div className="flex items-center gap-2 mb-1">
                                             {result.passed ? <CheckCircle2 className="w-4 h-4 text-done" /> : <XCircle className="w-4 h-4 text-danger" />}
-                                            <p className="text-[12px] font-extrabold text-ink">
+                                            <p className="text-[13px] font-extrabold text-ink">
                                               {result.passed ? "Passed — next module unlocked!" : `Not quite. Correct answer: ${moduleQuiz.answer}`}
                                             </p>
                                           </div>
@@ -1344,7 +1353,7 @@ export default function Course() {
                   { label: "Streak", value: `🔥 ${streak}` },
                 ].map(s => (
                   <div key={s.label} className="flex-1 rounded-xl bg-paper shadow-soft p-3 text-center">
-                    <p className="text-[11px] text-ink-muted font-bold">{s.label}</p>
+                    <p className="text-[13px] text-ink-muted font-bold">{s.label}</p>
                     <p className="text-lg font-extrabold text-ink">{s.value}</p>
                   </div>
                 ))}
@@ -1352,12 +1361,12 @@ export default function Course() {
 
               {/* Progress */}
               <div className="flex items-center justify-between mb-2 px-1">
-                <p className="text-[11px] font-bold text-ink-muted">
+                <p className="text-[13px] font-bold text-ink-muted">
                   {cardsLeft > 0 ? `${queueIndex + 1} / ${queue.length} cards` : "Session complete!"}
                 </p>
                 <div className="flex items-center gap-1">
                   <Star className="w-3 h-3 text-ink-muted" />
-                  <p className="text-[11px] font-bold text-ink-muted">{cardsLeft} remaining</p>
+                  <p className="text-[13px] font-bold text-ink-muted">{cardsLeft} remaining</p>
                 </div>
               </div>
               {queue.length > 0 && (
@@ -1416,7 +1425,7 @@ export default function Course() {
                               {currentCard.topic}
                             </p>
                             <p className="text-base font-extrabold text-ink leading-snug">{currentCard.front}</p>
-                            <p className="text-[11px] text-ink-muted mt-4">Tap to reveal answer</p>
+                            <p className="text-[13px] text-ink-muted mt-4">Tap to reveal answer</p>
                           </div>
                           {/* Back */}
                           <div className="absolute inset-0 rounded-2xl bg-paper shadow-soft flex flex-col items-center justify-center p-6 text-center"
@@ -1432,15 +1441,15 @@ export default function Course() {
                           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                             className="grid grid-cols-4 gap-2">
                             {[
-                              { grade: 1 as const, label: "Again", emoji: "😰" },
-                              { grade: 3 as const, label: "Hard",  emoji: "🤔" },
-                              { grade: 4 as const, label: "Good",  emoji: "👍" },
-                              { grade: 5 as const, label: "Easy",  emoji: "😎" },
+                              { grade: 1 as const, label: "Again", icon: Frown },
+                              { grade: 3 as const, label: "Hard",  icon: Meh },
+                              { grade: 4 as const, label: "Good",  icon: ThumbsUp },
+                              { grade: 5 as const, label: "Easy",  icon: Smile },
                             ].map(g => (
                               <button key={g.grade} onClick={() => gradeCard(g.grade)}
                                 className="flex flex-col items-center py-2.5 rounded-xl font-bold border border-line text-ink bg-paper hover:bg-line active:bg-line transition-colors active:scale-95">
-                                <span className="text-xl mb-0.5">{g.emoji}</span>
-                                <span className="text-[11px]">{g.label}</span>
+                                <g.icon className="w-5 h-5 mb-0.5 text-brand" strokeWidth={1.75} aria-hidden />
+                                <span className="text-[13px]">{g.label}</span>
                               </button>
                             ))}
                           </motion.div>
@@ -1473,7 +1482,7 @@ export default function Course() {
                     <div className="h-full rounded-full bg-brand transition-all duration-500"
                       style={{ width: `${totalModules > 0 ? (passedModuleCount / totalModules) * 100 : 0}%` }} />
                   </div>
-                  <p className="text-[12px] font-bold text-ink-muted mb-5">{passedModuleCount} / {totalModules} modules passed</p>
+                  <p className="text-[13px] font-bold text-ink-muted mb-5">{passedModuleCount} / {totalModules} modules passed</p>
                   <Button disabled className="w-full h-11 rounded-xl font-bold bg-brand text-paper opacity-50 cursor-not-allowed">
                     <Lock className="w-4 h-4 mr-1.5" /> Locked
                   </Button>
@@ -1510,7 +1519,7 @@ export default function Course() {
                                   onClick={() => handleConfirmSkill(skill)}
                                   disabled={added || busy}
                                   className={cn(
-                                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12px] font-bold transition-colors disabled:cursor-default",
+                                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[13px] font-bold transition-colors disabled:cursor-default",
                                     added ? "bg-brand border-brand text-paper" : "bg-paper border-line text-ink hover:bg-brand-soft",
                                   )}
                                 >
@@ -1528,7 +1537,7 @@ export default function Course() {
                       )}
 
                       {isGuest && (
-                        <p className="text-[12px] font-bold text-ink-muted text-center mb-3">
+                        <p className="text-[13px] font-bold text-ink-muted text-center mb-3">
                           Sign in to claim and keep your certificate.
                         </p>
                       )}
@@ -1542,7 +1551,7 @@ export default function Course() {
                           ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Issuing…</>
                           : <><Award className="w-4 h-4 mr-1.5" /> Issue certificate</>}
                       </Button>
-                      {certError && <p className="text-[12px] font-bold text-danger text-center mt-3">{certError}</p>}
+                      {certError && <p className="text-[13px] font-bold text-danger text-center mt-3">{certError}</p>}
                     </div>
                   ) : (
                     /* ── Issued certificate card ── */
@@ -1552,8 +1561,8 @@ export default function Course() {
                       </div>
                       <h2 className="text-display text-xl font-extrabold text-ink mb-1">Certificate earned</h2>
                       <p className="text-sm font-bold text-ink">{certificate.subDomainName}</p>
-                      <p className="text-[12px] text-ink-muted mb-1">{certificate.domainName}</p>
-                      <p className="text-[11px] font-bold text-ink-muted mb-5">
+                      <p className="text-[13px] text-ink-muted mb-1">{certificate.domainName}</p>
+                      <p className="text-[13px] font-bold text-ink-muted mb-5">
                         {certificate.certificateCode} · Final exam {certificate.finalExamScore}%
                       </p>
                       <div className="flex gap-2">
@@ -1575,7 +1584,7 @@ export default function Course() {
                           <ExternalLink className="w-4 h-4" /> View public link
                         </a>
                       </div>
-                      {certError && <p className="text-[12px] font-bold text-danger mt-3">{certError}</p>}
+                      {certError && <p className="text-[13px] font-bold text-danger mt-3">{certError}</p>}
                     </div>
                   )}
                 </>
@@ -1593,7 +1602,7 @@ export default function Course() {
                     <p className="text-sm text-ink-muted mb-1">
                       You scored {examResult.score} / {examResult.total}. You need 70% to earn your certificate.
                     </p>
-                    <p className="text-[12px] text-ink-muted mb-5">Unlimited retakes — a fresh exam is generated each time.</p>
+                    <p className="text-[13px] text-ink-muted mb-5">Unlimited retakes — a fresh exam is generated each time.</p>
                     <Button
                       onClick={handleRetakeExam}
                       disabled={generateFinalExam.isPending}
@@ -1612,7 +1621,7 @@ export default function Course() {
                         {exam.questions.filter(q => examAnswers[q.id]).length} / {exam.questions.length} answered
                       </span>
                     </div>
-                    <p className="text-[12px] text-ink-muted mb-2">Score 70% or higher to earn your certificate.</p>
+                    <p className="text-[13px] text-ink-muted mb-2">Score 70% or higher to earn your certificate.</p>
                     {exam.questions.map((q, qi) => (
                       <div key={q.id} className="border-t border-line py-4">
                         <p className="text-[13px] font-extrabold text-ink leading-snug mb-3">{qi + 1}. {q.question}</p>
@@ -1648,9 +1657,9 @@ export default function Course() {
                         : "Submit exam"}
                     </Button>
                     {!exam.questions.every(q => examAnswers[q.id]) && (
-                      <p className="text-[11px] font-bold text-ink-muted text-center mt-2">Answer all {exam.questions.length} questions to submit.</p>
+                      <p className="text-[13px] font-bold text-ink-muted text-center mt-2">Answer all {exam.questions.length} questions to submit.</p>
                     )}
-                    {certError && <p className="text-[12px] font-bold text-danger text-center mt-3">{certError}</p>}
+                    {certError && <p className="text-[13px] font-bold text-danger text-center mt-3">{certError}</p>}
                   </div>
                 ) : (
                   /* Generate state */
@@ -1671,7 +1680,7 @@ export default function Course() {
                         ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Generating…</>
                         : <>Generate exam <ChevronRight className="w-4 h-4 ml-1" /></>}
                     </Button>
-                    {certError && <p className="text-[12px] font-bold text-danger mt-3">{certError}</p>}
+                    {certError && <p className="text-[13px] font-bold text-danger mt-3">{certError}</p>}
                   </div>
                 )
               )}
@@ -1681,7 +1690,7 @@ export default function Course() {
                 <div className="rounded-2xl bg-paper shadow-soft p-6 text-center">
                   <div className="flex items-center justify-center gap-1.5 mb-4">
                     <CheckCircle2 className="w-4 h-4 text-done" />
-                    <p className="text-[12px] font-extrabold text-done">Final exam passed</p>
+                    <p className="text-[13px] font-extrabold text-done">Final exam passed</p>
                   </div>
                   <div className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-line">
                     <Mic className="w-7 h-7 text-ink" />
@@ -1691,12 +1700,12 @@ export default function Course() {
                     One last step: pass an AI mock interview with a score of 60 or higher to earn your certificate.
                   </p>
                   {linkingInterview && (
-                    <div className="flex items-center justify-center gap-2 text-[12px] font-bold text-ink-muted mb-4">
+                    <div className="flex items-center justify-center gap-2 text-[13px] font-bold text-ink-muted mb-4">
                       <Loader2 className="w-4 h-4 animate-spin" /> Checking your interview…
                     </div>
                   )}
                   {certInterviewResult && !certInterviewResult.passed && (
-                    <p className="text-[12px] font-bold text-danger mb-4">
+                    <p className="text-[13px] font-bold text-danger mb-4">
                       Your interview scored {certInterviewResult.overallScore}. You need 60 or higher — give it another try.
                     </p>
                   )}
@@ -1709,7 +1718,7 @@ export default function Course() {
                       ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Starting…</>
                       : <><Mic className="w-4 h-4 mr-1.5" /> {certInterviewResult && !certInterviewResult.passed ? "Retry interview" : "Start certificate interview"}</>}
                   </Button>
-                  {certError && <p className="text-[12px] font-bold text-danger mt-3">{certError}</p>}
+                  {certError && <p className="text-[13px] font-bold text-danger mt-3">{certError}</p>}
                 </div>
               )}
             </motion.div>

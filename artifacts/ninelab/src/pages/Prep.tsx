@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Target, ChevronRight, ChevronDown, MessageSquare, X, Cpu, Users, Shuffle, Building2, Flame, Mic, Camera, GraduationCap } from "lucide-react";
+import { ChevronRight, ChevronDown, MessageSquare, X, Cpu, Users, Shuffle, Building2, Flame, Mic, Camera, GraduationCap } from "lucide-react";
 import { useCreateInterviewSession } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { PageHeader, PAGE_CONTAINER } from "@/components/PageHeader";
 import InterviewLibrary from "@/components/prep/InterviewLibrary";
 import { useStudentId } from "@/hooks/useStudentId";
 import { useNameGate } from "@/components/NameGate";
@@ -43,7 +44,7 @@ function SampleReportCard({ open, onToggle }: { open: boolean; onToggle: () => v
             <h3 className="text-lg font-bold text-ink mt-1">
               {r.company} · {r.role}
             </h3>
-            <p className="text-[12px] text-ink-muted">{r.round} · {r.dateLabel}</p>
+            <p className="text-[13px] text-ink-muted">{r.round} · {r.dateLabel}</p>
           </div>
           <div className="text-right shrink-0">
             <p className={cn("text-2xl font-extrabold leading-none", scoreTextClass(r.overallScore * 10))}>
@@ -53,7 +54,7 @@ function SampleReportCard({ open, onToggle }: { open: boolean; onToggle: () => v
           </div>
         </div>
 
-        <p className="text-[11px] text-ink-muted italic leading-snug mt-2">{r.howCaption}</p>
+        <p className="text-[13px] text-ink-muted italic leading-snug mt-2">{r.howCaption}</p>
 
         <button
           onClick={onToggle}
@@ -79,8 +80,8 @@ function SampleReportCard({ open, onToggle }: { open: boolean; onToggle: () => v
                   {r.questionScores.map((q) => (
                     <div key={q.area}>
                       <div className="flex items-baseline justify-between mb-1">
-                        <span className="text-[12px] font-semibold text-ink">{q.area}</span>
-                        <span className="text-[11px] font-bold text-ink-muted tabular-nums">{q.score}/10</span>
+                        <span className="text-[13px] font-semibold text-ink">{q.area}</span>
+                        <span className="text-[13px] font-bold text-ink-muted tabular-nums">{q.score}/10</span>
                       </div>
                       <div className="h-1.5 rounded-full bg-line overflow-hidden">
                         <div className="h-full rounded-full bg-brand" style={{ width: `${q.score * 10}%` }} />
@@ -89,12 +90,12 @@ function SampleReportCard({ open, onToggle }: { open: boolean; onToggle: () => v
                   ))}
                 </div>
                 <div className="rounded-xl bg-brand-soft p-3">
-                  <p className="text-[11px] font-bold text-brand uppercase tracking-wider mb-0.5">Strongest</p>
-                  <p className="text-[12px] text-ink leading-snug">{r.strongPoint}</p>
+                  <p className="text-[12px] font-bold text-brand uppercase tracking-wider mb-0.5">Strongest</p>
+                  <p className="text-[13px] text-ink leading-snug">{r.strongPoint}</p>
                 </div>
                 <div className="rounded-xl border border-line p-3">
-                  <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider mb-0.5">To work on</p>
-                  <p className="text-[12px] text-ink leading-snug">{r.weakPoint}</p>
+                  <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider mb-0.5">To work on</p>
+                  <p className="text-[13px] text-ink leading-snug">{r.weakPoint}</p>
                 </div>
               </div>
             </motion.div>
@@ -169,27 +170,22 @@ export default function Prep() {
 
   return (
     <div className="pb-28 min-h-screen bg-canvas">
-      <div className="bg-brand px-4 pt-6 pb-10">
-        <div className="max-w-md lg:max-w-2xl mx-auto flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-display text-2xl font-extrabold flex items-center text-white">
-              <Target className="mr-2" /> Practice
-            </h1>
-            <p className="text-sm text-white/70 mt-1">
-              Get ready for your real placement interviews.
-            </p>
-          </div>
+      <PageHeader
+        wide
+        title="Practice"
+        subtitle="Get ready for your real placement interviews."
+        right={
           <button
             onClick={() => setLocation("/practice/history")}
-            className="mt-1 px-3 py-1.5 rounded-full bg-white/15 text-[11px] font-bold text-white uppercase tracking-wider whitespace-nowrap"
+            className="px-3 py-1.5 rounded-full bg-white/15 text-[12px] font-bold text-white uppercase tracking-wider whitespace-nowrap"
             data-testid="link-interview-history"
           >
             History
           </button>
-        </div>
-      </div>
+        }
+      />
 
-      <div className="p-4 -mt-6 max-w-md lg:max-w-2xl mx-auto space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4">
+      <div className={cn(PAGE_CONTAINER, "-mt-6 py-4 space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4")}>
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <Card
             className="border-0 shadow-soft rounded-2xl bg-paper cursor-pointer group"
@@ -255,7 +251,7 @@ export default function Prep() {
         )}
       </div>
 
-      <div className="px-4 pb-4 max-w-md lg:max-w-2xl mx-auto">
+      <div className={cn(PAGE_CONTAINER, "pb-4")}>
         <InterviewLibrary />
       </div>
 
@@ -331,7 +327,7 @@ export default function Prep() {
                             )}
                           >
                             <Icon className={cn("w-5 h-5 mb-1.5", interviewType === type ? "text-brand" : "text-ink")} />
-                            <div className="text-[12px] font-bold text-ink leading-tight">{label}</div>
+                            <div className="text-[13px] font-bold text-ink leading-tight">{label}</div>
                             <div className="text-[10px] text-ink-muted mt-0.5 leading-tight">{desc}</div>
                           </button>
                         ))}
@@ -374,7 +370,7 @@ export default function Prep() {
                         </div>
                         <div className="text-left">
                           <div className="text-sm font-bold text-ink">Voice Mode</div>
-                          <div className="text-[11px] text-ink-muted">AI reads questions · speak your answers</div>
+                          <div className="text-[13px] text-ink-muted">AI reads questions · speak your answers</div>
                         </div>
                       </div>
                       <div className={cn("w-11 h-6 rounded-full transition-colors relative flex-shrink-0", voiceMode ? "bg-brand" : "bg-line")}>
@@ -399,7 +395,7 @@ export default function Prep() {
                         </div>
                         <div className="text-left">
                           <div className="text-sm font-bold text-ink">Camera Mode</div>
-                          <div className="text-[11px] text-ink-muted">See yourself · feels like the real thing</div>
+                          <div className="text-[13px] text-ink-muted">See yourself · feels like the real thing</div>
                         </div>
                       </div>
                       <div className={cn("w-11 h-6 rounded-full transition-colors relative flex-shrink-0", cameraMode ? "bg-brand" : "bg-line")}>

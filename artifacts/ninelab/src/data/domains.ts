@@ -1,3 +1,10 @@
+import {
+  Atom, BarChart3, Blocks, Bot, BrainCircuit, ClipboardList, Cloud, Cpu, Dna,
+  FlaskConical, Gamepad2, Glasses, Globe, Network, Palette, PenLine, ShieldCheck,
+  Smartphone, Terminal, TrendingUp,
+  type LucideIcon,
+} from "lucide-react";
+
 export interface SubDomain {
   id: string;
   name: string;
@@ -7,7 +14,8 @@ export interface SubDomain {
 export interface Domain {
   id: string;
   name: string;
-  emoji: string;
+  /** Outline lucide icon rendered on the domain tile. */
+  icon: LucideIcon;
   color: string;
   bg: string;
   subDomains: SubDomain[];
@@ -17,7 +25,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "data",
     name: "Data & Analytics",
-    emoji: "📊",
+    icon: BarChart3,
     color: "#3b82f6",
     bg: "#eff6ff",
     subDomains: [
@@ -31,7 +39,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "design",
     name: "UI/UX Design",
-    emoji: "🎨",
+    icon: Palette,
     color: "#ec4899",
     bg: "#fdf2f8",
     subDomains: [
@@ -45,7 +53,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "webdev",
     name: "Web Development",
-    emoji: "🌐",
+    icon: Globe,
     color: "#7c3aed",
     bg: "#f5f3ff",
     subDomains: [
@@ -59,7 +67,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "mobile",
     name: "Mobile Dev",
-    emoji: "📱",
+    icon: Smartphone,
     color: "#06b6d4",
     bg: "#ecfeff",
     subDomains: [
@@ -73,7 +81,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "aiml",
     name: "AI / ML",
-    emoji: "🤖",
+    icon: BrainCircuit,
     color: "#10b981",
     bg: "#ecfdf5",
     subDomains: [
@@ -87,7 +95,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "security",
     name: "Cybersecurity",
-    emoji: "🔐",
+    icon: ShieldCheck,
     color: "#ef4444",
     bg: "#fef2f2",
     subDomains: [
@@ -101,7 +109,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "cloud",
     name: "Cloud & DevOps",
-    emoji: "☁️",
+    icon: Cloud,
     color: "#f97316",
     bg: "#fff7ed",
     subDomains: [
@@ -115,7 +123,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "blockchain",
     name: "Blockchain",
-    emoji: "⛓️",
+    icon: Blocks,
     color: "#8b5cf6",
     bg: "#f5f3ff",
     subDomains: [
@@ -129,7 +137,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "gamedev",
     name: "Game Dev",
-    emoji: "🎮",
+    icon: Gamepad2,
     color: "#f59e0b",
     bg: "#fffbeb",
     subDomains: [
@@ -143,7 +151,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "embedded",
     name: "Embedded / IoT",
-    emoji: "🔧",
+    icon: Cpu,
     color: "#64748b",
     bg: "#f8fafc",
     subDomains: [
@@ -157,7 +165,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "qa",
     name: "QA & Testing",
-    emoji: "🧪",
+    icon: FlaskConical,
     color: "#0ea5e9",
     bg: "#f0f9ff",
     subDomains: [
@@ -171,7 +179,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "product",
     name: "Product Mgmt",
-    emoji: "📋",
+    icon: ClipboardList,
     color: "#14b8a6",
     bg: "#f0fdfa",
     subDomains: [
@@ -185,7 +193,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "arvr",
     name: "AR / VR / XR",
-    emoji: "🥽",
+    icon: Glasses,
     color: "#a855f7",
     bg: "#faf5ff",
     subDomains: [
@@ -199,7 +207,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "robotics",
     name: "Robotics",
-    emoji: "🦾",
+    icon: Bot,
     color: "#dc2626",
     bg: "#fef2f2",
     subDomains: [
@@ -213,7 +221,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "fintech",
     name: "Fintech / Quant",
-    emoji: "💹",
+    icon: TrendingUp,
     color: "#16a34a",
     bg: "#f0fdf4",
     subDomains: [
@@ -227,7 +235,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "networking",
     name: "Networking & Infra",
-    emoji: "🛰️",
+    icon: Network,
     color: "#0891b2",
     bg: "#ecfeff",
     subDomains: [
@@ -241,7 +249,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "systems",
     name: "Systems Programming",
-    emoji: "⚙️",
+    icon: Terminal,
     color: "#475569",
     bg: "#f1f5f9",
     subDomains: [
@@ -255,7 +263,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "biotech",
     name: "Bio / Health Tech",
-    emoji: "🧬",
+    icon: Dna,
     color: "#84cc16",
     bg: "#f7fee7",
     subDomains: [
@@ -269,7 +277,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "quantum",
     name: "Quantum Computing",
-    emoji: "🧪",
+    icon: Atom,
     color: "#6366f1",
     bg: "#eef2ff",
     subDomains: [
@@ -283,7 +291,7 @@ export const DOMAINS: Domain[] = [
   {
     id: "devrel",
     name: "DevRel / Tech Writing",
-    emoji: "✍️",
+    icon: PenLine,
     color: "#d946ef",
     bg: "#fdf4ff",
     subDomains: [

@@ -39,7 +39,7 @@ export function SideNav({ initials, streakCount, onProfileClick }: SideNavProps)
             aria-label={`${streakCount} day streak`}
           >
             <Flame className="w-3.5 h-3.5 text-highlight" fill="currentColor" />
-            <span className="text-[11px] font-bold text-highlight tabular-nums">{streakCount}</span>
+            <span className="text-[13px] font-bold text-highlight tabular-nums">{streakCount}</span>
           </button>
         )}
       </div>
@@ -103,7 +103,7 @@ export function SideNav({ initials, streakCount, onProfileClick }: SideNavProps)
             onClick={onProfileClick}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-line/60 transition-colors"
           >
-            <span className="w-8 h-8 rounded-full bg-brand-soft flex items-center justify-center text-brand font-bold text-[12px] shrink-0">
+            <span className="w-8 h-8 rounded-full bg-brand-soft flex items-center justify-center text-brand font-bold text-[13px] shrink-0">
               {initials}
             </span>
             <span className="type-caption font-semibold text-ink">Account</span>

@@ -75,7 +75,7 @@ function InviteCard({ invite, onUpdate }: { invite: Invite; onUpdate: (id: numbe
               {invite.role && (
                 <div className="flex items-center gap-1 mt-0.5">
                   <Briefcase className="w-3 h-3 text-ink-muted" />
-                  <p className="text-[12px] text-ink">{invite.role}</p>
+                  <p className="text-[13px] text-ink">{invite.role}</p>
                 </div>
               )}
             </div>
@@ -90,12 +90,12 @@ function InviteCard({ invite, onUpdate }: { invite: Invite; onUpdate: (id: numbe
                   New
                 </span>
               )}
-              <span className="text-[12px] text-ink-muted">{timeAgo(invite.createdAt)}</span>
+              <span className="text-[13px] text-ink-muted">{timeAgo(invite.createdAt)}</span>
             </div>
           </div>
           <div className="flex items-center gap-1.5 mt-1">
             <Building2 className="w-3 h-3 text-ink-muted" />
-            <p className="text-[12px] text-ink-muted">{invite.recruiterName}</p>
+            <p className="text-[13px] text-ink-muted">{invite.recruiterName}</p>
           </div>
         </div>
       </div>
@@ -103,7 +103,7 @@ function InviteCard({ invite, onUpdate }: { invite: Invite; onUpdate: (id: numbe
       {/* Message */}
       {invite.message && (
         <div className="mt-3 bg-canvas rounded-xl px-3.5 py-2.5">
-          <p className="text-[12px] text-ink-muted leading-relaxed italic">"{invite.message}"</p>
+          <p className="text-[13px] text-ink-muted leading-relaxed italic">"{invite.message}"</p>
         </div>
       )}
 
@@ -116,8 +116,8 @@ function InviteCard({ invite, onUpdate }: { invite: Invite; onUpdate: (id: numbe
         >
           <CheckCircle className="w-4 h-4 text-done shrink-0" />
           <div>
-            <p className="text-[12px] font-bold text-ink">You accepted! Reach out directly:</p>
-            <a href={`mailto:${invite.recruiterEmail}`} className="text-[12px] font-bold text-ink flex items-center gap-1 mt-0.5 underline">
+            <p className="text-[13px] font-bold text-ink">You accepted! Reach out directly:</p>
+            <a href={`mailto:${invite.recruiterEmail}`} className="text-[13px] font-bold text-ink flex items-center gap-1 mt-0.5 underline">
               {invite.recruiterEmail} <ExternalLink className="w-3 h-3" />
             </a>
           </div>
@@ -128,7 +128,7 @@ function InviteCard({ invite, onUpdate }: { invite: Invite; onUpdate: (id: numbe
       {invite.status === "declined" && (
         <div className="mt-3 bg-canvas rounded-xl px-3.5 py-2.5 flex items-center gap-2">
           <XCircle className="w-4 h-4 text-ink-muted shrink-0" />
-          <p className="text-[12px] text-ink-muted">You passed on this one</p>
+          <p className="text-[13px] text-ink-muted">You passed on this one</p>
         </div>
       )}
 
@@ -209,13 +209,13 @@ export default function Inbox() {
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="bg-highlight text-white text-[11px] font-bold px-2 py-0.5 rounded-full min-w-[22px] text-center"
+                  className="bg-highlight text-white text-[13px] font-bold px-2 py-0.5 rounded-full min-w-[22px] text-center"
                 >
                   {pendingCount}
                 </motion.span>
               )}
             </div>
-            <p className="text-[12px] text-ink-muted mt-0.5">Companies interested in hiring you</p>
+            <p className="text-[13px] text-ink-muted mt-0.5">Companies interested in hiring you</p>
           </div>
           <div className="w-10 h-10 rounded-2xl bg-brand-soft flex items-center justify-center shrink-0">
             <Mail className="w-5 h-5 text-brand" />
@@ -228,7 +228,7 @@ export default function Inbox() {
             <button
               key={f.key}
               onClick={() => setActiveFilter(f.key)}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-bold whitespace-nowrap transition-colors ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-bold whitespace-nowrap transition-colors ${
                 activeFilter === f.key
                   ? "bg-brand text-white border border-brand"
                   : "bg-paper text-ink-muted border border-line"
@@ -261,7 +261,7 @@ export default function Inbox() {
             <p className="text-[14px] text-ink">
               {activeFilter === "all" ? "No invites yet." : `No ${activeFilter} invites.`}
             </p>
-            <p className="text-[12px] text-ink-muted mt-1 leading-relaxed">
+            <p className="text-[13px] text-ink-muted mt-1 leading-relaxed">
               {activeFilter === "all"
                 ? "Invites will appear here when a recruiter reaches out — nothing yet."
                 : `You don't have any ${activeFilter} invites right now.`}

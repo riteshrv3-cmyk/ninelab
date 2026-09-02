@@ -10,6 +10,7 @@ import {
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { PressableCard } from "@/components/PressableCard";
 import { hapticTap } from "@/lib/haptics";
+import { Footer } from "@/components/ninelab/Footer";
 
 // First-visit landing. Shows the product before the app: credibility page for
 // students, parents, TPOs and recruiters who want to read before touching.
@@ -69,13 +70,14 @@ const SCREENS = [
   { src: "/landing/shot-resume.jpg", alt: "AI resume screen" },
 ];
 
-const ROTATE_MS = 3500;
-const MANUAL_PAUSE_MS = 8000;
+const ROTATE_MS = 5000;
+const MANUAL_PAUSE_MS = 10000;
 const SWIPE_THRESHOLD_PX = 40;
 
 // Auto-rotating hero phone. Ambient rotation is allowed here (marketing page,
-// lightweight, single element); it goes fully static under reduced motion —
-// no auto-advance, no crossfade — while dots still swap screens instantly.
+// lightweight, single element). Under reduced motion it keeps advancing (the
+// screens are the content, and a static single shot undersells the app) but
+// the crossfade is dropped — screens swap instantly instead of animating.
 function PhoneFrame() {
   const reduce = useReducedMotion();
   const [screen, setScreen] = useState(0);
@@ -84,13 +86,12 @@ function PhoneFrame() {
   const pausedUntilRef = useRef(0);
 
   useEffect(() => {
-    if (reduce) return;
     const id = setInterval(() => {
       if (Date.now() < pausedUntilRef.current) return;
       setScreen((s) => (s + 1) % SCREENS.length);
     }, ROTATE_MS);
     return () => clearInterval(id);
-  }, [reduce]);
+  }, []);
 
   const goTo = (i: number) => {
     pausedUntilRef.current = Date.now() + MANUAL_PAUSE_MS;
@@ -117,8 +118,8 @@ function PhoneFrame() {
               key={s.src}
               src={s.src}
               alt={s.alt}
-              width={360}
-              height={780}
+              width={600}
+              height={1300}
               draggable={false}
               aria-hidden={i !== screen}
               className="absolute inset-0 w-full h-full block pointer-events-none"
@@ -129,20 +130,24 @@ function PhoneFrame() {
           ))}
         </motion.div>
       </div>
-      <div className="mt-4 flex items-center justify-center" role="group" aria-label="Choose app screen">
+      <div
+        className="mt-2 flex items-center justify-center"
+        role="group"
+        aria-label="Choose app screen"
+      >
         {SCREENS.map((s, i) => (
           <button
             key={s.src}
             type="button"
             onClick={() => goTo(i)}
-            aria-label={`Show screen: ${s.alt}`}
-            aria-current={i === screen}
-            className="p-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-full"
+            aria-label={`Show screen ${i + 1} of ${SCREENS.length}: ${s.alt}`}
+            aria-current={i === screen ? "true" : undefined}
+            className="w-11 h-11 flex items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <span
               className={`block w-2 h-2 rounded-full ${
                 i === screen ? "bg-brand" : "bg-line"
-              }`}
+              } ${reduce ? "" : "transition-colors duration-200"}`}
             />
           </button>
         ))}
@@ -264,8 +269,8 @@ export default function Landing({ onEnter }: { onEnter: () => void }) {
                 src="/landing/shot-practice.jpg"
                 alt="Mock interview practice screen"
                 className="w-full block"
-                width={360}
-                height={780}
+                width={600}
+                height={1300}
                 loading="lazy"
               />
             </div>
@@ -274,8 +279,8 @@ export default function Landing({ onEnter }: { onEnter: () => void }) {
                 src="/landing/shot-resume.jpg"
                 alt="AI resume screen"
                 className="w-full block"
-                width={360}
-                height={780}
+                width={600}
+                height={1300}
                 loading="lazy"
               />
             </div>
@@ -326,6 +331,8 @@ export default function Landing({ onEnter }: { onEnter: () => void }) {
           </PressableCard>
         </div>
       </footer>
+
+      <Footer />
 
       {/* Sticky CTA — slides in once the hero CTA scrolls out of view.
           User-scroll-triggered, so the motion is allowed; instant under

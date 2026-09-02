@@ -71,7 +71,7 @@ export default function Notebook() {
           </button>
           <div>
             <h1 className="text-display text-[30px] lg:text-[36px] font-extrabold text-ink leading-[1.06] tracking-tight">Toko's Notebook</h1>
-            <p className="text-[12px] text-ink-muted">Everything Toko has noticed about your journey</p>
+            <p className="text-[13px] text-ink-muted">Everything Toko has noticed about your journey</p>
           </div>
         </div>
       </div>
@@ -80,7 +80,7 @@ export default function Notebook() {
         {error && (
           <div className="bg-paper rounded-2xl shadow-soft p-4">
             <p className="text-[14px] font-bold text-danger">Couldn't load your notebook</p>
-            <p className="text-[12px] text-ink-muted mt-1">{error}</p>
+            <p className="text-[13px] text-ink-muted mt-1">{error}</p>
           </div>
         )}
 
@@ -94,7 +94,7 @@ export default function Notebook() {
           <div className="py-12 flex flex-col items-center text-center">
             <Toko pose="shrug" size={64} className="mb-3" />
             <p className="text-[14px] text-ink">Nothing here yet.</p>
-            <p className="text-[12px] text-ink-muted mt-1">Complete a task or take a mock interview — Toko starts noticing from day one.</p>
+            <p className="text-[13px] text-ink-muted mt-1">Complete a task or take a mock interview — Toko starts noticing from day one.</p>
           </div>
         )}
 
@@ -108,7 +108,7 @@ export default function Notebook() {
           >
             <div className="p-4 flex items-center justify-between">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">{weekLabel(week.weekKey)}</p>
+                <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">{weekLabel(week.weekKey)}</p>
                 <p className="text-[13px] font-semibold text-ink mt-0.5">
                   {week.summary.tasksDone} tasks · {week.summary.practiceSessionsDone} practice · {week.summary.applicationsAdded} applications
                 </p>
@@ -126,7 +126,7 @@ export default function Notebook() {
               </button>
             </div>
             {copiedWeek === week.weekKey && (
-              <p className="px-4 pb-2 text-[11px] font-semibold text-brand">Copied to clipboard</p>
+              <p className="px-4 pb-2 text-[13px] font-semibold text-brand">Copied to clipboard</p>
             )}
             <div className="border-t border-line">
               {week.events.map((e, i) => (
@@ -138,7 +138,7 @@ export default function Notebook() {
                   )}
                   <div className="min-w-0">
                     <p className="text-[13px] text-ink">{e.description}</p>
-                    <p className="text-[11px] text-ink-muted mt-0.5">{fmtDate(e.date)}</p>
+                    <p className="text-[13px] text-ink-muted mt-0.5">{fmtDate(e.date)}</p>
                   </div>
                 </div>
               ))}

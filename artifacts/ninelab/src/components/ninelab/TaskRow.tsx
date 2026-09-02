@@ -40,7 +40,7 @@ export function TaskRow({ label, sublabel, done, hot, ctaLabel, onToggle, onActi
         <p className={cn("text-[16px] font-semibold leading-snug", done ? "text-ink-muted line-through" : "text-ink")}>
           {label}
         </p>
-        {sublabel && <p className="text-[12px] text-ink-muted mt-0.5">{sublabel}</p>}
+        {sublabel && <p className="text-[13px] text-ink-muted mt-0.5">{sublabel}</p>}
       </button>
 
       {hot && !done && ctaLabel && (

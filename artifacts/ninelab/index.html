@@ -25,22 +25,102 @@
     <meta name="apple-mobile-web-app-title" content="ninelab">
     <meta name="description" content="ninelab — everything for placement season. Free for students. Explore first — jobs, resume, mock interviews and courses, no signup needed.">
 
-    <!-- Open Graph / social share cards. Uses the apple-touch-icon already
-         referenced above as the share image. Keep og:url on the canonical
-         apex domain the app opens into. -->
+    <!-- Open Graph / social share cards. The share image is the purpose-built
+         1280x720 card in public/opengraph.jpg — the apple-touch-icon that used
+         to sit here is a 180px square, which every scraper either letterboxes
+         into a grey slab or downgrades to a small summary card. Absolute URLs
+         because Slack/WhatsApp/LinkedIn do not resolve relative og:image paths.
+         Keep og:url on the canonical apex domain the app opens into. -->
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="ninelab">
     <meta property="og:title" content="ninelab">
     <meta property="og:description" content="Everything for placement season. Free for students. Explore first — no signup needed.">
     <meta property="og:url" content="https://ninelab.in">
-    <meta property="og:image" content="/apple-touch-icon.png">
+    <meta property="og:image" content="https://ninelab.in/opengraph.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1280">
+    <meta property="og:image:height" content="720">
+    <meta property="og:image:alt" content="ninelab — crack placements. see the app first.">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="ninelab">
     <meta name="twitter:description" content="Everything for placement season. Free for students. Explore first — no signup needed.">
-    <meta name="twitter:image" content="/apple-touch-icon.png">
+    <meta name="twitter:image" content="https://ninelab.in/opengraph.jpg">
+    <meta name="twitter:image:alt" content="ninelab — crack placements. see the app first.">
+
+    <!-- Boot screen. Lives INSIDE #root on purpose: React's createRoot clears
+         the container on its first commit, so this vanishes the moment the app
+         mounts with no JS, no observer and no race to un-hide it. Without it
+         the first paint was ~6s of blank white while the entry chunk, Clerk
+         and the lazy Landing chunk all landed. Pure CSS — anything that needed
+         a script would land after the very moment it exists to cover.
+         Palette/typography per src/DESIGN_SYSTEM.md (brand #4a55c7, ink
+         #1a1d2e, Plus Jakarta Sans). -->
+    <style>
+      #nl-boot {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        padding: 24px;
+        background: #ffffff;
+        /* The Google Fonts link above is render-blocking, so Jakarta is
+           normally already there; the system stack keeps the wordmark from
+           reflowing badly on a slow font fetch. */
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont,
+          'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        text-align: center;
+      }
+      #nl-boot .nl-boot-mark {
+        font-size: 34px;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: #4a55c7;
+        line-height: 1;
+      }
+      #nl-boot .nl-boot-line {
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: #1a1d2e;
+        line-height: 1.35;
+        max-width: 22ch;
+      }
+      #nl-boot .nl-boot-track {
+        width: 120px;
+        height: 3px;
+        border-radius: 999px;
+        background: #ecedf3;
+        overflow: hidden;
+        margin-top: 6px;
+      }
+      #nl-boot .nl-boot-fill {
+        display: block;
+        width: 40%;
+        height: 100%;
+        border-radius: 999px;
+        background: #4a55c7;
+        animation: nl-boot-slide 1.1s ease-in-out infinite;
+      }
+      @keyframes nl-boot-slide {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(300%); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #nl-boot .nl-boot-fill { animation: none; width: 100%; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="nl-boot">
+        <div class="nl-boot-mark">ninelab</div>
+        <div class="nl-boot-line">crack placements. see the app first.</div>
+        <div class="nl-boot-track"><span class="nl-boot-fill"></span></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

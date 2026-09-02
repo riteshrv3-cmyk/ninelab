@@ -74,7 +74,7 @@ const VERDICT_SUB: Record<string, string> = {
 };
 
 const outcomeBtnClass = (active: boolean) =>
-  `text-[11px] font-bold px-2.5 py-2 rounded-xl border active:scale-95 transition-transform disabled:opacity-50 flex items-center justify-center gap-1.5 ${
+  `text-[13px] font-bold px-2.5 py-2 rounded-xl border active:scale-95 transition-transform disabled:opacity-50 flex items-center justify-center gap-1.5 ${
     active ? "bg-brand text-white border-brand" : "border-line text-ink"
   }`;
 
@@ -86,7 +86,7 @@ function GhostRateBadge({ stats }: { stats: CompanyStats }) {
     return (
       <div className="rounded-2xl p-3 bg-canvas flex items-center gap-2.5">
         <TrendingUp className="w-4 h-4 text-ink-muted shrink-0" />
-        <p className="text-[12px] text-ink-muted leading-snug">
+        <p className="text-[13px] text-ink-muted leading-snug">
           {stats.applied ?? 0} ninelab users applied here. No outcomes reported yet.
         </p>
       </div>
@@ -99,23 +99,23 @@ function GhostRateBadge({ stats }: { stats: CompanyStats }) {
   return (
     <div className="rounded-2xl p-3.5 bg-canvas">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">
+        <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">
           Real outcomes from ninelab users
         </p>
-        <span className="text-[11px] font-bold text-ink-muted">n={decided}</span>
+        <span className="text-[13px] font-bold text-ink-muted">n={decided}</span>
       </div>
       <div className="grid grid-cols-3 gap-2">
         <div className="text-center">
           <p className="text-[18px] font-extrabold text-ink">{ghostRate}%</p>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">Ghosted</p>
+          <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">Ghosted</p>
         </div>
         <div className="text-center">
           <p className="text-[18px] font-extrabold text-ink">{callRate}%</p>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">Got Call</p>
+          <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">Got Call</p>
         </div>
         <div className="text-center">
           <p className="text-[18px] font-extrabold text-ink">{offerRate}%</p>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">Offer</p>
+          <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">Offer</p>
         </div>
       </div>
     </div>
@@ -137,16 +137,16 @@ function VerdictCard({ row, studentName, college, kodeScore }: {
     <div className="bg-paper rounded-2xl overflow-hidden shadow-soft">
       {/* Header strip */}
       <div className="px-5 pt-4 pb-4 border-b border-line">
-        <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-ink-muted">
+        <div className="flex items-center justify-between text-[12px] font-bold uppercase tracking-wider text-ink-muted">
           <span>{studentName} · {college.split(",")[0].slice(0, 22)}</span>
           <span>KodeScore {kodeScore}</span>
         </div>
         <div className={`mt-3 flex items-start gap-3 rounded-xl px-3.5 py-3 ${v.className}`}>
           <Icon className="w-6 h-6 shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-wider opacity-80">Verdict</p>
+            <p className="text-[12px] font-bold uppercase tracking-wider opacity-80">Verdict</p>
             <h2 className="text-display text-[18px] font-extrabold leading-tight mt-0.5">{v.label}</h2>
-            <p className="text-[12px] mt-0.5 opacity-90 leading-snug">{sub}</p>
+            <p className="text-[13px] mt-0.5 opacity-90 leading-snug">{sub}</p>
           </div>
         </div>
       </div>
@@ -157,16 +157,16 @@ function VerdictCard({ row, studentName, college, kodeScore }: {
         {(row.company || row.role || row.ctc) && (
           <div className="flex flex-wrap gap-1.5">
             {row.company && (
-              <span className="text-[11px] font-bold bg-brand text-white px-2.5 py-1 rounded-full">{row.company}</span>
+              <span className="text-[13px] font-bold bg-brand text-white px-2.5 py-1 rounded-full">{row.company}</span>
             )}
             {row.role && (
-              <span className="text-[11px] font-bold bg-brand-soft text-brand px-2.5 py-1 rounded-full">{row.role}</span>
+              <span className="text-[13px] font-bold bg-brand-soft text-brand px-2.5 py-1 rounded-full">{row.role}</span>
             )}
             {row.ctc && (
-              <span className="text-[11px] font-bold bg-brand-soft text-brand px-2.5 py-1 rounded-full">{row.ctc}</span>
+              <span className="text-[13px] font-bold bg-brand-soft text-brand px-2.5 py-1 rounded-full">{row.ctc}</span>
             )}
             {row.batch && (
-              <span className="text-[11px] font-bold bg-canvas text-ink-muted px-2.5 py-1 rounded-full">{row.batch}</span>
+              <span className="text-[13px] font-bold bg-canvas text-ink-muted px-2.5 py-1 rounded-full">{row.batch}</span>
             )}
           </div>
         )}
@@ -174,12 +174,12 @@ function VerdictCard({ row, studentName, college, kodeScore }: {
         {/* Scam reasons */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">Scam Score</p>
-            <span className="text-[11px] font-bold bg-brand-soft text-brand px-2 py-0.5 rounded-full">{row.scamScore}/100</span>
+            <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">Scam Score</p>
+            <span className="text-[13px] font-bold bg-brand-soft text-brand px-2 py-0.5 rounded-full">{row.scamScore}/100</span>
           </div>
           <div className="space-y-1.5">
             {row.scamReasons.map((r, i) => (
-              <div key={i} className="flex items-start gap-2 text-[12px] text-ink-muted">
+              <div key={i} className="flex items-start gap-2 text-[13px] text-ink-muted">
                 <span className="mt-1.5 w-1 h-1 rounded-full bg-ink-muted shrink-0" />
                 <span className="leading-snug">{r}</span>
               </div>
@@ -191,16 +191,16 @@ function VerdictCard({ row, studentName, college, kodeScore }: {
         {gates.length > 0 && (
           <div className="rounded-2xl p-3.5 bg-canvas">
             <div className="flex items-center justify-between mb-2.5">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">Tu eligible hai?</p>
-              <span className="text-[11px] font-bold text-ink">
+              <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">Tu eligible hai?</p>
+              <span className="text-[13px] font-bold text-ink">
                 {row.gatesOpen}/{row.gatesTotal} gates open · KodeScore fit {row.kodeScoreFit}
               </span>
             </div>
             <div className="space-y-2">
               {gates.map(([key, g]) => (
-                <div key={key} className="flex items-center gap-2 text-[12px]">
+                <div key={key} className="flex items-center gap-2 text-[13px]">
                   <span className={`w-2 h-2 rounded-full shrink-0 ${g.open ? "bg-done" : "bg-danger"}`} />
-                  <span className="flex-1 text-[12px] text-ink">{g.label}</span>
+                  <span className="flex-1 text-[13px] text-ink">{g.label}</span>
                 </div>
               ))}
             </div>
@@ -217,11 +217,11 @@ function VerdictCard({ row, studentName, college, kodeScore }: {
           <div className="rounded-2xl p-3.5 bg-canvas">
             <div className="flex items-center gap-2 mb-1">
               <CheckCircle2 className="w-4 h-4 text-done shrink-0" />
-              <p className="text-[11px] font-bold uppercase tracking-wider text-ink">
+              <p className="text-[12px] font-bold uppercase tracking-wider text-ink">
                 Verified by your TPO
               </p>
             </div>
-            <p className="text-[12px] text-ink-muted leading-snug">
+            <p className="text-[13px] text-ink-muted leading-snug">
               {row.tpoMatchedDrive?.postedByName ?? "Your TPO"} officially shared this drive
               {row.tpoMatchedDrive?.createdAt
                 ? ` on ${new Date(row.tpoMatchedDrive.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })}`
@@ -230,13 +230,13 @@ function VerdictCard({ row, studentName, college, kodeScore }: {
             {row.tpoMatchedDrive && (row.tpoMatchedDrive.role || row.tpoMatchedDrive.ctc || row.tpoMatchedDrive.driveDate) && (
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {row.tpoMatchedDrive.role && (
-                  <span className="text-[11px] font-bold bg-paper text-ink-muted px-2 py-0.5 rounded-full">{row.tpoMatchedDrive.role}</span>
+                  <span className="text-[13px] font-bold bg-paper text-ink-muted px-2 py-0.5 rounded-full">{row.tpoMatchedDrive.role}</span>
                 )}
                 {row.tpoMatchedDrive.ctc && (
-                  <span className="text-[11px] font-bold bg-paper text-ink-muted px-2 py-0.5 rounded-full">{row.tpoMatchedDrive.ctc}</span>
+                  <span className="text-[13px] font-bold bg-paper text-ink-muted px-2 py-0.5 rounded-full">{row.tpoMatchedDrive.ctc}</span>
                 )}
                 {row.tpoMatchedDrive.driveDate && (
-                  <span className="text-[11px] font-bold bg-paper text-ink-muted px-2 py-0.5 rounded-full">
+                  <span className="text-[13px] font-bold bg-paper text-ink-muted px-2 py-0.5 rounded-full">
                     {new Date(row.tpoMatchedDrive.driveDate).toLocaleDateString()}
                   </span>
                 )}
@@ -246,12 +246,12 @@ function VerdictCard({ row, studentName, college, kodeScore }: {
         ) : row.tpoMatch === "not_matched" ? (
           <div className="rounded-2xl p-3 bg-canvas flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-ink-muted mt-0.5 shrink-0" />
-            <p className="text-[12px] text-ink-muted leading-snug">
+            <p className="text-[13px] text-ink-muted leading-snug">
               Your TPO has <span className="font-bold text-ink">NOT</span> shared this drive. Verify the source before applying.
             </p>
           </div>
         ) : (
-          <div className="flex items-center gap-2 text-[12px] text-ink-muted">
+          <div className="flex items-center gap-2 text-[13px] text-ink-muted">
             <span>Your TPO hasn't posted any drives recently — can't cross-check.</span>
           </div>
         )}
@@ -526,7 +526,7 @@ export default function DriveCheck() {
         <div className="max-w-md lg:max-w-3xl mx-auto">
           <button
             onClick={() => setLocation("/home")}
-            className="flex items-center gap-1 text-[12px] font-bold text-white/70 mb-4"
+            className="flex items-center gap-1 text-[13px] font-bold text-white/70 mb-4"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> Home
           </button>
@@ -541,7 +541,7 @@ export default function DriveCheck() {
       {/* Pending pings — drives student applied to 7+ days ago */}
       {pendingPings.length > 0 && (
         <div className="mb-4 bg-paper rounded-2xl shadow-soft p-4">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mb-2">
+          <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted mb-2">
             Quick check — kya hua in drives ka?
           </p>
           <div>
@@ -588,7 +588,7 @@ export default function DriveCheck() {
                   <button
                     onClick={() => setOutcome(p, "skipped")}
                     disabled={actionLoading}
-                    className="text-[11px] font-bold px-2.5 py-2 rounded-xl text-ink-muted active:scale-95 transition-transform disabled:opacity-50"
+                    className="text-[13px] font-bold px-2.5 py-2 rounded-xl text-ink-muted active:scale-95 transition-transform disabled:opacity-50"
                   >
                     Skip
                   </button>
@@ -613,7 +613,7 @@ export default function DriveCheck() {
           <button
             onClick={pasteFromClipboard}
             disabled={loading}
-            className="flex items-center gap-1.5 border border-line text-brand font-bold text-[12px] px-3 py-3 rounded-xl active:scale-95 transition-transform disabled:opacity-40"
+            className="flex items-center gap-1.5 border border-line text-brand font-bold text-[13px] px-3 py-3 rounded-xl active:scale-95 transition-transform disabled:opacity-40"
           >
             <Clipboard className="w-3.5 h-3.5" /> Paste
           </button>
@@ -636,7 +636,7 @@ export default function DriveCheck() {
             )}
           </motion.button>
         </div>
-        <p className="text-[12px] text-ink-muted text-center mt-2.5">
+        <p className="text-[13px] text-ink-muted text-center mt-2.5">
           We tell you: 1) Scam ya nahi · 2) Tu eligible bhi hai ya nahi
         </p>
       </div>
@@ -665,7 +665,7 @@ export default function DriveCheck() {
               <div className="mt-3 bg-paper rounded-2xl shadow-soft p-3.5">
                 {verdict.outcome === "pending" && (
                   <>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mb-2">
+                    <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted mb-2">
                       Apply karega is drive ko?
                     </p>
                     <button
@@ -674,16 +674,16 @@ export default function DriveCheck() {
                       className="w-full bg-brand text-white font-bold text-[14px] py-3 rounded-full active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                       <CheckCircle2 className="w-4 h-4" /> Maine apply kiya
-                      {verdict.applyLink && <span className="text-[11px] opacity-70">+ open link</span>}
+                      {verdict.applyLink && <span className="text-[13px] opacity-70">+ open link</span>}
                     </button>
-                    <p className="text-[12px] text-ink-muted text-center mt-2">
+                    <p className="text-[13px] text-ink-muted text-center mt-2">
                       We'll ping you in 7 days to ask kya hua — your reply helps every other student.
                     </p>
                   </>
                 )}
                 {verdict.outcome === "applied" && (
                   <>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mb-2">
+                    <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted mb-2">
                       Status update — kya hua?
                     </p>
                     <div className="grid grid-cols-2 gap-2">
@@ -739,7 +739,7 @@ export default function DriveCheck() {
                     <p className="text-[13px] font-bold text-ink leading-tight">
                       Warn the group — one tap
                     </p>
-                    <p className="text-[12px] text-ink-muted mt-0.5">
+                    <p className="text-[13px] text-ink-muted mt-0.5">
                       Prefilled message + verdict card. Saves friends from getting scammed.
                     </p>
                   </div>
@@ -748,7 +748,7 @@ export default function DriveCheck() {
                   <button
                     onClick={() => warnTheGroup("whatsapp")}
                     data-testid="button-warn-whatsapp"
-                    className="bg-brand text-white font-bold text-[12px] py-2.5 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                    className="bg-brand text-white font-bold text-[13px] py-2.5 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
                   >
                     <Megaphone className="w-3.5 h-3.5" />
                     WhatsApp group
@@ -756,14 +756,14 @@ export default function DriveCheck() {
                   <button
                     onClick={() => warnTheGroup("telegram")}
                     data-testid="button-warn-telegram"
-                    className="border border-line text-brand font-bold text-[12px] py-2.5 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                    className="border border-line text-brand font-bold text-[13px] py-2.5 rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
                   >
                     <Megaphone className="w-3.5 h-3.5" />
                     Telegram group
                   </button>
                 </div>
                 {verdict.sharedCount > 0 && (
-                  <p className="text-[12px] text-ink-muted text-center mt-2 font-bold">
+                  <p className="text-[13px] text-ink-muted text-center mt-2 font-bold">
                     Shared {verdict.sharedCount} {verdict.sharedCount === 1 ? "time" : "times"}
                   </p>
                 )}
@@ -784,7 +784,7 @@ export default function DriveCheck() {
       {/* Recent checks */}
       {recent.length > 0 && (
         <div className="mt-10 bg-paper rounded-2xl shadow-soft p-4">
-          <h3 className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mb-2">Recent checks</h3>
+          <h3 className="text-[12px] font-bold uppercase tracking-wider text-ink-muted mb-2">Recent checks</h3>
           <div>
             {recent.slice(0, 5).map((r, i) => {
               const v = VERDICT_STYLE[r.scamVerdict] ?? VERDICT_STYLE.risky;
@@ -801,7 +801,7 @@ export default function DriveCheck() {
                     <p className="text-[14px] font-semibold text-ink truncate">
                       {r.company ?? "Unknown company"} {r.role ? `· ${r.role}` : ""}
                     </p>
-                    <p className="text-[12px] text-ink-muted mt-0.5">
+                    <p className="text-[13px] text-ink-muted mt-0.5">
                       {v.label} · {r.gatesOpen}/{r.gatesTotal} gates open
                     </p>
                   </div>

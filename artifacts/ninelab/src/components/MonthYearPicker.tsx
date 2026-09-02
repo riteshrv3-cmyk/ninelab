@@ -30,7 +30,7 @@ export function MonthYearPicker({ value, onChange, allowPresent }: MonthYearPick
     return (
       <div className="flex items-center gap-2 h-9">
         <span className="text-sm font-semibold text-ink flex-1">Present</span>
-        <button type="button" onClick={() => onChange("")} className="text-[11px] font-bold text-brand shrink-0">
+        <button type="button" onClick={() => onChange("")} className="text-[13px] font-bold text-brand shrink-0">
           Set a date
         </button>
       </div>
@@ -63,7 +63,7 @@ export function MonthYearPicker({ value, onChange, allowPresent }: MonthYearPick
         <button
           type="button"
           onClick={() => onChange("Present")}
-          className="text-[11px] font-bold text-ink-muted shrink-0 whitespace-nowrap"
+          className="text-[13px] font-bold text-ink-muted shrink-0 whitespace-nowrap"
         >
           Present
         </button>

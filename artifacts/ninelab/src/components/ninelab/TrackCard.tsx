@@ -30,19 +30,19 @@ export function TrackCard({ studentId }: { studentId: string | null }) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">Your track</p>
+          <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">Your track</p>
           <p className="text-[15px] font-extrabold text-ink leading-tight truncate">{track.name}</p>
         </div>
         <div className="text-right shrink-0">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted">Readiness</p>
+          <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted">Readiness</p>
           <p className={`text-[20px] font-extrabold tabular-nums leading-none ${readinessColor}`}>{readiness.score}</p>
         </div>
       </div>
 
       <div className="mt-3">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-[11px] font-semibold text-ink-muted">{done} of {total} milestones</span>
-          <span className="text-[11px] font-semibold text-ink-muted tabular-nums">{pct}%</span>
+          <span className="text-[13px] font-semibold text-ink-muted">{done} of {total} milestones</span>
+          <span className="text-[13px] font-semibold text-ink-muted tabular-nums">{pct}%</span>
         </div>
         <div className="h-1.5 rounded-full bg-canvas overflow-hidden">
           <div className="h-full bg-brand rounded-full transition-all" style={{ width: `${pct}%` }} />
@@ -51,7 +51,7 @@ export function TrackCard({ studentId }: { studentId: string | null }) {
 
       {next && (
         <div className="mt-3 flex items-center justify-between gap-2">
-          <span className="text-[12px] text-ink-muted truncate">Next: <span className="font-semibold text-ink">{next.title}</span></span>
+          <span className="text-[13px] text-ink-muted truncate">Next: <span className="font-semibold text-ink">{next.title}</span></span>
           <ChevronRight className="w-4 h-4 text-ink-muted shrink-0" />
         </div>
       )}

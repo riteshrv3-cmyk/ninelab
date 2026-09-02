@@ -60,7 +60,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
       {/* pt clears the TopBar (h-14) plus the status-bar inset the TopBar now
           absorbs, since the page renders with viewport-fit=cover. */}
-      <main ref={mainRef} className="max-w-md mx-auto w-full pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[calc(4rem+env(safe-area-inset-bottom))] min-h-[100dvh] lg:max-w-5xl lg:px-8 lg:pt-8 lg:pb-8">
+      <main ref={mainRef} className="max-w-md mx-auto w-full pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[calc(8.25rem+env(safe-area-inset-bottom))] min-h-[100dvh] lg:max-w-5xl lg:px-8 lg:pt-8 lg:pb-8">
         <OfflineBanner />
         <InstallBanner />
         {/* Routes render directly — no fade wrapper. Instant navigation reads

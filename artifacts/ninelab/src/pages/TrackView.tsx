@@ -58,7 +58,7 @@ export default function TrackView() {
           {!isLoading && !isError && data && !data.track && (
             <div className="py-12 text-center">
               <p className="text-[14px] text-ink">No track assigned yet.</p>
-              <p className="text-[12px] text-ink-muted mt-1">Join your college to get a curated track, or keep building your profile.</p>
+              <p className="text-[13px] text-ink-muted mt-1">Join your college to get a curated track, or keep building your profile.</p>
             </div>
           )}
 
@@ -73,11 +73,11 @@ export default function TrackView() {
                 <div className="space-y-2">
                   {BREAKDOWN_LABELS.map(({ key, label }) => (
                     <div key={key} className="flex items-center gap-3">
-                      <span className="text-[12px] text-ink-muted w-28 shrink-0">{label}</span>
+                      <span className="text-[13px] text-ink-muted w-28 shrink-0">{label}</span>
                       <div className="h-1.5 rounded-full bg-canvas overflow-hidden flex-1">
                         <div className="h-full bg-brand rounded-full" style={{ width: `${data.readiness.breakdown[key]}%` }} />
                       </div>
-                      <span className="text-[11px] font-semibold text-ink-muted tabular-nums w-8 text-right">
+                      <span className="text-[13px] font-semibold text-ink-muted tabular-nums w-8 text-right">
                         {data.readiness.breakdown[key]}
                       </span>
                     </div>
@@ -87,7 +87,7 @@ export default function TrackView() {
 
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[13px] font-bold text-ink">Milestones</p>
-                <p className="text-[12px] font-semibold text-ink-muted">{data.done} of {data.total} done</p>
+                <p className="text-[13px] font-semibold text-ink-muted">{data.done} of {data.total} done</p>
               </div>
 
               <div className="space-y-2.5">
@@ -111,13 +111,13 @@ export default function TrackView() {
                         <p className={`text-[14px] font-bold leading-tight ${m.done ? "text-ink-muted line-through" : "text-ink"}`}>
                           {m.title}
                         </p>
-                        {m.description && <p className="text-[12px] text-ink-muted mt-0.5 leading-snug">{m.description}</p>}
+                        {m.description && <p className="text-[13px] text-ink-muted mt-0.5 leading-snug">{m.description}</p>}
                       </div>
                       {!m.done && (
                         <button
                           type="button"
                           onClick={() => setLocation(m.href)}
-                          className="shrink-0 inline-flex items-center gap-0.5 text-[12px] font-bold text-brand"
+                          className="shrink-0 inline-flex items-center gap-0.5 text-[13px] font-bold text-brand"
                         >
                           Go <ChevronRight className="w-4 h-4" />
                         </button>

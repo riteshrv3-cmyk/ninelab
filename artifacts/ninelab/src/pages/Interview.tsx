@@ -502,7 +502,7 @@ export default function Interview() {
         </Button>
         <div className="text-center space-y-1">
           <h1 className="text-display text-[30px] lg:text-[36px] font-extrabold text-ink leading-[1.06] tracking-tight">Interview Complete</h1>
-          <p className="text-[12px] text-ink-muted font-bold">{interviewTypeLabel} · {session?.company}</p>
+          <p className="text-[13px] text-ink-muted font-bold">{interviewTypeLabel} · {session?.company}</p>
         </div>
 
         <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4">
@@ -512,7 +512,7 @@ export default function Interview() {
             <div className="text-[80px] font-black leading-none mb-1 text-brand">
               {evalData?.overallScore ?? 85}
             </div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mb-3">Overall Score</p>
+            <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted mb-3">Overall Score</p>
             {evalData?.overallRating && (
               <span className="px-4 py-1.5 rounded-full text-sm font-bold bg-brand text-paper">
                 {evalData.overallRating}
@@ -536,7 +536,7 @@ export default function Interview() {
                   {!showRealInterviewQ ? (
                     <>
                       <p className="text-[14px] font-bold text-ink mb-1">How confident did you feel?</p>
-                      <p className="text-[12px] text-ink-muted mb-3">This helps us personalise your practice.</p>
+                      <p className="text-[13px] text-ink-muted mb-3">This helps us personalise your practice.</p>
                       <div className="flex justify-around">
                         {CONFIDENCE_EMOJIS.map(({ emoji, label }, i) => (
                           <button
@@ -593,7 +593,7 @@ export default function Interview() {
         {evalData && (
           <Card className="rounded-2xl bg-paper shadow-soft lg:order-3">
             <CardContent className="p-5">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mb-4">Category Scores</p>
+              <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted mb-4">Category Scores</p>
               <div className="flex justify-around">
                 <ScoreRing score={evalData.communicationScore} max={10} label="Comms" />
                 <ScoreRing score={evalData.technicalScore} max={10} label="Technical" />
@@ -607,19 +607,19 @@ export default function Interview() {
           <div className="space-y-3 lg:order-5 lg:col-span-2">
             <Card className="border-0 border-l-2 border-done shadow-none rounded-none bg-paper">
               <CardContent className="p-4">
-                <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider mb-1">Strength</p>
+                <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider mb-1">Strength</p>
                 <p className="text-[14px] font-medium text-ink">{evalData.strongPoint}</p>
               </CardContent>
             </Card>
             <Card className="border-0 border-l-2 border-line shadow-none rounded-none bg-paper">
               <CardContent className="p-4">
-                <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider mb-1">Work on this</p>
+                <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider mb-1">Work on this</p>
                 <p className="text-[14px] font-medium text-ink mb-2">{evalData.weakPoint}</p>
                 <button
                   onClick={addWeakPointToTomorrow}
                   disabled={addedToTomorrow}
                   className={cn(
-                    "text-[12px] font-bold disabled:cursor-default",
+                    "text-[13px] font-bold disabled:cursor-default",
                     addedToTomorrow ? "text-done" : "text-brand"
                   )}
                 >
@@ -633,7 +633,7 @@ export default function Interview() {
         {times.length > 0 && (
           <Card className="rounded-2xl bg-paper shadow-soft lg:order-4">
             <CardContent className="p-4">
-              <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider mb-3">
+              <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider mb-3">
                 <Clock className="w-3 h-3 inline mr-1" /> Response Times
               </p>
               <div className="grid grid-cols-3 gap-2 text-center">
@@ -648,7 +648,7 @@ export default function Interview() {
 
         {evalData?.questionFeedback && evalData.questionFeedback.length > 0 && (
           <div>
-            <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider mb-2 px-1">Q&A Review</p>
+            <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider mb-2 px-1">Q&A Review</p>
             <div>
               {evalData.questionFeedback.map((qf, i) => (
                 <div key={i} className="border-t border-line first:border-t-0">
@@ -667,11 +667,11 @@ export default function Interview() {
                       <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden">
                         <div className="pb-4 space-y-3 border-t border-line pt-3">
                           <div>
-                            <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider mb-1">Your Answer</p>
+                            <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider mb-1">Your Answer</p>
                             <p className="text-[14px] text-ink">{qf.studentAnswer || "(no answer)"}</p>
                           </div>
                           <div>
-                            <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider mb-1">Better Answer</p>
+                            <p className="text-[12px] font-bold text-ink-muted uppercase tracking-wider mb-1">Better Answer</p>
                             <p className="text-[14px] text-ink border border-line rounded-xl p-3">{qf.betterAnswer}</p>
                           </div>
                         </div>
@@ -715,7 +715,7 @@ export default function Interview() {
           </Button>
           <div className="text-center">
             <h1 className="text-display font-extrabold text-base text-ink">{interviewType} Interview</h1>
-            <p className="text-[11px] text-ink-muted font-medium">{session?.company} · Q{questionCount}/{maxQuestions}</p>
+            <p className="text-[13px] text-ink-muted font-medium">{session?.company} · Q{questionCount}/{maxQuestions}</p>
           </div>
           <div className="flex items-center gap-1.5">
             <button
@@ -794,7 +794,7 @@ export default function Interview() {
       {/* Timer */}
       {timerRunning && (
         <div className="flex justify-end px-4 pt-1">
-          <div className="flex items-center gap-1 text-[12px] font-bold text-ink-muted">
+          <div className="flex items-center gap-1 text-[13px] font-bold text-ink-muted">
             <Clock className="w-3 h-3" /> {formatTime(timerSeconds)}
           </div>
         </div>
@@ -836,7 +836,7 @@ export default function Interview() {
                       transition={{ duration: 0.6, repeat: Infinity, delay }} />
                   ))}
                 </div>
-                <span className="text-[12px] font-bold text-brand">Speaking…</span>
+                <span className="text-[13px] font-bold text-brand">Speaking…</span>
               </div>
             </motion.div>
           )}
@@ -848,7 +848,7 @@ export default function Interview() {
       <div className="fixed bottom-0 left-0 right-0 bg-paper border-t border-line pt-4 pb-5 px-4 max-w-md lg:max-w-2xl mx-auto">
         {(isRecording || isTranscribing || isSpeaking) && (
           <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1, repeat: Infinity }}
-            className="text-center text-[12px] font-bold text-ink-muted mb-2">
+            className="text-center text-[13px] font-bold text-ink-muted mb-2">
             {isRecording ? "Listening… speak now, tap Stop when done"
               : isTranscribing ? "Transcribing your answer…"
               : "Interviewer speaking…"}

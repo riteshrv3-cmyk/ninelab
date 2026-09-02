@@ -127,13 +127,13 @@ export function InstallBanner() {
         <div className="w-7 h-7 rounded-lg bg-brand flex items-center justify-center shrink-0">
           <Smartphone className="w-4 h-4 text-white" />
         </div>
-        <p className="text-[12px] font-semibold text-ink flex-1 leading-snug">
+        <p className="text-[13px] font-semibold text-ink flex-1 leading-snug">
           Get the app experience — faster, fullscreen, one tap away.
         </p>
         <button
           type="button"
           onClick={install}
-          className="shrink-0 bg-brand text-white text-[12px] font-bold px-3 py-1.5 rounded-full"
+          className="shrink-0 bg-brand text-white text-[13px] font-bold px-3 py-1.5 rounded-full"
         >
           Install
         </button>
