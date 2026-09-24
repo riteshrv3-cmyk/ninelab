@@ -23,7 +23,7 @@ ${renderPlainText(opts.doc)}
 
 Score each axis 0-100 against these rubrics (deduct, don't just vibe-check):
 - evidenceStrength: does every claim read as concrete and specific, or vague/generic? Deduct heavily for filler.
-- impactLanguage: strong verbs, no banned openers (Responsible for/Worked on/Helped with), no filler verbs (Utilised/Leveraged/Spearheaded), no self-adjectives (robust/scalable/seamless)?
+- impactLanguage: strong verbs, no banned openers (Responsible for/Worked on/Helped with), no filler verbs (Utilised/Leveraged/Spearheaded), no self-adjectives (robust/scalable/seamless), no passive voice ("was developed"), no opening verb used more than twice, no spelling mistakes?
 - parseSafety: plain text only, no special characters an ATS parser would choke on, standard section vocabulary?
 - truthfulness: does ANY claim go beyond what the evidence ledger actually supports — a skill, a number, a scope not present in the ledger? NO PARTIAL CREDIT: if you find even one such claim, this must be 0. Otherwise 100.
 

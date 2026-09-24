@@ -5,7 +5,7 @@
 // one-tap "Fix formatting" without fear of drift.
 
 import { normalizeDate } from "./dates";
-import { CANONICAL_CASE } from "./lexicon";
+import { CANONICAL_CASE, fixMisspellings } from "./lexicon";
 import { normTerm } from "./normalize";
 import { shortenUrl } from "./upgrade";
 import type { ResumeDocument, SectionKey } from "./types";
@@ -126,6 +126,12 @@ export function applyAutoFixes(input: ResumeDocument): { doc: ResumeDocument; ap
   for (const f of fields) {
     const after = recase(f.get());
     if (record("STY-04", f.path, f.get(), after)) f.set(after);
+  }
+
+  // 6b. STY-10: known misspellings (curated list, so every change is certain).
+  for (const f of fields) {
+    const after = fixMisspellings(f.get());
+    if (record("STY-10", f.path, f.get(), after)) f.set(after);
   }
 
   // 7. STY-08: dedupe skills (first occurrence wins), drop emptied sections.

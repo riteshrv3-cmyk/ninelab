@@ -196,3 +196,147 @@ export const CANONICAL_CASE: Record<string, string> = {
   "oauth": "OAuth", "jwt": "JWT", "owasp": "OWASP", "siem": "SIEM",
   "burp suite": "Burp Suite", "nmap": "Nmap", "wireshark": "Wireshark",
 };
+
+// ─── Honesty-gate vocabulary ─────────────────────────────────────────────────
+
+/**
+ * Lexicon entries that are ordinary practices or concepts, not a specific
+ * technology a student can be caught lying about. Naming "security" or
+ * "agile" in a summary is not a fabricated stack claim.
+ */
+export const PRACTICE_TERMS: ReadonlySet<string> = new Set([
+  "agile", "scrum", "kanban", "system design", "dsa", "data structures", "algorithms",
+  "oop", "design patterns", "clean code", "sql optimization", "distributed systems",
+  "load balancing", "caching", "security", "authentication", "authorization",
+  "data analytics", "data science", "unit testing", "integration testing",
+  "test automation", "load testing", "tdd", "bdd", "microservices", "rest apis",
+  "machine learning", "deep learning", "artificial intelligence", "generative ai",
+  "prompt engineering", "computer vision", "nlp", "cybersecurity", "network security",
+  "vulnerability assessment", "penetration testing", "cryptography", "ci/cd",
+]);
+
+/**
+ * Tech names that are also everyday English words. They count as a tech claim
+ * only when written the way the technology is written (capitalised, not at
+ * the start of a sentence), so "go live", "render", "express interest" or
+ * "less than" never trip the honesty gate.
+ */
+const AMBIGUOUS_TECH = new Set([
+  "go", "r", "c", "express", "render", "lambda", "spark", "swift", "rust", "ruby",
+  "dart", "julia", "lua", "less", "spring", "gin", "fiber", "rails", "realm",
+  "apollo", "remix", "vite", "jest", "mocha", "chai", "gatsby", "flask", "fastapi",
+  "android", "linux", "git", "rag",
+]);
+
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Specific technologies the text claims, for the honesty gate. Practices are
+ * ignored, and ambiguous English words only count in tech casing mid-sentence.
+ */
+export function scanClaimedTech(text: string): string[] {
+  const found: string[] = [];
+  for (const term of scanLexicon(text)) {
+    if (PRACTICE_TERMS.has(term)) continue;
+    if (!AMBIGUOUS_TECH.has(term)) {
+      found.push(term);
+      continue;
+    }
+    const re = new RegExp(`(?<![A-Za-z0-9])${escapeRe(term)}(?![A-Za-z0-9+#])`, "gi");
+    let m: RegExpExecArray | null;
+    let claimed = false;
+    while ((m = re.exec(text)) !== null) {
+      const word = m[0];
+      const before = text.slice(0, m.index).trimEnd();
+      const sentenceStart = before === "" || /[.!?:;\n•\-–—|]$/.test(before);
+      const techCased = term.length === 1 ? word === word.toUpperCase() : /^[A-Z]/.test(word);
+      // "C." / "R." read as initials, not languages.
+      const initial = term.length === 1 && text[m.index + 1] === ".";
+      if (techCased && !sentenceStart && !initial) {
+        claimed = true;
+        break;
+      }
+    }
+    if (claimed) found.push(term);
+  }
+  return found;
+}
+
+// ─── Spelling ────────────────────────────────────────────────────────────────
+
+/**
+ * Misspellings that show up on real student resumes, mapped to the fix.
+ * A curated list rather than a dictionary: every hit is a certain error, so
+ * the rule never flags a correct tech name or an Indian proper noun.
+ */
+export const MISSPELLINGS: Readonly<Record<string, string>> = {
+  acheived: "achieved", achived: "achieved", acheive: "achieve", accomodate: "accommodate",
+  adress: "address", algorithim: "algorithm", algoritm: "algorithm", analysys: "analysis",
+  appication: "application", applicaton: "application",
+  architecure: "architecture", begining: "beginning", calender: "calendar",
+  collabrated: "collaborated", colaborated: "collaborated", comunication: "communication",
+  communcation: "communication", commited: "committed", completly: "completely",
+  concious: "conscious", databse: "database", definately: "definitely",
+  deployement: "deployment", develope: "develop", developped: "developed",
+  developement: "development", devlopment: "development", efficency: "efficiency",
+  enviroment: "environment", enviornment: "environment", excercise: "exercise",
+  existance: "existence", experiance: "experience", expirience: "experience",
+  familar: "familiar", funtionality: "functionality", functionallity: "functionality",
+  goverment: "government", guidence: "guidance", immediatly: "immediately",
+  implimented: "implemented", implemeted: "implemented", improvment: "improvement",
+  independant: "independent", informations: "information", integeration: "integration",
+  intergration: "integration", knowlege: "knowledge", knowledgable: "knowledgeable",
+  langauge: "language", languge: "language", maintainance: "maintenance",
+  maintenence: "maintenance", managment: "management", mangement: "management",
+  neccessary: "necessary", necesary: "necessary", occured: "occurred", occurence: "occurrence",
+  optimzed: "optimized", optmized: "optimized",
+  perfomance: "performance", performace: "performance", persue: "pursue",
+  prefered: "preferred", proffesional: "professional", profesional: "professional",
+  programing: "programming", recieve: "receive", recieved: "received",
+  reccomend: "recommend", recomend: "recommend", relevent: "relevant",
+  reponsive: "responsive", resposive: "responsive", responsibilty: "responsibility",
+  responsiblity: "responsibility", seperate: "separate", seperately: "separately",
+  sofware: "software", softwere: "software", sucessful: "successful",
+  successfull: "successful", sucessfully: "successfully", succesfully: "successfully",
+  sytem: "system", systme: "system", techincal: "technical", tehnical: "technical",
+  technolgy: "technology", techonology: "technology", teh: "the", thier: "their",
+  untill: "until", usefull: "useful", wich: "which", writting: "writing",
+  achievment: "achievement", acheivement: "achievement", strenght: "strength",
+  aplication: "application", buisness: "business", bussiness: "business",
+  certificaton: "certification", certifcation: "certification", intership: "internship",
+  internshp: "internship", projct: "project", porject: "project", devloped: "developed",
+  desinged: "designed", desgined: "designed", analized: "analyzed",
+};
+
+/** Misspelled words in `text`, with their corrections. */
+export function findMisspellings(text: string): Array<{ wrong: string; right: string }> {
+  const out: Array<{ wrong: string; right: string }> = [];
+  for (const word of text.match(/[A-Za-z]+/g) ?? []) {
+    const right = MISSPELLINGS[word.toLowerCase()];
+    if (right) out.push({ wrong: word, right });
+  }
+  return out;
+}
+
+/** Fixes every known misspelling, keeping the original capitalisation. */
+export function fixMisspellings(text: string): string {
+  return text.replace(/[A-Za-z]+/g, (word) => {
+    const right = MISSPELLINGS[word.toLowerCase()];
+    if (!right) return word;
+    if (word === word.toUpperCase() && word.length > 1) return right.toUpperCase();
+    if (word[0] === word[0].toUpperCase()) return right[0].toUpperCase() + right.slice(1);
+    return right;
+  });
+}
+
+// ─── Passive voice ───────────────────────────────────────────────────────────
+
+const IRREGULAR_PARTICIPLES = "built|made|written|done|given|taken|shown|led|set|run|kept|held|sent|won|chosen|drawn|driven|grown|known|seen|taught|brought|bought|found|put|read|split|spent|begun";
+
+/** "was developed", "were built by", "has been designed": passive, not action. */
+export const PASSIVE_RE = new RegExp(
+  `\\b(?:was|were|is|are|been|being|be)\\s+(?:\\w+ly\\s+)?(?:\\w{3,}ed|${IRREGULAR_PARTICIPLES})\\b`,
+  "i",
+);

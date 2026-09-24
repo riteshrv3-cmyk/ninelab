@@ -178,10 +178,10 @@ describe("style rules", () => {
 
   it("STY-06 fails on clichés and deducts per phrase", () => {
     const d = clone(strong);
-    d.summary = "Passionate team player and quick learner building backend services in Node.js with PostgreSQL for production use.";
+    d.summary = "Passionate team player building backend services in Node.js with PostgreSQL for production use.";
     const r = rule(d, "STY-06");
     expect(r.passed).toBe(false);
-    expect(r.earned).toBe(1); // 4 - 3 distinct clichés
+    expect(r.earned).toBe(1); // 3 - 2 distinct clichés
   });
 
   it("STY-07 fails on double spaces", () => {

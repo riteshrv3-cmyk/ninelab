@@ -16,7 +16,7 @@ import type {
   SectionKey,
   SkillSection,
 } from "@workspace/resume-core";
-import { normTerm, renderDensityBudget } from "@workspace/resume-core";
+import { normTerm, renderDensityBudget, termVariants } from "@workspace/resume-core";
 import { callJson } from "./callJson";
 import { renderLedgerForPrompt } from "./ledger";
 import { formatDegree, gradYearFor } from "./fallbacks";
@@ -48,11 +48,22 @@ Keyword tailoring that is not fabrication: where the ledger and the job descript
 words for the same real thing, use the JOB DESCRIPTION's word — that is the string an ATS parser
 scans for.
 
-Summary: at most 45 words, no first person, no "seeking". Never use passionate, motivated, team
-player, results-driven, or detail-oriented.
+Every bullet opens with a different past-tense action verb (Built, Designed, Automated, Reduced,
+Deployed, Integrated, Analyzed, Optimized...): never the same opener more than twice in the whole
+resume. Active voice only, never "was developed" or "were built". Give each entry 2-4 bullets
+when the evidence supports it. Write each technology the way its makers do (JavaScript, Node.js,
+PostgreSQL, AWS). Spell a well-known acronym out once where it helps a keyword scanner, e.g.
+"Natural Language Processing (NLP)".
 
-Skills: 3-5 categories mirroring the job's own grouping, ordered by relevance to the job. Never
-list soft skills.
+Summary: 25-45 words, no first person, no "seeking". Open with the role the student is aiming
+for, then their strongest real evidence. Never use passionate, motivated, team player,
+results-driven, or detail-oriented.
+
+Headline: "<Target role> | <3-4 strongest real skills>".
+
+Skills: 2-5 categories with plain names an ATS recognises ("Languages", "Frameworks & Libraries",
+"Databases", "Tools & Platforms", "Cloud & DevOps"), ordered by relevance to the job. At least 5
+skills total when the ledger has them. Never list soft skills.
 
 Respond with valid JSON only — no markdown, no explanation.`;
 
@@ -374,14 +385,19 @@ export async function draftResume(opts: {
     degraded = true;
   }
 
+  // Both spellings of each profile skill ("REST API" / "REST APIs"), so a
+  // plural or alias the model uses isn't dropped as if it were invented.
   const skillLedgerTerms = new Set(
-    ledger.rows.filter((r) => r.kind === "SK" || r.kind === "GL").map((r) => normTerm(r.text.replace(/^Skill: |^GitHub language: /, "").split(" (")[0])),
+    ledger.rows
+      .filter((r) => r.kind === "SK" || r.kind === "GL")
+      .flatMap((r) => termVariants(normTerm(skillName(r.text)))),
   );
+  const isProfileSkill = (item: string) => termVariants(normTerm(item)).some((v) => skillLedgerTerms.has(v));
   const skillSections: SkillSection[] = rawSkills
     .slice(0, budget.skillsMaxCategories)
     .map((s) => ({
       category: (typeof s.category === "string" ? s.category : "").slice(0, 60),
-      items: (Array.isArray(s.items) ? s.items : []).filter((i) => typeof i === "string" && skillLedgerTerms.has(normTerm(i))).slice(0, budget.skillsMaxItemsPerCategory),
+      items: (Array.isArray(s.items) ? s.items : []).filter((i) => typeof i === "string" && isProfileSkill(i)).slice(0, budget.skillsMaxItemsPerCategory),
       evidence: (Array.isArray(s.evidence) ? s.evidence : []).filter((e): e is string => typeof e === "string" && validIds.has(e)),
     }))
     .filter((s) => s.category && s.items.length > 0);

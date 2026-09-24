@@ -13,7 +13,9 @@ import {
   OUTCOME_CUES,
   SELF_ADJECTIVES,
   TECH_LEXICON,
+  PASSIVE_RE,
   WEAK_OPENERS,
+  findMisspellings,
   scanLexicon,
 } from "./lexicon";
 import { normTerm } from "./normalize";
@@ -46,7 +48,7 @@ export interface QualitySubScore {
 }
 
 export interface QualityReport {
-  version: "quality-v1";
+  version: "quality-v1" | "quality-v2";
   total: number; // 0-100 integer
   subScores: Record<SubScoreKey, QualitySubScore>;
   rules: QualityRuleResult[];
@@ -228,21 +230,21 @@ const RULES: RuleDef[] = [
     },
   },
   {
-    id: "IMP-02", subScore: "impact", section: "overall", points: 6, autoFixable: false,
+    id: "IMP-02", subScore: "impact", section: "overall", points: 5, autoFixable: false,
     run: ({ bullets }) => {
       if (bullets.length === 0) return vacuous();
       const weak = bullets.filter((b) => WEAK_OPENERS.some((w) => startsWithPhrase(b.text, w)));
       if (weak.length === 0) return pass();
       const frac = (bullets.length - weak.length) / bullets.length;
       return {
-        earned: Math.round(6 * frac * 10) / 10, passed: false,
+        earned: Math.round(5 * frac * 10) / 10, passed: false,
         hint: `${weak.length} bullet${weak.length > 1 ? "s" : ""} open weakly ('Responsible for…', 'Worked on…'). Start with what you did: Built, Reduced, Automated.`,
         targets: weak.map((b) => b.path),
       };
     },
   },
   {
-    id: "IMP-03", subScore: "impact", section: "overall", points: 4, autoFixable: false,
+    id: "IMP-03", subScore: "impact", section: "overall", points: 3, autoFixable: false,
     run: ({ bullets }) => {
       if (bullets.length === 0) return vacuous();
       const hits = bullets.filter((b) => FILLER_VERBS.some((v) => containsWord(b.text, v)));
@@ -273,7 +275,7 @@ const RULES: RuleDef[] = [
     },
   },
   {
-    id: "IMP-05", subScore: "impact", section: "overall", points: 4, autoFixable: false,
+    id: "IMP-05", subScore: "impact", section: "overall", points: 3, autoFixable: false,
     run: ({ bullets }) => {
       if (bullets.some((b) => OUTCOME_CUES.some((c) => c === "%" || c === "x faster" ? containsPhrase(b.text, c) : containsWord(b.text, c)))) return pass();
       return {
@@ -284,9 +286,37 @@ const RULES: RuleDef[] = [
     },
   },
 
+  {
+    // Resume Worded and Rezi both flag the same opening verb used over and
+    // over: it reads as a template, and it wastes the strongest word slot.
+    id: "IMP-06", subScore: "impact", section: "overall", points: 3, autoFixable: false,
+    run: ({ bullets }) => {
+      if (bullets.length < 3) return bullets.length === 0 ? vacuous() : pass();
+      const counts = new Map<string, { n: number; paths: string[] }>();
+      for (const b of bullets) {
+        const verb = b.text.trim().split(/\s+/)[0]?.toLowerCase().replace(/[^a-z]/g, "") ?? "";
+        if (!verb) continue;
+        const c = counts.get(verb) ?? { n: 0, paths: [] };
+        c.n++;
+        c.paths.push(b.path);
+        counts.set(verb, c);
+      }
+      const limit = bullets.length >= 8 ? 3 : 2;
+      const repeated = [...counts.entries()].filter(([, c]) => c.n > limit).sort((a, b) => b[1].n - a[1].n);
+      if (repeated.length === 0) return pass();
+      const [verb, c] = repeated[0];
+      const word = verb.charAt(0).toUpperCase() + verb.slice(1);
+      return {
+        earned: repeated.length === 1 ? 1.5 : 0, passed: false,
+        hint: `${c.n} bullets start with '${word}'. Vary the opening verb: Built, Designed, Automated, Reduced, Shipped.`,
+        targets: repeated.flatMap(([, x]) => x.paths.slice(limit)),
+      };
+    },
+  },
+
   // ── Brevity (15) ──
   {
-    id: "BRV-01", subScore: "brevity", section: "overall", points: 6, autoFixable: false,
+    id: "BRV-01", subScore: "brevity", section: "overall", points: 5, autoFixable: false,
     run: ({ bullets }) => {
       if (bullets.length === 0) return vacuous();
       const bad = bullets.filter((b) => {
@@ -298,7 +328,7 @@ const RULES: RuleDef[] = [
       const which = tooLong >= bad.length - tooLong ? "long" : "short";
       const frac = (bullets.length - bad.length) / bullets.length;
       return {
-        earned: Math.round(6 * frac * 10) / 10, passed: false,
+        earned: Math.round(5 * frac * 10) / 10, passed: false,
         hint: `${bad.length} bullet${bad.length > 1 ? "s are" : " is"} too ${which}. Aim for one line: 8-28 words each.`,
         targets: bad.map((b) => b.path),
       };
@@ -335,7 +365,7 @@ const RULES: RuleDef[] = [
     },
   },
   {
-    id: "BRV-04", subScore: "brevity", section: "header", points: 2, autoFixable: false,
+    id: "BRV-04", subScore: "brevity", section: "header", points: 1, autoFixable: false,
     run: ({ doc }) => {
       const len = doc.headline.trim().length;
       if (len >= 1 && len <= 80) return pass();
@@ -349,9 +379,30 @@ const RULES: RuleDef[] = [
     },
   },
 
+  {
+    // Rezi: 3-6 bullets per role. For a fresher's projects 2-4 is the norm, so
+    // the floor is 2 for any entry and the ceiling 6 (experience) / 4 (projects).
+    id: "BRV-05", subScore: "brevity", section: "overall", points: 2, autoFixable: false,
+    run: ({ doc }) => {
+      const entries = [
+        ...doc.experience.map((e, i) => ({ n: e.bullets.length, max: 6, path: `experience[${i}]`, label: e.company || e.role })),
+        ...doc.projects.map((p, i) => ({ n: p.bullets.length, max: 4, path: `projects[${i}]`, label: p.title })),
+      ];
+      if (entries.length === 0) return vacuous();
+      const thin = entries.filter((e) => e.n < 2);
+      const heavy = entries.filter((e) => e.n > e.max);
+      if (thin.length === 0 && heavy.length === 0) return pass();
+      const frac = (entries.length - thin.length - heavy.length) / entries.length;
+      const hint = heavy.length > 0
+        ? `'${heavy[0].label}' has ${heavy[0].n} bullets. Keep your best ${heavy[0].max}: recruiters stop reading after that.`
+        : `'${thin[0].label}' has only ${thin[0].n} bullet. Give each entry at least 2: what you built, and what it achieved.`;
+      return { earned: Math.round(2 * frac * 10) / 10, passed: false, hint, targets: [...thin, ...heavy].map((e) => e.path) };
+    },
+  },
+
   // ── Style & Consistency (20) ──
   {
-    id: "STY-01", subScore: "style", section: "experience", points: 3, autoFixable: false,
+    id: "STY-01", subScore: "style", section: "experience", points: 2, autoFixable: false,
     run: ({ bullets }) => {
       const experienceBullets = bullets.filter((b) => b.fromExperience);
       if (experienceBullets.length === 0) return vacuous(); // no experience yet
@@ -365,7 +416,7 @@ const RULES: RuleDef[] = [
       if (bad.length === 0) return pass();
       const frac = (pastBullets.length - bad.length) / pastBullets.length;
       return {
-        earned: Math.round(3 * frac * 10) / 10, passed: false,
+        earned: Math.round(2 * frac * 10) / 10, passed: false,
         hint: `Past internships should use past tense: 'Built', not 'Build'. ${bad.length} bullet${bad.length > 1 ? "s" : ""} to fix.`,
         targets: bad.map((b) => b.path),
       };
@@ -396,10 +447,12 @@ const RULES: RuleDef[] = [
       });
       const real = dates.filter((d) => d.v.trim().toLowerCase() !== "present");
       if (real.length === 0) return vacuous();
+      // ATS parsers compute tenure from these; a bare "2024" reads as Jan-Dec
+      // or not at all. Every experience date needs its month.
       const allMonYear = real.every((d) => MONTH_YEAR_RE.test(d.v.trim()));
-      const allYear = real.every((d) => YEAR_RE.test(d.v.trim()));
-      if (allMonYear || allYear) return pass();
+      if (allMonYear) return pass();
       const offenders = real.filter((d) => !MONTH_YEAR_RE.test(d.v.trim()));
+      const onlyMissingMonths = offenders.every((d) => YEAR_RE.test(d.v.trim()));
       // Only advertise a one-tap fix when the fixer can actually rewrite one
       // of them — a bare "2024" has no month to recover, so that's manual.
       const fixable = offenders.some((d) => isDateFixable(d.v));
@@ -407,13 +460,15 @@ const RULES: RuleDef[] = [
         earned: 0, passed: false, autoFixable: fixable,
         hint: fixable
           ? "Your dates mix formats ('June 2024' vs '2024'). Recruiters and ATS parsers both prefer 'Jun 2024'."
-          : "Your dates mix formats. Write each one as 'Jun 2024' — add the month where only a year is given.",
+          : onlyMissingMonths
+            ? "Add the month to your internship dates ('Jun 2024', not '2024'). ATS systems use it to work out how long you were there."
+            : "Your dates mix formats. Write each one as 'Jun 2024' — add the month where only a year is given.",
         targets: offenders.map((d) => d.path),
       };
     },
   },
   {
-    id: "STY-04", subScore: "style", section: "overall", points: 3, autoFixable: true,
+    id: "STY-04", subScore: "style", section: "overall", points: 2, autoFixable: true,
     run: (input) => {
       const fields = textFields(input.doc);
       const keys = Object.keys(CANONICAL_CASE);
@@ -439,14 +494,14 @@ const RULES: RuleDef[] = [
       if (wrong === 0) return pass();
       const frac = (occurrences - wrong) / occurrences;
       return {
-        earned: Math.round(3 * frac * 10) / 10, passed: false,
+        earned: Math.round(2 * frac * 10) / 10, passed: false,
         hint: `${wrong} technology name${wrong > 1 ? "s are" : " is"} miscased ('javascript' → 'JavaScript'). Correct casing signals attention to detail.`,
         targets: offenders,
       };
     },
   },
   {
-    id: "STY-05", subScore: "style", section: "overall", points: 3, autoFixable: false,
+    id: "STY-05", subScore: "style", section: "overall", points: 2, autoFixable: false,
     run: ({ doc, bullets }) => {
       const fields = [{ text: doc.summary, path: "summary" }, ...bullets.map((b) => ({ text: b.text, path: b.path }))]
         .filter((f) => f.text.trim());
@@ -461,14 +516,14 @@ const RULES: RuleDef[] = [
     },
   },
   {
-    id: "STY-06", subScore: "style", section: "overall", points: 4, autoFixable: false,
+    id: "STY-06", subScore: "style", section: "overall", points: 3, autoFixable: false,
     run: ({ doc, bullets }) => {
       const scan = [doc.summary, doc.headline, ...bullets.map((b) => b.text)].join("\n").toLowerCase();
       if (!scan.trim()) return vacuous();
       const found = CLICHES.filter((c) => scan.includes(c));
       if (found.length === 0) return pass();
       return {
-        earned: Math.max(0, 4 - found.length), passed: false,
+        earned: Math.max(0, 3 - found.length), passed: false,
         hint: `'${found[0]}' appears on lakhs of resumes. Delete it and show the evidence instead — that's what the rest of this checklist does.`,
         targets: [],
       };
@@ -504,6 +559,38 @@ const RULES: RuleDef[] = [
       });
       if (!dupe) return pass();
       return { earned: 0, passed: false, hint: `'${dupe}' appears twice in your skills. Once is enough.`, targets };
+    },
+  },
+
+  {
+    id: "STY-09", subScore: "style", section: "overall", points: 2, autoFixable: false,
+    run: ({ bullets }) => {
+      if (bullets.length === 0) return vacuous();
+      const hits = bullets.filter((b) => PASSIVE_RE.test(b.text));
+      if (hits.length === 0) return pass();
+      return {
+        earned: hits.length === 1 ? 1 : 0, passed: false,
+        hint: `${hits.length} bullet${hits.length > 1 ? "s use" : " uses"} passive voice ('was developed'). Say what you did: 'Developed…'.`,
+        targets: hits.map((b) => b.path),
+      };
+    },
+  },
+  {
+    id: "STY-10", subScore: "style", section: "overall", points: 2, autoFixable: true,
+    run: (input) => {
+      const fields = textFields(input.doc);
+      if (fields.length === 0) return vacuous();
+      const hits = fields
+        .map((f) => ({ ...f, typos: findMisspellings(f.text) }))
+        .filter((f) => f.typos.length > 0);
+      if (hits.length === 0) return pass();
+      const first = hits[0].typos[0];
+      const count = hits.reduce((n, h) => n + h.typos.length, 0);
+      return {
+        earned: 0, passed: false,
+        hint: `${count} spelling mistake${count > 1 ? "s" : ""}, like '${first.wrong}' → '${first.right}'. One typo is enough for many recruiters to stop reading. We can fix them.`,
+        targets: hits.map((h) => h.path),
+      };
     },
   },
 
@@ -784,7 +871,7 @@ export function buildQualityReport(
   const quantified = bullets.filter((b) => isQuantifiedBullet(b.text)).length;
 
   return {
-    version: "quality-v1",
+    version: "quality-v2",
     total: Math.max(0, Math.min(100, total)),
     subScores,
     rules,

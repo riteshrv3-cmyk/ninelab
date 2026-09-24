@@ -1,5 +1,5 @@
 import type { AtsMatchedTerm, AtsMissingTerm, AtsReport, HardSkill, JdAnalysis, ResumeDocument, SectionKey } from "./types";
-import { normTerm, tokenizeToNgrams } from "./normalize";
+import { normTerm, termVariants, tokenizeToNgrams } from "./normalize";
 import { scanLexicon } from "./lexicon";
 import { renderPlainText } from "./plainText";
 
@@ -72,14 +72,16 @@ export function scoreCoverage(
   const matched: AtsMatchedTerm[] = [];
   const missing: AtsMissingTerm[] = [];
 
+  const has = (set: Set<string>, term: string) => termVariants(term).some((v) => set.has(v));
+
   for (const kw of keywords) {
-    if (!fullHaystack.has(kw.term)) {
+    if (!has(fullHaystack, kw.term)) {
       missing.push({ term: kw.term, weight: kw.weight, importance: kw.importance });
       continue;
     }
     let where: AtsMatchedTerm["where"] = "summary";
     for (const [key, set] of Object.entries(sectionText) as [SectionKey, Set<string>][]) {
-      if (set.has(kw.term)) {
+      if (has(set, kw.term)) {
         where = key as AtsMatchedTerm["where"];
         break;
       }
