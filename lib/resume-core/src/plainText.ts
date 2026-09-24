@@ -25,10 +25,10 @@ export function renderPlainText(input: ResumeDocument): string {
     },
     experience: () => {
       for (const e of doc.experience) {
-        lines.push([e.role, e.company].filter(Boolean).join(" | "));
+        lines.push(e.role);
         lines.push([e.start, e.end].map((s) => s.trim()).filter(Boolean).join(" - "));
-        const sub = [e.employmentType, e.location].filter(Boolean).join(" | ");
-        if (sub) lines.push(sub);
+        const org = [e.company, e.employmentType, e.location].filter(Boolean).join(" | ");
+        if (org) lines.push(org);
         for (const b of e.bullets) lines.push(b.text);
       }
     },
@@ -47,9 +47,10 @@ export function renderPlainText(input: ResumeDocument): string {
     },
     education: () => {
       for (const ed of doc.education) {
-        lines.push([ed.degree, ed.institution].filter(Boolean).join(" | "));
+        lines.push(ed.degree);
         lines.push([ed.start, ed.end].map((s) => s.trim()).filter(Boolean).join(" - "));
-        const sub = [ed.field, ed.cgpa ? `CGPA ${ed.cgpa}` : null].filter(Boolean).join(" | ");
+        if (ed.institution) lines.push(ed.institution);
+        const sub = [ed.field, ed.cgpa ? `CGPA: ${ed.cgpa}` : null].filter(Boolean).join(" | ");
         if (sub) lines.push(sub);
       }
     },

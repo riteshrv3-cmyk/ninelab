@@ -644,8 +644,8 @@ const RULES: RuleDef[] = [
       return {
         earned: 0, passed: false, autoFixable: fixable,
         hint: fixable
-          ? "Format your phone as +91 XXXXX XXXXX so it's unambiguous internationally."
-          : "That phone number looks incomplete — check the digits and write it as +91 XXXXX XXXXX.",
+          ? "Format your phone as +91 followed by the 10 digits, so every ATS can read it."
+          : "That phone number looks incomplete. Check the digits and write it as +91 followed by the 10 digits.",
         targets: ["contact.phone"],
       };
     },

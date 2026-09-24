@@ -39,11 +39,58 @@ export function regroupSkills(doc: ResumeDocument): ResumeDocument {
   return { ...doc, skillSections: sections };
 }
 
+// Indian degree abbreviations, spelled out with the short form kept: parsers
+// match "Bachelor"/"Master", recruiters search either form.
+const DEGREES: Array<[RegExp, string]> = [
+  [/^B\.?\s?E\.?(?=\s|$|,)/i, "Bachelor of Engineering (B.E.)"],
+  [/^B\.?\s?Tech\.?(?=\s|$|,)/i, "Bachelor of Technology (B.Tech)"],
+  [/^M\.?\s?Tech\.?(?=\s|$|,)/i, "Master of Technology (M.Tech)"],
+  [/^M\.?\s?E\.?(?=\s|$|,)/i, "Master of Engineering (M.E.)"],
+  [/^B\.?\s?C\.?\s?A\.?(?=\s|$|,)/i, "Bachelor of Computer Applications (BCA)"],
+  [/^M\.?\s?C\.?\s?A\.?(?=\s|$|,)/i, "Master of Computer Applications (MCA)"],
+  [/^B\.?\s?Sc\.?(?=\s|$|,)/i, "Bachelor of Science (B.Sc.)"],
+  [/^M\.?\s?Sc\.?(?=\s|$|,)/i, "Master of Science (M.Sc.)"],
+  [/^B\.?\s?B\.?\s?A\.?(?=\s|$|,)/i, "Bachelor of Business Administration (BBA)"],
+  [/^M\.?\s?B\.?\s?A\.?(?=\s|$|,)/i, "Master of Business Administration (MBA)"],
+  [/^B\.?\s?Com\.?(?=\s|$|,)/i, "Bachelor of Commerce (B.Com)"],
+];
+
+export function expandDegree(degree: string): string {
+  const d = degree.trim();
+  if (/^(bachelor|master|doctor|diploma)/i.test(d)) return d;
+  for (const [re, full] of DEGREES) {
+    const m = d.match(re);
+    if (m) {
+      const rest = d.slice(m[0].length).replace(/^[\s,.-]+/, "").replace(/^in\s+/i, "");
+      return rest ? `${full} in ${rest}` : full;
+    }
+  }
+  return d;
+}
+
+/** "Backend Developer | Java, Spring Boot" -> "Backend Developer | Java | Spring Boot":
+ * a comma after a word reads as "City, ST" to some location parsers. */
+export function pipeHeadline(headline: string): string {
+  return headline.split(/\s*[|,]\s*/).filter(Boolean).join(" | ");
+}
+
+/** "Aspiring Software Developer" -> "Software Developer": the one cliché
+ * that can be dropped without rewriting the sentence around it. */
+export function dropAspiring(text: string): string {
+  return text.replace(/\baspiring\s+/gi, "").replace(/^([a-z])/, (c) => c.toUpperCase());
+}
+
 /**
  * Final deterministic pass on a freshly generated resume: standard skill
  * groups, then every mechanical fix (section order, casing, date format,
  * spelling, punctuation, whitespace). Nothing here changes a claim.
  */
 export function polishGenerated(doc: ResumeDocument): ResumeDocument {
-  return applyAutoFixes(regroupSkills(doc)).doc;
+  const shaped: ResumeDocument = {
+    ...regroupSkills(doc),
+    headline: pipeHeadline(dropAspiring(doc.headline)),
+    summary: dropAspiring(doc.summary),
+    education: doc.education.map((e) => ({ ...e, degree: expandDegree(e.degree) })),
+  };
+  return applyAutoFixes(shaped).doc;
 }

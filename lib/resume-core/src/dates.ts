@@ -49,7 +49,7 @@ export function isDateFixable(raw: string): boolean {
   return normalizeDate(raw) !== raw;
 }
 
-/** Digits that reformat to "+91 XXXXX XXXXX". */
+/** Digits that reformat to "+91 XXXXXXXXXX". */
 export function isIndianMobileFixable(phone: string): boolean {
   return /^(91)?[6-9]\d{9}$/.test(phone.replace(/\D/g, ""));
 }

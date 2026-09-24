@@ -1,6 +1,23 @@
 import type { EvidenceLedger, RemovedByGate, ResumeDocument } from "@workspace/resume-core";
 import { normTerm, scanClaimedTech } from "@workspace/resume-core";
 import { introducesNewNumbers, numberTokens } from "./numbers";
+import { overlap } from "./similarity";
+
+// ", enhancing code maintainability" / ", improving user experience": the
+// benefit clause models append when the evidence states no result.
+const TRAILING_BENEFIT = /,\s+(?:thereby\s+)?(?:enhancing|improving|ensuring|facilitating|boosting|streamlining|increasing|optimizing|resulting in|leading to|contributing to|driving|enabling|promoting|fostering)\b[^,;]*$/i;
+
+/**
+ * Strips a trailing benefit clause the cited evidence doesn't back up. A clause
+ * that carries a number or restates words from the evidence is kept.
+ */
+export function stripUnsupportedBenefit(text: string, evidenceText: string): string {
+  const m = text.match(TRAILING_BENEFIT);
+  if (!m) return text;
+  const clause = m[0].replace(/^,\s+/, "");
+  if (/\d/.test(clause) || overlap(clause, evidenceText) >= 0.5) return text;
+  return text.slice(0, m.index).trimEnd();
+}
 
 /** Specific technologies `text` names that the ledger never mentions. */
 export function unsupportedTech(text: string, ledger: EvidenceLedger): string[] {
@@ -70,12 +87,15 @@ export function fabricationGate(doc: ResumeDocument, ledger: EvidenceLedger): { 
     return true;
   };
 
+  const cited = (evidence: string[]) => ledger.rows.filter((r) => evidence.includes(r.id)).map((r) => r.text).join(" ");
+  const trim = <T extends { text: string; evidence: string[] }>(b: T): T => ({ ...b, text: stripUnsupportedBenefit(b.text, cited(b.evidence)) });
+
   const experience = doc.experience
-    .map((e, ei) => ({ ...e, bullets: e.bullets.filter((b) => checkBullet(b.text, b.evidence, `experience[${ei}].bullets`, b.suggested)) }))
+    .map((e, ei) => ({ ...e, bullets: e.bullets.map(trim).filter((b) => checkBullet(b.text, b.evidence, `experience[${ei}].bullets`, b.suggested)) }))
     .filter((e) => e.bullets.length > 0);
 
   const projects = doc.projects
-    .map((p, pi) => ({ ...p, bullets: p.bullets.filter((b) => checkBullet(b.text, b.evidence, `projects[${pi}].bullets`, b.suggested)) }))
+    .map((p, pi) => ({ ...p, bullets: p.bullets.map(trim).filter((b) => checkBullet(b.text, b.evidence, `projects[${pi}].bullets`, b.suggested)) }))
     .filter((p) => p.bullets.length > 0);
 
   const skillSections = doc.skillSections

@@ -105,7 +105,9 @@ export const RESUME_HTML_CSS = `
    stream and scrambles reading order for ATS parsers. */
 .rz-rule--short { padding-bottom: 4pt; background: linear-gradient(var(--r-accent), var(--r-accent)) left bottom / 24pt 2pt no-repeat; }
 
-.rz-entry { margin-bottom: var(--r-space-md); break-inside: avoid; }
+/* Gap between entries must exceed ~1.4x the line gap: that is how parsers
+   (e.g. OpenResume) tell one job/project from the next. */
+.rz-entry { margin-bottom: calc(var(--r-space-md) + 5pt); break-inside: avoid; }
 .rz-entry:last-child { margin-bottom: 0; }
 .rz-entry-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8pt; }
 .rz-entry-title { font-size: var(--r-entry-size); line-height: var(--r-entry-leading); font-weight: 600; color: var(--r-ink); }
@@ -117,6 +119,7 @@ export const RESUME_HTML_CSS = `
   color: var(--r-muted);
   white-space: nowrap;
 }
+.rz-entry-org { font-size: var(--r-body-size); line-height: var(--r-body-leading); color: var(--r-body-color); }
 .rz-entry-sub { font-size: var(--r-meta-size); line-height: var(--r-meta-leading); letter-spacing: var(--r-meta-tracking); color: var(--r-muted); margin-top: 0.5pt; }
 .rz-entry-sub a { color: var(--r-muted); }
 
@@ -251,14 +254,11 @@ export function ResumeHtml({ doc: source, templateId, highlightSection, onElemen
         {doc.experience.map((e, ei) => (
           <div key={ei} className="rz-entry">
             <div className="rz-entry-head">
-              <p className="rz-entry-title">
-                {e.role}
-                {e.company && <span className="rz-entry-co"> | {e.company}</span>}
-              </p>
+              <p className="rz-entry-title">{e.role}</p>
               <p className="rz-entry-meta">{joinDates(e.start, e.end)}</p>
             </div>
-            {(e.location || e.employmentType) && (
-              <p className="rz-entry-sub">{[e.employmentType, e.location].filter(Boolean).join(" | ")}</p>
+            {(e.company || e.location || e.employmentType) && (
+              <p className="rz-entry-org">{[e.company, e.employmentType, e.location].filter(Boolean).join(" | ")}</p>
             )}
             <ul className="rz-bullets">
               {e.bullets.map((b, bi) => {
@@ -314,14 +314,12 @@ export function ResumeHtml({ doc: source, templateId, highlightSection, onElemen
         {doc.education.map((ed, i) => (
           <div key={i} className="rz-entry">
             <div className="rz-entry-head">
-              <p className="rz-entry-title">
-                {ed.degree}
-                {ed.institution && <span className="rz-entry-co"> | {ed.institution}</span>}
-              </p>
+              <p className="rz-entry-title">{ed.degree}</p>
               <p className="rz-entry-meta">{joinDates(ed.start, ed.end)}</p>
             </div>
+            {ed.institution && <p className="rz-entry-org">{ed.institution}</p>}
             {(ed.field || ed.cgpa) && (
-              <p className="rz-entry-sub">{[ed.field, ed.cgpa ? `CGPA ${ed.cgpa}` : null].filter(Boolean).join(" | ")}</p>
+              <p className="rz-entry-sub">{[ed.field, ed.cgpa ? `CGPA: ${ed.cgpa}` : null].filter(Boolean).join(" | ")}</p>
             )}
           </div>
         ))}

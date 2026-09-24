@@ -97,3 +97,20 @@ describe("suggestion overlap", () => {
     )).toBeLessThan(0.5);
   });
 });
+
+import { stripUnsupportedBenefit } from "../src/lib/resume/gate";
+
+describe("unsupported benefit clauses", () => {
+  const ev = 'Experience: Frontend Intern at Codeverse Labs — Built reusable React components for the admin dashboard | Fixed UI bugs reported by QA team';
+  it("strips an invented benefit", () => {
+    expect(stripUnsupportedBenefit("Built reusable React components for the admin dashboard, enhancing code maintainability and efficiency", ev))
+      .toBe("Built reusable React components for the admin dashboard");
+  });
+  it("keeps a benefit with a real number", () => {
+    expect(stripUnsupportedBenefit("Added Redis caching, reducing response time from 480 ms to 120 ms", "Redis cut response time from 480 ms to 120 ms"))
+      .toBe("Added Redis caching, reducing response time from 480 ms to 120 ms");
+  });
+  it("leaves bullets without a trailing clause alone", () => {
+    expect(stripUnsupportedBenefit("Fixed UI bugs reported by the QA team", ev)).toBe("Fixed UI bugs reported by the QA team");
+  });
+});

@@ -117,10 +117,9 @@ function buildSections(doc: ResumeDocument): Paragraph[] {
       if (!doc.experience.length) return;
       out.push(section_heading(DEFAULT_HEADING_LABELS.experience));
       for (const e of doc.experience) {
-        out.push(entry_header([e.role, e.company].filter(Boolean).join(" | "), joinDates(e.start, e.end)));
-        if (e.employmentType || e.location) {
-          out.push(entry_sub([e.employmentType, e.location].filter(Boolean).join(" | ")));
-        }
+        out.push(entry_header(e.role, joinDates(e.start, e.end)));
+        const org = [e.company, e.employmentType, e.location].filter(Boolean).join(" | ");
+        if (org) out.push(entry_sub(org));
         for (const b of e.bullets) out.push(bullet(b.text));
       }
     },
@@ -150,8 +149,9 @@ function buildSections(doc: ResumeDocument): Paragraph[] {
       if (!doc.education.length) return;
       out.push(section_heading(DEFAULT_HEADING_LABELS.education));
       for (const e of doc.education) {
-        out.push(entry_header([e.degree, e.institution].filter(Boolean).join(" | "), joinDates(e.start, e.end)));
-        const sub = [e.field, e.cgpa ? `CGPA ${e.cgpa}` : ""].filter(Boolean).join(" | ");
+        out.push(entry_header(e.degree, joinDates(e.start, e.end)));
+        if (e.institution) out.push(entry_sub(e.institution));
+        const sub = [e.field, e.cgpa ? `CGPA: ${e.cgpa}` : ""].filter(Boolean).join(" | ");
         if (sub) out.push(entry_sub(sub));
         if (e.coursework?.length) {
           out.push(body("Relevant coursework: " + e.coursework.join(", ")));

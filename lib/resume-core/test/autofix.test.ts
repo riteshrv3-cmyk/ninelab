@@ -103,7 +103,7 @@ describe("applyAutoFixes", () => {
     const d: ResumeDocument = JSON.parse(JSON.stringify(strong));
     d.contact.phone = "9876543210";
     const { doc } = applyAutoFixes(d);
-    expect(doc.contact.phone).toBe("+91 98765 43210");
+    expect(doc.contact.phone).toBe("+91 9876543210");
   });
 
   it("leaves an unparseable phone alone", () => {

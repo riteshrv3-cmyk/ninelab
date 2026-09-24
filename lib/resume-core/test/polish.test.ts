@@ -30,3 +30,18 @@ describe("generation polish", () => {
     expect(r.rules.find((x) => x.id === "ATS-02")?.passed).toBe(true);
   });
 });
+
+import { expandDegree, pipeHeadline } from "../src/polish";
+
+describe("parser-friendly wording", () => {
+  it("spells out Indian degree abbreviations", () => {
+    expect(expandDegree("B.E. Computer Engineering")).toBe("Bachelor of Engineering (B.E.) in Computer Engineering");
+    expect(expandDegree("B.Tech Information Technology")).toBe("Bachelor of Technology (B.Tech) in Information Technology");
+    expect(expandDegree("BCA")).toBe("Bachelor of Computer Applications (BCA)");
+    expect(expandDegree("Bachelor of Science")).toBe("Bachelor of Science");
+    expect(expandDegree("Diploma in Mechanical")).toBe("Diploma in Mechanical");
+  });
+  it("separates headline skills with pipes, not commas", () => {
+    expect(pipeHeadline("Backend Developer | Java, REST APIs, Spring Boot")).toBe("Backend Developer | Java | REST APIs | Spring Boot");
+  });
+});

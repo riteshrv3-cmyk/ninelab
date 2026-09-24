@@ -8,7 +8,7 @@ export const strong: ResumeDocument = {
   contact: {
     name: "Priya Deshmukh",
     email: "priya.deshmukh@gmail.com",
-    phone: "+91 98765 43210",
+    phone: "+91 9876543210",
     city: "Pune",
     links: [
       { label: "github.com/priyadesh", url: "https://github.com/priyadesh", kind: "github" },
