@@ -69,8 +69,21 @@ export function rateLimit(opts: LimiterOptions): RequestHandler {
       });
       return;
     }
+    // Lets a route hand the token back when the work failed on our side, so a
+    // student retrying after a server error isn't also locked out.
+    const refunds = ((res.locals.rateLimitRefunds as (() => void)[] | undefined) ??= []);
+    refunds.push(() => {
+      const cur = buckets.get(key);
+      if (cur) cur.tokens = Math.min(max, cur.tokens + 1);
+    });
     next();
   };
+}
+
+export function refundRateLimit(res: Response): void {
+  const refunds = res.locals.rateLimitRefunds as (() => void)[] | undefined;
+  for (const refund of refunds ?? []) refund();
+  res.locals.rateLimitRefunds = [];
 }
 
 export const rlAiHeavy = rateLimit({ name: "ai-heavy", windowMs: 60 * 60 * 1000, max: 30 });
@@ -81,3 +94,6 @@ export const rlDriveCheck = rateLimit({ name: "drivecheck", windowMs: 60 * 60 * 
 // The 4-stage resume pipeline costs 4-5x a single rlAiHeavy call — a dedicated,
 // tighter bucket instead of sharing rlAiHeavy's 30/hr.
 export const rlResumeGen = rateLimit({ name: "resume-gen", windowMs: 60 * 60 * 1000, max: 10 });
+// Single-bullet rewrites are one small call each; sharing the generation bucket
+// meant a few rewrites could block the student's next full generation.
+export const rlBulletRewrite = rateLimit({ name: "resume-rewrite", windowMs: 60 * 60 * 1000, max: 40 });

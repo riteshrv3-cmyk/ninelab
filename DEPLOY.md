@@ -31,7 +31,9 @@ git push -u origin main
 3. Render prompts for the secret env vars (marked `sync:false`). Paste the same
    values from your local `.env`:
    - `DATABASE_URL`
-   - `AI_INTEGRATIONS_ANTHROPIC_API_KEY`
+   - `OPENAI_API_KEY` (required; the server will not start without it)
+   - `OPENAI_BASE_URL` (only if you use a gateway such as AgentRouter)
+   - `AI_MODEL` (optional, default `gpt-4o-mini`) and `AI_MODEL_RESUME` (optional, default `gpt-4o`)
    - `CLERK_PUBLISHABLE_KEY`
    - `VITE_CLERK_PUBLISHABLE_KEY` (same value as CLERK_PUBLISHABLE_KEY)
    - `CLERK_SECRET_KEY`
@@ -40,6 +42,19 @@ git push -u origin main
 
 ### 3. Open the live URL
 Render gives you `https://ninelab.onrender.com` (or similar).
+
+## Database schema
+The build does not change the database. After a deploy that adds columns, push
+the schema to production yourself (see `lib/db`), or resume generation fails
+with a server error:
+```bash
+DATABASE_URL=$(grep '^# DATABASE_URL_PROD=' .env | sed 's/^# DATABASE_URL_PROD=//' | awk '{print $1}') pnpm --filter @workspace/db push
+```
+
+## Production today
+ninelab.in runs on **Railway** (project `kodetalent`), auto-deployed from `main`.
+If the site shows Railway's "Application not found", the plan or credits have
+run out and every deployment was removed: restore billing, then redeploy.
 
 ## Notes
 - **Free tier sleeps** after ~15 min idle; the next request cold-starts in ~50s.

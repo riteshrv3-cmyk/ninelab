@@ -45,6 +45,10 @@ interface CreateParams {
   // (e.g. `req.on("close", ...)`) actually aborts the in-flight call instead
   // of only stopping the caller from waiting on it.
   signal?: AbortSignal;
+  // Per-call overrides of the SDK defaults (600s timeout, 2 retries), which are
+  // far too long for a request a student is watching.
+  timeoutMs?: number;
+  maxRetries?: number;
   [key: string]: unknown;
 }
 
@@ -104,7 +108,11 @@ export const anthropic = {
           ...(params.response_format ? { response_format: params.response_format } : {}),
           messages: toOpenAIMessages(params) as never,
         },
-        params.signal ? { signal: params.signal } : undefined,
+        {
+          ...(params.signal ? { signal: params.signal } : {}),
+          ...(params.timeoutMs !== undefined ? { timeout: params.timeoutMs } : {}),
+          ...(params.maxRetries !== undefined ? { maxRetries: params.maxRetries } : {}),
+        },
       );
       const text = resp.choices[0]?.message?.content ?? "";
       return {

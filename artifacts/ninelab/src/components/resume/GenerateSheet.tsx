@@ -14,6 +14,31 @@ import { isContentEmpty, type SavedResume } from "./resumeTypes";
 
 const TEMPLATE_LIST = Object.values(TEMPLATE_REGISTRY);
 
+const OFFLINE_MESSAGE = "We can't reach ninelab right now. Check your internet. If it's working, our server may be down; please try again in a few minutes.";
+
+class GenerateError extends Error {}
+
+/** Turns a failed API response into one plain sentence a student can act on. */
+async function readErrorMessage(r: Response): Promise<string> {
+  const body = await r.json().catch(() => ({})) as { error?: string; message?: string; code?: string; retryAfter?: number };
+  // Railway's edge answers with its own 404 JSON when no app is deployed.
+  if (r.headers.get("x-railway-fallback")) return OFFLINE_MESSAGE;
+  if (r.status === 429) {
+    const secs = body.retryAfter ?? (Number(r.headers.get("Retry-After")) || 60);
+    const mins = Math.max(1, Math.ceil(secs / 60));
+    return `You've generated a lot in the last hour. Try again in about ${mins} minute${mins === 1 ? "" : "s"}.`;
+  }
+  if (r.status === 401) return "Your session expired. Sign in again to keep going.";
+  if (r.status === 403) {
+    return body.code === "NEEDS_CLAIM"
+      ? "Your account isn't linked to a profile yet. Finish onboarding, then try again."
+      : "This profile belongs to a different account. Sign out and sign back in.";
+  }
+  if (r.status === 404) return "We couldn't find your profile. Sign out and sign back in.";
+  if (r.status === 502 || r.status === 503 || r.status === 504) return OFFLINE_MESSAGE;
+  return body.message ?? body.error ?? "Something went wrong on our side. Please try again in a minute.";
+}
+
 // Generation is profile-driven: no company field, no JD paste. The AI writes
 // from the student's verified profile toward the seeded role/tags (from a
 // recommendation card or retarget), and the ReviewFlow does the polishing.
@@ -46,8 +71,9 @@ export function GenerateSheet({
 
   // Profile-emptiness gate: check on mount; show a quick-capture step for
   // users whose ledger has nothing yet (no skills, projects, or experience).
-  type ProfileStep = "loading" | "capture" | "generate";
+  type ProfileStep = "loading" | "capture" | "generate" | "error";
   const [profileStep, setProfileStep] = useState<ProfileStep>("loading");
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [justCreated] = useState(() => {
     if (sessionStorage.getItem("kt:justCreated") !== "1") return false;
     sessionStorage.removeItem("kt:justCreated");
@@ -63,19 +89,27 @@ export function GenerateSheet({
   const [githubImportResult, setGithubImportResult] = useState<{ repos: number; projects: number } | null>(null);
   const [githubImportError, setGithubImportError] = useState<string | null>(null);
 
+  const [profileCheckNonce, setProfileCheckNonce] = useState(0);
   useEffect(() => {
+    setProfileStep("loading");
     apiFetch(`/api/students/${studentId}/full-profile`)
-      .then(r => r.ok ? r.json() : null)
-      .then((data: { skills?: Record<string, number>; projects?: unknown[]; experience?: unknown[] } | null) => {
-        if (!data) { setProfileStep("generate"); return; }
-        const isEmpty =
-          Object.keys(data.skills ?? {}).length === 0 &&
-          (data.projects ?? []).length === 0 &&
-          (data.experience ?? []).length === 0;
-        setProfileStep(isEmpty ? "capture" : "generate");
+      .then(async r => {
+        if (!r.ok) throw new GenerateError(await readErrorMessage(r));
+        return r.json() as Promise<{ skills?: Record<string, number>; projects?: unknown[]; experience?: unknown[]; certifications?: unknown[] }>;
       })
-      .catch(() => setProfileStep("generate"));
-  }, [studentId]);
+      .then(data => {
+        const substance =
+          Object.keys(data.skills ?? {}).length +
+          (data.projects ?? []).length +
+          (data.experience ?? []).length +
+          (data.certifications ?? []).length;
+        setProfileStep(substance === 0 ? "capture" : "generate");
+      })
+      .catch((e: Error) => {
+        setProfileError(e instanceof GenerateError ? e.message : OFFLINE_MESSAGE);
+        setProfileStep("error");
+      });
+  }, [studentId, profileCheckNonce]);
 
   const [captureError, setCaptureError] = useState<string | null>(null);
 
@@ -149,9 +183,8 @@ export function GenerateSheet({
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
-      const projectsData = projectsRes.ok
-        ? await projectsRes.json() as { added?: number }
-        : { added: 0 };
+      if (!projectsRes.ok) throw new Error(await readErrorMessage(projectsRes));
+      const projectsData = await projectsRes.json() as { added?: number };
 
       setGithubImportResult({ repos: stats.publicRepos ?? 0, projects: projectsData.added ?? 0 });
     } catch (e) {
@@ -180,10 +213,26 @@ export function GenerateSheet({
   const [stageStatuses, setStageStatuses] = useState<Record<string, StageStatus>>({});
   const [findings, setFindings] = useState<{ have: number; partial: number; missing: string[] } | null>(null);
 
+  const [generateError, setGenerateError] = useState<string | null>(null);
+
+  /** After a dropped stream, the server may still have saved the resume. */
+  const recoverSavedResume = async (startedAt: number): Promise<SavedResume | null> => {
+    try {
+      const r = await apiFetch(`/api/students/${studentId}/resumes`);
+      if (!r.ok) return null;
+      const list = await r.json() as SavedResume[];
+      return list.find(x => new Date(x.createdAt as unknown as string).getTime() >= startedAt - 5_000) ?? null;
+    } catch {
+      return null;
+    }
+  };
+
   const generate = async () => {
     setGenerating(true);
+    setGenerateError(null);
     setStageStatuses({});
     setFindings(null);
+    const startedAt = Date.now();
     const abortCtrl = new AbortController();
     try {
       const r = await apiFetch(`/api/students/${studentId}/resumes`, {
@@ -197,53 +246,95 @@ export function GenerateSheet({
         signal: abortCtrl.signal,
       });
       if (!r.ok || !r.body) {
-        const err = await r.json().catch(() => ({})) as { error?: string; code?: string };
-        // The server's substance gate — send them back to add real material
-        // instead of showing a generic failure toast.
-        if (r.status === 422 && err.code === "EMPTY_PROFILE") {
-          setCaptureError(err.error ?? "Add your skills, a project, or an internship first.");
+        const body = await r.clone().json().catch(() => ({})) as { code?: string; error?: string };
+        // The server's substance gate: send them back to add real material
+        // instead of showing a generic failure.
+        if (r.status === 422 && body.code === "EMPTY_PROFILE") {
+          setCaptureError(body.error ?? "Add your skills, a project, or an internship first.");
           setProfileStep("capture");
           return;
         }
-        throw new Error(err.error ?? "Failed to generate");
+        throw new GenerateError(await readErrorMessage(r));
       }
 
       const reader = r.body.getReader();
       const decoder = new TextDecoder();
+      let buffer = "";
+      let finished = false;
+
+      // SSE events end with a blank line. A network chunk can hold half an
+      // event (the final one carries the whole saved resume), so buffer until
+      // the separator arrives instead of parsing each chunk on its own.
+      const handleEvent = (raw: string) => {
+        const dataLines = raw.split("\n").filter(l => l.startsWith("data: ")).map(l => l.slice(6));
+        if (dataLines.length === 0) return; // keep-alive comment
+        let data: {
+          stage?: string; status?: string; message?: string; code?: string;
+          have?: number; partial?: number; missing?: string[];
+          done?: boolean; resume?: SavedResume; error?: boolean;
+        };
+        try {
+          data = JSON.parse(dataLines.join("\n"));
+        } catch {
+          return;
+        }
+        if (data.stage && data.status) {
+          setStageStatuses(prev => ({ ...prev, [data.stage!]: data.status === "start" ? "active" : "done" }));
+        }
+        if (data.stage === "map" && data.status === "done" && typeof data.have === "number") {
+          setFindings({ have: data.have, partial: data.partial ?? 0, missing: data.missing ?? [] });
+        }
+        if (data.done) {
+          finished = true;
+          if (data.error) throw new GenerateError(data.message ?? "We couldn't finish your resume this time. Please try again in a minute.");
+          if (data.resume) {
+            toast({ title: "Resume ready!", description: data.resume.name });
+            setGeneratedResume(data.resume as unknown as SavedResume);
+          }
+        }
+      };
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        for (const line of chunk.split("\n").filter(l => l.startsWith("data: "))) {
-          try {
-            const data = JSON.parse(line.slice(6)) as {
-              stage?: string; status?: string; message?: string;
-              have?: number; partial?: number; missing?: string[];
-              done?: boolean; resume?: SavedResume; error?: boolean;
-            };
-            if (data.stage && data.status) {
-              setStageStatuses(prev => ({ ...prev, [data.stage!]: data.status === "start" ? "active" : "done" }));
-            }
-            if (data.stage === "map" && data.status === "done" && typeof data.have === "number") {
-              setFindings({ have: data.have, partial: data.partial ?? 0, missing: data.missing ?? [] });
-            }
-            if (data.done) {
-              if (data.error) throw new Error("Generation failed on server");
-              if (data.resume) {
-                toast({ title: "Resume ready!", description: data.resume.name });
-                setGeneratedResume(data.resume as unknown as SavedResume);
-              }
-            }
-          } catch (e) {
-            if ((e as Error).message === "Generation failed on server") throw e;
-          }
+        if (value) buffer += decoder.decode(value, { stream: true });
+        if (done) buffer += decoder.decode();
+        buffer = buffer.replace(/\r\n/g, "\n");
+        let sep: number;
+        while ((sep = buffer.indexOf("\n\n")) !== -1) {
+          const event = buffer.slice(0, sep);
+          buffer = buffer.slice(sep + 2);
+          handleEvent(event);
+        }
+        if (done) {
+          if (buffer.trim()) handleEvent(buffer);
+          break;
         }
       }
-    } catch (e) {
-      if ((e as Error).name !== "AbortError") {
-        toast({ title: "Generation failed", description: (e as Error).message, variant: "destructive" });
+
+      if (!finished) {
+        const recovered = await recoverSavedResume(startedAt);
+        if (!recovered) throw new GenerateError("The connection dropped before your resume finished. Please try again.");
+        toast({ title: "Resume ready!", description: recovered.name });
+        setGeneratedResume(recovered);
       }
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      let message: string;
+      if (e instanceof GenerateError) {
+        message = e.message;
+      } else {
+        // fetch() rejects with TypeError when the server can't be reached, or
+        // the stream broke mid-way. The resume may still have been saved.
+        const recovered = await recoverSavedResume(startedAt);
+        if (recovered) {
+          toast({ title: "Resume ready!", description: recovered.name });
+          setGeneratedResume(recovered);
+          return;
+        }
+        message = e instanceof TypeError ? OFFLINE_MESSAGE : "Something went wrong on our side. Please try again in a minute.";
+      }
+      setGenerateError(message);
+      toast({ title: "Couldn't generate your resume", description: message, variant: "destructive" });
     } finally {
       setGenerating(false);
     }
@@ -396,6 +487,19 @@ export function GenerateSheet({
               Skip review — save as is
             </button>
           </>
+        ) : profileStep === "error" ? (
+          <div className="py-10 space-y-4 text-center">
+            <p className="type-body font-semibold text-ink">We couldn't load your profile</p>
+            <p className="type-caption text-ink-muted">{profileError}</p>
+            <div className="flex justify-center gap-2">
+              <Button onClick={() => setProfileCheckNonce(n => n + 1)} className="rounded-full bg-brand text-white hover:bg-brand/90">
+                Try again
+              </Button>
+              <Button onClick={onClose} variant="outline" className="rounded-full border border-line">
+                Close
+              </Button>
+            </div>
+          </div>
         ) : profileStep === "loading" ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 text-brand animate-spin" />
@@ -604,13 +708,18 @@ export function GenerateSheet({
                 )}
               </div>
             ) : (
+              <>
+              {generateError && (
+                <p role="alert" className="text-[13px] text-danger text-center leading-snug">{generateError}</p>
+              )}
               <Button
                 onClick={generate}
                 className="w-full h-12 rounded-full bg-brand text-white hover:bg-brand/90 font-bold text-[15px]"
               >
                 <Sparkles className="w-5 h-5 mr-2" />
-                Generate Resume
+                {generateError ? "Try again" : "Generate Resume"}
               </Button>
+              </>
             )}
           </>
         )}

@@ -21,6 +21,7 @@ import { callJson } from "./callJson";
 import { renderLedgerForPrompt } from "./ledger";
 import { formatDegree, gradYearFor } from "./fallbacks";
 import { logger } from "../logger";
+import { asObjectArray, ShapeError } from "./shapes";
 
 type Student = typeof studentsTable.$inferSelect;
 
@@ -183,6 +184,17 @@ function buildCertificationEntries(student: Student, courseCerts: CertificationE
  * an absolute URL from, matching how the /certs/:slug route is addressed.
  */
 async function fetchResumeCourseCertificates(studentId: number): Promise<CertificationEntry[]> {
+  try {
+    return await queryResumeCourseCertificates(studentId);
+  } catch (err) {
+    // Optional enrichment: a DB hiccup (or a missing column on a stale
+    // schema) must not take the whole generation down with it.
+    logger.warn({ err, studentId }, "resume pipeline: course certificate lookup failed, continuing without them");
+    return [];
+  }
+}
+
+async function queryResumeCourseCertificates(studentId: number): Promise<CertificationEntry[]> {
   const rows = await db
     .select({
       subDomainName: courseCertificatesTable.subDomainName,
@@ -200,27 +212,47 @@ async function fetchResumeCourseCertificates(studentId: number): Promise<Certifi
   }));
 }
 
+function skillName(rowText: string): string {
+  return rowText.replace(/^Skill: |^GitHub language: /, "").split(" (")[0];
+}
+
+/**
+ * Deterministic draft for when the model is unavailable. Everything is copied
+ * from the profile and cites the ledger row it came from, so the fabrication
+ * gate keeps it instead of stripping the resume down to a name.
+ */
 function fallbackDraft(student: Student, ledger: EvidenceLedger, experienceRows: ExperienceRow[], projectRows: ProjectRow[]): {
   headline: string; summary: string; experience: ExperienceEntry[]; projects: ProjectEntry[]; skillSections: SkillSection[]; achievements: never[];
 } {
   const skillRows = ledger.rows.filter((r) => r.kind === "SK" || r.kind === "GL");
+  const exIds = ledger.rows.filter((r) => r.kind === "EX").map((r) => r.id);
+  const prIds = ledger.rows.filter((r) => r.kind === "PR").map((r) => r.id);
+  const edId = ledger.rows.find((r) => r.kind === "ED")?.id;
+  const topSkills = skillRows.slice(0, 3).map((r) => skillName(r.text));
+  const summaryParts = [
+    student.field && student.college ? `${formatDegree(student.field)} student at ${student.college}` : "",
+    topSkills.length ? `with hands-on work in ${topSkills.join(", ")}` : "",
+  ].filter(Boolean);
   return {
     headline: student.targetRole ?? "",
-    summary: `${student.field} student at ${student.college}. Generated without AI polish — please review and edit.`,
-    experience: experienceRows.map((e) => ({
+    summary: summaryParts.length && edId ? `${summaryParts.join(" ")}.` : "",
+    experience: experienceRows.map((e, i) => ({
       company: e.company,
       role: e.role,
       start: parsePeriod(e.period).start,
       end: parsePeriod(e.period).end,
-      bullets: (e.bullets ?? []).slice(0, 4).map((text) => ({ text, evidence: [] })),
+      bullets: (e.bullets ?? []).filter((t) => typeof t === "string" && t.trim()).slice(0, 4)
+        .map((text) => ({ text, evidence: exIds[i] ? [exIds[i]] : [] })),
     })),
-    projects: projectRows.map((p) => ({
+    projects: projectRows.map((p, i) => ({
       title: p.title,
       tech: p.techStack ?? [],
       link: p.githubUrl ?? p.liveUrl ?? null,
-      bullets: p.description ? [{ text: p.description, evidence: [] }] : [],
+      bullets: p.description ? [{ text: p.description, evidence: prIds[i] ? [prIds[i]] : [] }] : [],
     })),
-    skillSections: skillRows.length > 0 ? [{ category: "Skills", items: skillRows.map((r) => r.text.replace(/^Skill: |^GitHub language: /, "").split(" (")[0]), evidence: [] }] : [],
+    skillSections: skillRows.length > 0
+      ? [{ category: "Technical Skills", items: [...new Set(skillRows.map((r) => skillName(r.text)))], evidence: skillRows.map((r) => r.id) }]
+      : [],
     achievements: [],
   };
 }
@@ -267,6 +299,10 @@ export async function draftResume(opts: {
       temperature: 0.4,
       signal: opts.signal,
       stageName: "draft",
+      shape: (r) => {
+        if (!r || typeof r !== "object" || Array.isArray(r)) throw new ShapeError("draft was not a JSON object");
+        return r as DraftOutput;
+      },
     });
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") throw err;
@@ -291,8 +327,13 @@ export async function draftResume(opts: {
     };
   }
 
-  const experience: ExperienceEntry[] = (raw.experience ?? [])
-    .filter((e) => experienceRows[e.index])
+  const rawExperience = asObjectArray(raw?.experience) as unknown as DraftIndexedEntry[];
+  const rawProjects = asObjectArray(raw?.projects) as unknown as DraftIndexedEntry[];
+  const rawSkills = asObjectArray(raw?.skillSections) as unknown as DraftSkillSection[];
+  const rawAchievements = asObjectArray(raw?.achievements) as unknown as DraftBullet[];
+
+  const experience: ExperienceEntry[] = rawExperience
+    .filter((e) => Number.isInteger(e.index) && experienceRows[e.index])
     .slice(0, budget.experienceMaxEntries)
     .map((e) => {
       const row = experienceRows[e.index];
@@ -307,8 +348,8 @@ export async function draftResume(opts: {
     })
     .filter((e) => e.bullets.length > 0);
 
-  const projects: ProjectEntry[] = (raw.projects ?? [])
-    .filter((p) => projectRows[p.index])
+  const projects: ProjectEntry[] = rawProjects
+    .filter((p) => Number.isInteger(p.index) && projectRows[p.index])
     .slice(0, budget.projectsMaxEntries)
     .map((p) => {
       const row = projectRows[p.index];
@@ -321,19 +362,31 @@ export async function draftResume(opts: {
     })
     .filter((p) => p.bullets.length > 0);
 
+  // The model answered but cited nothing usable for any entry (every bullet
+  // lacked evidence). Rather than ship a resume with no work on it, fall back
+  // to the profile's own words for the entries.
+  let rescuedExperience = experience;
+  let rescuedProjects = projects;
+  if (experience.length === 0 && projects.length === 0 && experienceRows.length + projectRows.length > 0) {
+    const fb = fallbackDraft(student, ledger, experienceRows, projectRows);
+    rescuedExperience = fb.experience.filter((e) => e.bullets.length > 0).slice(0, budget.experienceMaxEntries);
+    rescuedProjects = fb.projects.filter((p) => p.bullets.length > 0).slice(0, budget.projectsMaxEntries);
+    degraded = true;
+  }
+
   const skillLedgerTerms = new Set(
     ledger.rows.filter((r) => r.kind === "SK" || r.kind === "GL").map((r) => normTerm(r.text.replace(/^Skill: |^GitHub language: /, "").split(" (")[0])),
   );
-  const skillSections: SkillSection[] = (raw.skillSections ?? [])
+  const skillSections: SkillSection[] = rawSkills
     .slice(0, budget.skillsMaxCategories)
     .map((s) => ({
-      category: (s.category ?? "").slice(0, 60),
+      category: (typeof s.category === "string" ? s.category : "").slice(0, 60),
       items: (Array.isArray(s.items) ? s.items : []).filter((i) => typeof i === "string" && skillLedgerTerms.has(normTerm(i))).slice(0, budget.skillsMaxItemsPerCategory),
       evidence: (Array.isArray(s.evidence) ? s.evidence : []).filter((e): e is string => typeof e === "string" && validIds.has(e)),
     }))
     .filter((s) => s.category && s.items.length > 0);
 
-  const achievements = (raw.achievements ?? [])
+  const achievements = rawAchievements
     .slice(0, budget.achievementsMaxItems)
     .map((a) => {
       const evidence = (Array.isArray(a.evidence) ? a.evidence : []).filter((e): e is string => typeof e === "string" && validIds.has(e));
@@ -346,14 +399,14 @@ export async function draftResume(opts: {
     doc: {
       schemaVersion: 2,
       contact: { name: student.name, email: student.email, phone: student.phone, city: student.city, links: buildContactLinks(student) },
-      headline: typeof raw.headline === "string" ? raw.headline.slice(0, 120) : "",
-      summary: typeof raw.summary === "string" ? raw.summary.slice(0, 400) : "",
+      headline: typeof raw?.headline === "string" ? raw.headline.slice(0, 120) : "",
+      summary: typeof raw?.summary === "string" ? raw.summary.slice(0, 400) : "",
       order,
       skillSections,
-      experience,
-      projects,
+      experience: rescuedExperience,
+      projects: rescuedProjects,
       education: buildEducationEntries(student),
-      certifications: buildCertificationEntries(student),
+      certifications: buildCertificationEntries(student, courseCerts),
       achievements,
       atsMeta: null,
     },

@@ -3,6 +3,7 @@ import { scanLexicon } from "@workspace/resume-core";
 import { cacheGetOrSet } from "../aiCache";
 import { callJson } from "./callJson";
 import { logger } from "../logger";
+import { normalizeJd } from "./shapes";
 
 const SYSTEM_PROMPT = `You are a senior technical recruiter analyzing a job posting for an Indian
 engineering student's placement season. Extract a machine-usable target spec — respond with
@@ -76,7 +77,7 @@ export async function analyzeJd(opts: { jdText?: string; roleTitle?: string; job
 
   try {
     const { value, cached } = await cacheGetOrSet<JdAnalysis>(
-      { namespace: "resume-jd-v1", keyParts: [jdText, roleTitle, jobTags], ttlSeconds: 30 * 24 * 60 * 60 },
+      { namespace: "resume-jd-v2", keyParts: [jdText, roleTitle, jobTags], ttlSeconds: 30 * 24 * 60 * 60 },
       () =>
         callJson<JdAnalysis>({
           system: SYSTEM_PROMPT,
@@ -85,9 +86,12 @@ export async function analyzeJd(opts: { jdText?: string; roleTitle?: string; job
           temperature: 0.15,
           signal: opts.signal,
           stageName: "jd",
+          shape: (raw) => normalizeJd(raw, jdText ? "jd" : "tags"),
         }),
     );
-    return { analysis: value, cached, degraded: false };
+    // Re-normalize on read too: a row written by an older build may predate
+    // the shape check.
+    return { analysis: normalizeJd(value, jdText ? "jd" : "tags"), cached, degraded: false };
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") throw err;
     logger.warn({ err }, "resume pipeline: stage 1 (JD analysis) failed, using lexicon fallback");

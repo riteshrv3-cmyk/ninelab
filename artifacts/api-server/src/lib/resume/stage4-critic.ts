@@ -118,17 +118,18 @@ export async function critique(opts: {
       truthfulness: clamp(raw.scores?.truthfulness),
     };
 
-    const patches = (raw.patches ?? []).filter((p) => ALLOWED_PATCH_PATH.test(p.path) && typeof p.value === "string");
+    const patches = (Array.isArray(raw?.patches) ? raw.patches : [])
+      .filter((p) => p && typeof p.path === "string" && ALLOWED_PATCH_PATH.test(p.path) && typeof p.value === "string");
     const overall = recomputeOverall(scores);
 
     const report: CriticReport = {
       scores,
       overall,
       verdict: overall >= 82 && scores.truthfulness === 100 ? "ship" : overall >= 60 ? "revise" : "reject",
-      violations: Array.isArray(raw.violations) ? raw.violations : [],
+      violations: Array.isArray(raw?.violations) ? raw.violations.filter((v) => v && typeof v === "object") : [],
       patches,
-      recruiterSevenSecondRead: typeof raw.recruiterSevenSecondRead === "string" ? raw.recruiterSevenSecondRead : "",
-      topThreeFixes: Array.isArray(raw.topThreeFixes) ? raw.topThreeFixes.slice(0, 3) : [],
+      recruiterSevenSecondRead: typeof raw?.recruiterSevenSecondRead === "string" ? raw.recruiterSevenSecondRead : "",
+      topThreeFixes: Array.isArray(raw?.topThreeFixes) ? raw.topThreeFixes.filter((t): t is string => typeof t === "string").slice(0, 3) : [],
     };
     return { report, degraded: false };
   } catch (err) {

@@ -3,6 +3,7 @@ import { cacheGetOrSet } from "../aiCache";
 import { callJson } from "./callJson";
 import { ledgerHash, renderLedgerForPrompt } from "./ledger";
 import { logger } from "../logger";
+import { normalizeMap } from "./shapes";
 
 const SYSTEM_PROMPT = `You are planning a resume BEFORE writing it. Decide which of the candidate's
 real, verified facts (the evidence ledger) actually answer this job — with citations. Respond
@@ -87,7 +88,7 @@ export interface BuildEvidenceMapResult {
 export async function buildEvidenceMap(ledger: EvidenceLedger, jd: JdAnalysis, signal?: AbortSignal): Promise<BuildEvidenceMapResult> {
   try {
     const { value, cached } = await cacheGetOrSet<EvidenceMap>(
-      { namespace: "resume-map-v1", keyParts: [ledgerHash(ledger), jd], ttlSeconds: 7 * 24 * 60 * 60 },
+      { namespace: "resume-map-v2", keyParts: [ledgerHash(ledger), jd], ttlSeconds: 7 * 24 * 60 * 60 },
       () =>
         callJson<EvidenceMap>({
           system: SYSTEM_PROMPT,
@@ -96,9 +97,10 @@ export async function buildEvidenceMap(ledger: EvidenceLedger, jd: JdAnalysis, s
           temperature: 0.1,
           signal,
           stageName: "map",
+          shape: normalizeMap,
         }),
     );
-    return { map: enforceCitations(value, ledger), cached, degraded: false };
+    return { map: enforceCitations(normalizeMap(value), ledger), cached, degraded: false };
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") throw err;
     logger.warn({ err }, "resume pipeline: stage 2 (evidence map) failed, using exact-match fallback");

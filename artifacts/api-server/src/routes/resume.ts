@@ -5,7 +5,7 @@ import { eq, and, desc, sql, isNull, ilike } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import { buildAtsReport, buildQualityReport, renderPlainText, upgradeContent, type QuantFact, type TemplateDensity, type ResumeVersion, MAX_RESUME_VERSIONS } from "@workspace/resume-core";
 import { GenerateResumeBody, UpdateResumeBody, ImproveResumeSectionBody, QuantApplyBody } from "@workspace/api-zod";
-import { rlAiMedium, rlResumeGen } from "../middlewares/rateLimit";
+import { rlAiMedium, rlResumeGen, rlBulletRewrite, refundRateLimit } from "../middlewares/rateLimit";
 import { requireStudent } from "../middlewares/studentAuth";
 import { logEvent } from "../lib/events";
 import { cacheGetOrSet } from "../lib/aiCache";
@@ -66,7 +66,10 @@ router.post("/students/:id/resumes", requireStudent({ allowGuest: true }), rlRes
   if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
 
   const parsedBody = GenerateResumeBody.safeParse(req.body);
-  if (!parsedBody.success) return res.status(400).json({ error: parsedBody.error.message });
+  if (!parsedBody.success) {
+    refundRateLimit(res);
+    return res.status(400).json({ error: "Something in that request was off. Refresh the page and try again.", code: "BAD_REQUEST" });
+  }
   const body = parsedBody.data;
 
   const templateId = (body.templateId ?? "classic") as TemplateId;
@@ -89,6 +92,7 @@ router.post("/students/:id/resumes", requireStudent({ allowGuest: true }), rlRes
   const volume = ledgerVolume(buildLedger(student));
   const substance = volume.skillCount + volume.projectCount + volume.experienceCount + volume.certificationCount;
   if (substance === 0) {
+    refundRateLimit(res);
     return res.status(422).json({
       error: "Add your skills, a project, or an internship first — we only write from what's actually on your profile.",
       code: "EMPTY_PROFILE",
@@ -112,7 +116,8 @@ router.post("/students/:id/resumes", requireStudent({ allowGuest: true }), rlRes
     const [parent] = await db.select({ id: studentResumesTable.id, studentId: studentResumesTable.studentId })
       .from(studentResumesTable).where(eq(studentResumesTable.id, parentResumeId)).limit(1);
     if (!parent || parent.studentId !== id) {
-      return res.status(400).json({ error: "Invalid parentResumeId" });
+      refundRateLimit(res);
+      return res.status(400).json({ error: "The resume you started from was deleted. Generate a fresh one instead.", code: "BAD_PARENT" });
     }
   }
 
@@ -120,11 +125,19 @@ router.post("/students/:id/resumes", requireStudent({ allowGuest: true }), rlRes
   const controller = new AbortController();
   req.on("close", () => controller.abort());
 
+  let heartbeat: NodeJS.Timeout | undefined;
   if (isSSE) {
     res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
     res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no");
     res.flushHeaders();
+    // Each stage can wait a minute or more on the model with nothing to send.
+    // A comment line every 15s keeps proxies from closing an idle stream.
+    heartbeat = setInterval(() => {
+      if (!res.writableEnded) res.write(": ping\n\n");
+    }, 15_000);
+    res.on("close", () => clearInterval(heartbeat));
   }
 
   try {
@@ -173,6 +186,7 @@ router.post("/students/:id/resumes", requireStudent({ allowGuest: true }), rlRes
 
     logEvent(id, "resume_generated", name, { templateId, degraded: generation.degraded });
 
+    clearInterval(heartbeat);
     if (isSSE) {
       res.write(`data: ${JSON.stringify({ done: true, resume: saved })}\n\n`);
       res.end();
@@ -180,18 +194,21 @@ router.post("/students/:id/resumes", requireStudent({ allowGuest: true }), rlRes
       res.status(201).json(saved);
     }
   } catch (err) {
+    clearInterval(heartbeat);
+    refundRateLimit(res);
     if (controller.signal.aborted) {
       // Client disconnected mid-generation — nothing to send back, and the
       // aborted OpenAI call means we didn't pay for a response nobody reads.
       if (!res.writableEnded) res.end();
       return;
     }
-    req.log.error({ err }, "Failed to generate resume");
+    req.log.error({ err, studentId: id }, "Failed to generate resume");
+    const message = "We couldn't finish your resume this time. Nothing was lost. Please try again in a minute.";
     if (isSSE) {
-      res.write(`data: ${JSON.stringify({ done: true, error: true })}\n\n`);
+      res.write(`data: ${JSON.stringify({ done: true, error: true, code: "GENERATION_FAILED", message })}\n\n`);
       res.end();
     } else if (!res.headersSent) {
-      res.status(500).json({ error: "Failed to generate resume" });
+      res.status(500).json({ error: message, code: "GENERATION_FAILED" });
     }
   }
   return;
@@ -345,7 +362,7 @@ router.post("/students/:id/resumes/:resumeId/restore-version", requireStudent({ 
 // attached to the bullet, never claim a new one — so this can never be used
 // to sneak in an unsupported fact.
 
-router.post("/students/:id/resumes/:resumeId/bullet-rewrite", requireStudent({ allowGuest: true }), rlResumeGen, async (req, res) => {
+router.post("/students/:id/resumes/:resumeId/bullet-rewrite", requireStudent({ allowGuest: true }), rlBulletRewrite, async (req, res) => {
   const id = Number(req.params.id);
   const resumeId = Number(req.params.resumeId);
   if (isNaN(id) || isNaN(resumeId)) return res.status(400).json({ error: "Invalid id" });
