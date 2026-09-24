@@ -43,6 +43,7 @@ Rules:
 - patches may ONLY replace an existing string at one of the allowed paths above — never add a new array entry, never touch a path outside that list.
 - Do not invent a fix that would add a technology or claim not in the evidence ledger. You are forbidden from adding a technology to raise coverage.
 - Never add a number, count, percentage or scope ("for 3 teams") that is not written in the evidence ledger. A patch that does is discarded.
+- Never add a benefit or result the ledger doesn't state ("improving deployment speed", "enhancing scalability"). Reword what was done; don't append outcomes.
 - If truthfulness is 100, patches should be empty or only stylistic (impact/parse fixes), never fabrication additions.`;
 }
 

@@ -48,6 +48,9 @@ Keyword tailoring that is not fabrication: where the ledger and the job descript
 words for the same real thing, use the JOB DESCRIPTION's word — that is the string an ATS parser
 scans for.
 
+Never append a benefit the ledger doesn't state ("improving efficiency", "enhancing scalability"):
+where there is no real result, end the bullet with the concrete scope or technology instead.
+
 Every bullet opens with a different past-tense action verb (Built, Designed, Automated, Reduced,
 Deployed, Integrated, Analyzed, Optimized...): never the same opener more than twice in the whole
 resume. Active voice only, never "was developed" or "were built". Give each entry 2-4 bullets

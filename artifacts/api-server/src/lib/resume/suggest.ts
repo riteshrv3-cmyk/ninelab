@@ -5,6 +5,7 @@ import { unsupportedTech } from "./gate";
 import { parsePeriod } from "./stage3-draft";
 import { asObjectArray, ShapeError } from "./shapes";
 import { introducesNewNumbers, numberTokens } from "./numbers";
+import { overlap } from "./similarity";
 import { logger } from "../logger";
 
 type Student = typeof studentsTable.$inferSelect;
@@ -26,12 +27,15 @@ Rules for every bullet:
 - Use a number ONLY if that exact number appears in the entry's facts. Never invent a metric,
   percentage or count; the student adds real numbers later.
 - No claims of results you cannot see in the facts (no "improved performance", no user counts).
+- Each bullet must cover a DIFFERENT aspect than the bullets already on the resume (e.g. the
+  data model, a specific feature, testing, deployment, the tools used), never a rephrasing.
 - Plain, specific, believable. Never "robust", "scalable", "seamless", "passionate".
 
 Respond with valid JSON only.`;
 
 interface ThinItem {
   ref: string;
+  existing: string[];
   kind: "experience" | "projects";
   facts: string;
   need: number;
@@ -66,14 +70,16 @@ export async function suggestForThinEntries(opts: {
     if (!ref || !row?.role) return;
     const docIndex = opts.doc.experience.findIndex((e) => same(e.company, row.company) && same(e.role, row.role));
     const have = docIndex === -1 ? 0 : opts.doc.experience[docIndex].bullets.length;
-    if (have < MIN_BULLETS) items.push({ ref, kind: "experience", facts: exRows[i].text, need: MIN_BULLETS - have, docIndex: docIndex === -1 ? null : docIndex, row });
+    const existing = docIndex === -1 ? [] : opts.doc.experience[docIndex].bullets.map((b) => b.text);
+    if (have < MIN_BULLETS) items.push({ ref, existing, kind: "experience", facts: exRows[i].text, need: MIN_BULLETS - have, docIndex: docIndex === -1 ? null : docIndex, row });
   });
   projectRows.forEach((row, i) => {
     const ref = prRows[i]?.id;
     if (!ref || !row?.title) return;
     const docIndex = opts.doc.projects.findIndex((p) => same(p.title, row.title));
     const have = docIndex === -1 ? 0 : opts.doc.projects[docIndex].bullets.length;
-    if (have < MIN_BULLETS) items.push({ ref, kind: "projects", facts: prRows[i].text, need: MIN_BULLETS - have, docIndex: docIndex === -1 ? null : docIndex, row });
+    const existing = docIndex === -1 ? [] : opts.doc.projects[docIndex].bullets.map((b) => b.text);
+    if (have < MIN_BULLETS) items.push({ ref, existing, kind: "projects", facts: prRows[i].text, need: MIN_BULLETS - have, docIndex: docIndex === -1 ? null : docIndex, row });
   });
 
   // Never grow past the page budget with entries the student hasn't vouched for.
@@ -94,7 +100,7 @@ export async function suggestForThinEntries(opts: {
     raw = await callJson<Record<string, unknown>>({
       system: SYSTEM_PROMPT,
       user: `Entries that need bullets (write exactly "need" bullets for each, cite nothing, just text):
-${wanted.map((w) => `- ref ${w.ref} (need ${w.need}): ${w.facts}`).join("\n")}
+${wanted.map((w) => `- ref ${w.ref} (need ${w.need}): ${w.facts}${w.existing.length ? `\n  Already on the resume, do NOT restate: ${w.existing.map((e) => `"${e}"`).join("; ")}` : ""}`).join("\n")}
 
 Return JSON: { "items": [{ "ref": "EX:1", "bullets": ["...", "..."] }] }`,
       maxTokens: 1200,
@@ -132,7 +138,14 @@ Return JSON: { "items": [{ "ref": "EX:1", "bullets": ["...", "..."] }] }`,
   let added = 0;
   const orderAdds = new Set<SectionKey>();
   for (const w of wanted) {
-    const texts = (byRef.get(w.ref) ?? []).map((t) => clean(t, w.facts)).filter((t): t is string => !!t).slice(0, w.need);
+    const texts: string[] = [];
+    for (const t of (byRef.get(w.ref) ?? []).map((x) => clean(x, w.facts))) {
+      if (!t || texts.length >= w.need) continue;
+      // A suggestion that restates an existing bullet is padding, and checkers
+      // penalise the repetition.
+      if ([...w.existing, ...texts].some((e) => overlap(e, t) >= 0.5)) continue;
+      texts.push(t);
+    }
     if (texts.length === 0) continue;
     const bullets: Bullet[] = texts.map((text) => ({ text, evidence: [w.ref], suggested: true }));
     added += bullets.length;

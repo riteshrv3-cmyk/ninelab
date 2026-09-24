@@ -80,3 +80,20 @@ describe("critic patch safety", () => {
     expect(revertUnsafePatches(before, after, ledger).reverted).toBe(0);
   });
 });
+
+import { overlap } from "../src/lib/resume/similarity";
+
+describe("suggestion overlap", () => {
+  it("flags a rephrasing of an existing bullet", () => {
+    expect(overlap(
+      "Built a Library Management System using Python and MySQL for book issuance and returns at the college library",
+      "Developed a desktop application for issuing and returning books using Python and MySQL for the college library",
+    )).toBeGreaterThanOrEqual(0.5);
+  });
+  it("lets a genuinely different point through", () => {
+    expect(overlap(
+      "Built a Library Management System using Python and MySQL for book issuance and returns",
+      "Designed the MySQL schema with separate tables for members, books and loans",
+    )).toBeLessThan(0.5);
+  });
+});
