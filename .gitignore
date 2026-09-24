@@ -61,3 +61,7 @@ docs/
 .gstack/
 dev.log
 api.log
+
+# resume PDF parse-back check output
+artifacts/api-server/test/pdf-out/
+artifacts/api-server/test/.parseback.mjs

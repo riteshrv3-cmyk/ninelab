@@ -9,7 +9,7 @@ export const classicTemplate: TemplateConfig = {
   accent: null,
   header: {
     align: "center",
-    nameCase: "upper",
+    nameCase: "title",
     showHeadline: true,
     accentBar: false,
   },

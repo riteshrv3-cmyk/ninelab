@@ -18,6 +18,6 @@ export const minimalTemplate: TemplateConfig = {
     ruleWeight: 0,
     useAccent: false,
   },
-  bullet: { glyph: "–" },
+  bullet: { glyph: "•" },
   headingLabels: {},
 };

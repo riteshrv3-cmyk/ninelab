@@ -13,18 +13,20 @@ export interface TypeStyle {
 }
 
 export const TYPE_SCALE: Record<TypeRole, TypeStyle> = {
-  name: { size: 21, leading: 25.5, tracking: 0.6, weight: "bold" },
+  name: { size: 21, leading: 25.5, tracking: 0, weight: "bold" },
   headline: { size: 10.5, leading: 13.5, tracking: 0, weight: "normal" },
   contact: { size: 9, leading: 12, tracking: 0, weight: "normal" },
-  section: { size: 9, leading: 12, tracking: 0.9, weight: "bold" },
+  section: { size: 9.5, leading: 12, tracking: 0, weight: "bold" },
   entry: { size: 11, leading: 15, tracking: 0, weight: "bold" },
-  meta: { size: 8.25, leading: 10.5, tracking: 0.15, weight: "normal" },
+  meta: { size: 8.5, leading: 10.5, tracking: 0, weight: "normal" },
   body: { size: 10, leading: 13.5, tracking: 0, weight: "normal" },
-  micro: { size: 7.5, leading: 9, tracking: 0.3, weight: "normal" },
+  micro: { size: 7.5, leading: 9, tracking: 0, weight: "normal" },
 };
 
 /** Extra tracking applied to `name` when the template renders it uppercase. */
-export const UPPERCASE_NAME_EXTRA_TRACKING = 0.6;
+// Letter-spacing is kept at zero everywhere: some ATS text extractors read
+// tracked capitals as separate letters ("E X P E R I E N C E").
+export const UPPERCASE_NAME_EXTRA_TRACKING = 0;
 
 export type SpacingRole = "xs" | "sm" | "md" | "lg" | "xl" | "xxl";
 

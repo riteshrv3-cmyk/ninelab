@@ -102,6 +102,12 @@ async function buildAll() {
       "electron",
     ],
     sourcemap: "linked",
+    // The server PDF reuses the student app's own resume renderer (React SSR),
+    // so preview and download can never drift apart.
+    alias: {
+      "@resume-render": path.resolve(artifactDir, "../ninelab/src/components/resume/html/printDocument.ts"),
+    },
+    jsx: "automatic",
     plugins: [
       // pino relies on workers to handle logging, instead of externalizing it we use a plugin to handle it
       esbuildPluginPino({ transports: ["pino-pretty"] })

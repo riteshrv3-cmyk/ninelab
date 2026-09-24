@@ -5,7 +5,8 @@ import { eq, and, desc, sql, isNull, ilike } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import { buildAtsReport, buildQualityReport, renderPlainText, upgradeContent, type QuantFact, type TemplateDensity, type ResumeVersion, MAX_RESUME_VERSIONS } from "@workspace/resume-core";
 import { GenerateResumeBody, UpdateResumeBody, ImproveResumeSectionBody, QuantApplyBody } from "@workspace/api-zod";
-import { rlAiMedium, rlResumeGen, rlBulletRewrite, refundRateLimit } from "../middlewares/rateLimit";
+import { rlAiMedium, rlResumeGen, rlBulletRewrite, rlResumePdf, refundRateLimit } from "../middlewares/rateLimit";
+import { renderResumePdf, resumeFileName, PdfUnavailableError } from "../lib/resume/pdf";
 import { requireStudent } from "../middlewares/studentAuth";
 import { logEvent } from "../lib/events";
 import { cacheGetOrSet } from "../lib/aiCache";
@@ -649,6 +650,41 @@ router.post("/students/:id/resumes/:resumeId/quant-apply", requireStudent({ allo
     return res.status(500).json({ error: "Server error" });
   }
   return;
+});
+
+// ─── POST /students/:id/resumes/:resumeId/pdf ────────────────────────────────
+// Server-rendered, text-layer PDF of the saved resume: identical on every
+// device, no browser print headers, and a professional file name. 503 when the
+// server has no Chromium, so the client can fall back to browser print.
+
+router.post("/students/:id/resumes/:resumeId/pdf", requireStudent({ allowGuest: true }), rlResumePdf, async (req, res) => {
+  const id = Number(req.params.id);
+  const resumeId = Number(req.params.resumeId);
+  if (isNaN(id) || isNaN(resumeId)) return res.status(400).json({ error: "Invalid id" });
+  try {
+    const [resume] = await db.select().from(studentResumesTable).where(eq(studentResumesTable.id, resumeId)).limit(1);
+    if (!resume || resume.studentId !== id) return res.status(404).json({ error: "Resume not found" });
+    // The review screen may hold edits its autosave hasn't flushed yet, so the
+    // client can send its current content (as data, normalized here; the
+    // server still builds the markup itself). Otherwise the saved copy is used.
+    const bodyContent = req.body?.content;
+    const source = bodyContent && typeof bodyContent === "object" && !Array.isArray(bodyContent) ? bodyContent : resume.content;
+    const doc = upgradeContent((source ?? {}) as Record<string, unknown>);
+    const templateId = VALID_TEMPLATES.includes(req.body?.templateId) ? (req.body.templateId as TemplateId) : resume.templateId;
+    const pdf = await renderResumePdf(doc, templateId, resume.name);
+    const filename = resumeFileName(doc.contact.name || resume.name);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Cache-Control", "no-store");
+    return res.send(pdf);
+  } catch (err) {
+    refundRateLimit(res);
+    if (err instanceof PdfUnavailableError) {
+      return res.status(503).json({ error: "PDF service unavailable", code: "PDF_UNAVAILABLE" });
+    }
+    req.log.error({ err }, "Failed to render resume PDF");
+    return res.status(500).json({ error: "Couldn't create the PDF", code: "PDF_FAILED" });
+  }
 });
 
 // ─── POST /students/:id/resumes/:resumeId/downloaded ──────────────────────────

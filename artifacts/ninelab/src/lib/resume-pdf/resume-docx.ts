@@ -9,8 +9,12 @@ import {
   TabStopType,
 } from "docx";
 import type { ResumeDocument, SectionKey } from "@workspace/resume-core";
-function sanitizeFilename(name: string): string {
-  return name.replace(/[/\\:*?"<>|]/g, "").replace(/\s+/g, "_").replace(/\.+$/, "").slice(0, 80);
+import { DEFAULT_HEADING_LABELS } from "./templateConfig";
+
+/** First-Last-Resume: the professional file name checkers look for. */
+function resumeFileName(name: string): string {
+  const parts = name.normalize("NFKD").replace(/[^A-Za-z0-9 ]/g, "").trim().split(/\s+/).filter(Boolean).slice(0, 3);
+  return `${parts.length ? parts.join("-") : "Resume"}-Resume`;
 }
 
 // Half-points (docx unit for font size)
@@ -26,13 +30,11 @@ function name_paragraph(text: string): Paragraph {
   });
 }
 
-function contact_paragraph(parts: string[]): Paragraph {
+function centered(text: string, size: number, after: number): Paragraph {
   return new Paragraph({
     alignment: AlignmentType.CENTER,
-    spacing: { after: 80 },
-    children: [
-      new TextRun({ text: parts.filter(Boolean).join("  |  "), size: PT(10), font: "Calibri" }),
-    ],
+    spacing: { after },
+    children: [new TextRun({ text, size: PT(size), font: "Calibri" })],
   });
 }
 
@@ -63,7 +65,7 @@ function entry_sub(text: string): Paragraph {
   return new Paragraph({
     spacing: { after: 20 },
     children: [
-      new TextRun({ text, italics: true, size: PT(10), font: "Calibri", color: "444444" }),
+      new TextRun({ text, size: PT(10), font: "Calibri", color: "444444" }),
     ],
   });
 }
@@ -87,47 +89,52 @@ function body(text: string): Paragraph {
   });
 }
 
+const joinDates = (start: string, end: string) => [start, end].map((s) => s.trim()).filter(Boolean).join(" - ");
+
+// Same headings, separators and content as the PDF (ResumeHtml), so the Word
+// file and the PDF parse identically.
 function buildSections(doc: ResumeDocument): Paragraph[] {
   const out: Paragraph[] = [];
 
-  // Header
   out.push(name_paragraph(doc.contact.name));
+  if (doc.headline.trim()) out.push(centered(doc.headline, 11, 20));
   const contactParts: string[] = [
     doc.contact.email,
     doc.contact.phone ?? "",
     doc.contact.city ?? "",
     ...doc.contact.links.map(l => l.label),
   ].filter(Boolean);
-  if (contactParts.length) out.push(contact_paragraph(contactParts));
+  if (contactParts.length) out.push(centered(contactParts.join(" | "), 10, 80));
 
   const renderers: Record<SectionKey, () => void> = {
     summary: () => {
       if (!doc.summary) return;
-      out.push(section_heading("Summary"));
+      out.push(section_heading(DEFAULT_HEADING_LABELS.summary));
       out.push(body(doc.summary));
     },
     experience: () => {
       if (!doc.experience.length) return;
-      out.push(section_heading("Experience"));
+      out.push(section_heading(DEFAULT_HEADING_LABELS.experience));
       for (const e of doc.experience) {
-        out.push(entry_header(`${e.role} — ${e.company}`, `${e.start} – ${e.end}`));
+        out.push(entry_header([e.role, e.company].filter(Boolean).join(" | "), joinDates(e.start, e.end)));
         if (e.employmentType || e.location) {
-          out.push(entry_sub([e.employmentType, e.location].filter(Boolean).join(" · ")));
+          out.push(entry_sub([e.employmentType, e.location].filter(Boolean).join(" | ")));
         }
         for (const b of e.bullets) out.push(bullet(b.text));
       }
     },
     projects: () => {
       if (!doc.projects.length) return;
-      out.push(section_heading("Projects"));
+      out.push(section_heading(DEFAULT_HEADING_LABELS.projects));
       for (const p of doc.projects) {
         out.push(entry_header(p.title, p.tech.length ? p.tech.join(", ") : ""));
+        if (p.link) out.push(entry_sub(p.link.replace(/^https?:\/\//, "")));
         for (const b of p.bullets) out.push(bullet(b.text));
       }
     },
     skills: () => {
       if (!doc.skillSections.length) return;
-      out.push(section_heading("Skills"));
+      out.push(section_heading(DEFAULT_HEADING_LABELS.skills));
       for (const s of doc.skillSections) {
         out.push(new Paragraph({
           spacing: { after: 20 },
@@ -140,10 +147,11 @@ function buildSections(doc: ResumeDocument): Paragraph[] {
     },
     education: () => {
       if (!doc.education.length) return;
-      out.push(section_heading("Education"));
+      out.push(section_heading(DEFAULT_HEADING_LABELS.education));
       for (const e of doc.education) {
-        out.push(entry_header(`${e.degree}${e.field ? ", " + e.field : ""}`, `${e.start} – ${e.end}`));
-        out.push(entry_sub([e.institution, e.cgpa ? `CGPA ${e.cgpa}` : ""].filter(Boolean).join("  ·  ")));
+        out.push(entry_header([e.degree, e.institution].filter(Boolean).join(" | "), joinDates(e.start, e.end)));
+        const sub = [e.field, e.cgpa ? `CGPA ${e.cgpa}` : ""].filter(Boolean).join(" | ");
+        if (sub) out.push(entry_sub(sub));
         if (e.coursework?.length) {
           out.push(body("Relevant coursework: " + e.coursework.join(", ")));
         }
@@ -151,14 +159,14 @@ function buildSections(doc: ResumeDocument): Paragraph[] {
     },
     certifications: () => {
       if (!doc.certifications.length) return;
-      out.push(section_heading("Certifications"));
+      out.push(section_heading(DEFAULT_HEADING_LABELS.certifications));
       for (const c of doc.certifications) {
-        out.push(body(`${c.name} — ${c.issuer}${c.date ? ` (${c.date})` : ""}`));
+        out.push(bullet(`${c.name}${c.issuer ? `, ${c.issuer}` : ""}${c.date ? ` (${c.date})` : ""}`));
       }
     },
     achievements: () => {
       if (!doc.achievements.length) return;
-      out.push(section_heading("Achievements"));
+      out.push(section_heading(DEFAULT_HEADING_LABELS.achievements));
       for (const a of doc.achievements) out.push(bullet(a.text));
     },
   };
@@ -192,6 +200,6 @@ export async function renderResumeDocx(doc: ResumeDocument, resumeName: string):
   });
 
   const blob = await Packer.toBlob(document);
-  const filename = sanitizeFilename(resumeName || doc.contact.name) + ".docx";
+  const filename = resumeFileName(doc.contact.name || resumeName) + ".docx";
   return { blob, filename };
 }

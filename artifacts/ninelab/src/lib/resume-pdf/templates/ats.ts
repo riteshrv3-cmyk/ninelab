@@ -21,10 +21,10 @@ export const atsTemplate: TemplateConfig = {
     ruleWeight: 0.5,
     useAccent: false,
   },
-  bullet: { glyph: "-" },
+  bullet: { glyph: "•" },
   headingLabels: {
     experience: "Work Experience",
     education: "Education",
-    skills: "Skills",
+    skills: "Technical Skills",
   },
 };

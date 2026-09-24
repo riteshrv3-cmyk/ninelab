@@ -79,6 +79,9 @@ export const RESUME_HTML_CSS = `
 .rz-contact { font-size: var(--r-contact-size); line-height: var(--r-contact-leading); color: var(--r-muted); margin-top: 3pt; }
 .rz-contact a { color: var(--r-body-color); }
 .rz-contact-sep { padding: 0 3pt; color: var(--r-rule); }
+/* A contact item (phone, email, link) never wraps inside itself: a phone
+   number split across lines is no longer a phone number to a parser. */
+.rz-contact > span { white-space: nowrap; }
 
 .rz-section { margin-top: var(--r-space-xl); break-inside: auto; }
 .rz-section:first-of-type { margin-top: 0; }
@@ -93,8 +96,10 @@ export const RESUME_HTML_CSS = `
   break-after: avoid;
 }
 .rz-rule--full { border-bottom: 0.5pt solid var(--r-rule); padding-bottom: 2pt; }
-.rz-rule--short { position: relative; padding-bottom: 4pt; }
-.rz-rule--short::after { content: ""; position: absolute; left: 0; bottom: 0; width: 24pt; height: 2pt; background: var(--r-accent); }
+/* Drawn as a background, not a positioned ::after: positioned boxes paint in a
+   later pass, which moves their text after the body text in the PDF's text
+   stream and scrambles reading order for ATS parsers. */
+.rz-rule--short { padding-bottom: 4pt; background: linear-gradient(var(--r-accent), var(--r-accent)) left bottom / 24pt 2pt no-repeat; }
 
 .rz-entry { margin-bottom: var(--r-space-md); break-inside: avoid; }
 .rz-entry:last-child { margin-bottom: 0; }
@@ -113,15 +118,17 @@ export const RESUME_HTML_CSS = `
 
 .rz-bullets { list-style: none; margin-top: var(--r-space-xs); }
 .rz-bullets li {
-  position: relative;
   padding-left: 12pt;
+  text-indent: -10pt;
   font-size: var(--r-body-size);
   line-height: var(--r-body-leading);
   margin-bottom: var(--r-space-xs);
   break-inside: avoid;
 }
 .rz-bullets li:last-child { margin-bottom: 0; }
-.rz-bullets li::before { content: var(--r-bullet-glyph); position: absolute; left: 2pt; color: var(--r-body-color); }
+/* Inline hanging bullet (no absolute positioning) so the glyph is emitted
+   before its line in the PDF text layer, exactly where a parser expects it. */
+.rz-bullets li::before { content: var(--r-bullet-glyph); display: inline-block; width: 10pt; text-indent: 0; color: var(--r-body-color); }
 
 .rz-summary { font-size: var(--r-body-size); line-height: var(--r-body-leading); }
 .rz-skill-row { font-size: var(--r-body-size); line-height: var(--r-body-leading); margin-bottom: var(--r-space-xs); color: var(--r-body-color); }
@@ -146,7 +153,7 @@ function ensurePreviewCss(): void {
 
 function joinDates(start: string, end: string): string {
   const parts = [start, end].map((s) => s.trim()).filter(Boolean);
-  return parts.join(" – ");
+  return parts.join(" - ");
 }
 
 export function ResumeHtml({ doc, templateId, highlightSection, onElementClick, onMeasure }: ResumeHtmlProps) {
@@ -239,12 +246,12 @@ export function ResumeHtml({ doc, templateId, highlightSection, onElementClick, 
             <div className="rz-entry-head">
               <p className="rz-entry-title">
                 {e.role}
-                {e.company && <span className="rz-entry-co"> · {e.company}</span>}
+                {e.company && <span className="rz-entry-co"> | {e.company}</span>}
               </p>
               <p className="rz-entry-meta">{joinDates(e.start, e.end)}</p>
             </div>
             {(e.location || e.employmentType) && (
-              <p className="rz-entry-sub">{[e.employmentType, e.location].filter(Boolean).join(" · ")}</p>
+              <p className="rz-entry-sub">{[e.employmentType, e.location].filter(Boolean).join(" | ")}</p>
             )}
             <ul className="rz-bullets">
               {e.bullets.map((b, bi) => {
@@ -266,7 +273,7 @@ export function ResumeHtml({ doc, templateId, highlightSection, onElementClick, 
           <div key={pi} className="rz-entry">
             <div className="rz-entry-head">
               <p className="rz-entry-title">{p.title}</p>
-              {p.tech.length > 0 && <p className="rz-entry-meta">{p.tech.join(" · ")}</p>}
+              {p.tech.length > 0 && <p className="rz-entry-meta">{p.tech.join(", ")}</p>}
             </div>
             {p.link && (
               <p className="rz-entry-sub">
@@ -294,12 +301,12 @@ export function ResumeHtml({ doc, templateId, highlightSection, onElementClick, 
             <div className="rz-entry-head">
               <p className="rz-entry-title">
                 {ed.degree}
-                {ed.institution && <span className="rz-entry-co"> · {ed.institution}</span>}
+                {ed.institution && <span className="rz-entry-co"> | {ed.institution}</span>}
               </p>
               <p className="rz-entry-meta">{joinDates(ed.start, ed.end)}</p>
             </div>
             {(ed.field || ed.cgpa) && (
-              <p className="rz-entry-sub">{[ed.field, ed.cgpa ? `CGPA ${ed.cgpa}` : null].filter(Boolean).join(" · ")}</p>
+              <p className="rz-entry-sub">{[ed.field, ed.cgpa ? `CGPA ${ed.cgpa}` : null].filter(Boolean).join(" | ")}</p>
             )}
           </div>
         ))}
@@ -315,7 +322,7 @@ export function ResumeHtml({ doc, templateId, highlightSection, onElementClick, 
           {doc.certifications.map((c, i) => (
             <li key={i}>
               {c.name}
-              {c.issuer && ` — ${c.issuer}`}
+              {c.issuer && `, ${c.issuer}`}
               {c.date && ` (${c.date})`}
             </li>
           ))}
@@ -340,7 +347,7 @@ export function ResumeHtml({ doc, templateId, highlightSection, onElementClick, 
 
   const contactBits: React.ReactNode[] = [];
   const pushBit = (node: React.ReactNode, key: string) => {
-    if (contactBits.length > 0) contactBits.push(<span key={`sep-${key}`} className="rz-contact-sep">·</span>);
+    if (contactBits.length > 0) contactBits.push(<span key={`sep-${key}`} className="rz-contact-sep">|</span>);
     contactBits.push(<span key={key}>{node}</span>);
   };
   if (doc.contact.email) pushBit(doc.contact.email, "email");

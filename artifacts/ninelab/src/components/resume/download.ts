@@ -60,15 +60,7 @@ export function notifyResumeDownloaded(resume: SavedResume): void {
   apiFetch(`/api/students/${resume.studentId}/resumes/${resume.id}/downloaded`, { method: "POST" }).catch(() => {});
 }
 
-export async function downloadResumePDF(resume: SavedResume): Promise<void> {
-  const doc = upgradeContent(resume.content);
-  await printResume(doc, resume.templateId, resume.name);
-  notifyResumeDownloaded(resume);
-}
-
-export async function downloadResumeDocx(resume: SavedResume): Promise<void> {
-  const doc = upgradeContent(resume.content);
-  const { blob, filename } = await renderResumeDocx(doc, resume.name);
+function saveBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -77,5 +69,37 @@ export async function downloadResumeDocx(resume: SavedResume): Promise<void> {
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+/**
+ * Server-rendered PDF first: a real file, identical on every phone, no print
+ * dialog headers, named First-Last-Resume.pdf. Falls back to the browser's
+ * print dialog if the server can't render one (offline, no Chromium).
+ */
+export async function downloadResumePDF(resume: SavedResume): Promise<void> {
+  const doc = upgradeContent(resume.content);
+  try {
+    const r = await apiFetch(`/api/students/${resume.studentId}/resumes/${resume.id}/pdf`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: resume.content, templateId: resume.templateId }),
+    });
+    if (r.ok && (r.headers.get("content-type") ?? "").includes("application/pdf")) {
+      const filename = /filename="([^"]+)"/.exec(r.headers.get("content-disposition") ?? "")?.[1] ?? "Resume.pdf";
+      saveBlob(await r.blob(), filename);
+      notifyResumeDownloaded(resume);
+      return;
+    }
+  } catch {
+    // Fall through to the print path.
+  }
+  await printResume(doc, resume.templateId, resume.name);
+  notifyResumeDownloaded(resume);
+}
+
+export async function downloadResumeDocx(resume: SavedResume): Promise<void> {
+  const doc = upgradeContent(resume.content);
+  const { blob, filename } = await renderResumeDocx(doc, resume.name);
+  saveBlob(blob, filename);
   notifyResumeDownloaded(resume);
 }

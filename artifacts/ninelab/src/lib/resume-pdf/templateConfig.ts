@@ -33,7 +33,7 @@ export const DEFAULT_HEADING_LABELS: Record<SectionKey, string> = {
   summary: "Summary",
   experience: "Experience",
   projects: "Projects",
-  skills: "Skills",
+  skills: "Technical Skills",
   education: "Education",
   certifications: "Certifications",
   achievements: "Achievements",

@@ -18,6 +18,6 @@ export const techTemplate: TemplateConfig = {
     ruleWeight: 2,
     useAccent: true,
   },
-  bullet: { glyph: "▪" },
+  bullet: { glyph: "•" },
   headingLabels: {},
 };

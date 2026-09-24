@@ -96,4 +96,5 @@ export const rlDriveCheck = rateLimit({ name: "drivecheck", windowMs: 60 * 60 * 
 export const rlResumeGen = rateLimit({ name: "resume-gen", windowMs: 60 * 60 * 1000, max: 10 });
 // Single-bullet rewrites are one small call each; sharing the generation bucket
 // meant a few rewrites could block the student's next full generation.
+export const rlResumePdf = rateLimit({ name: "resume-pdf", windowMs: 60 * 60 * 1000, max: 40 });
 export const rlBulletRewrite = rateLimit({ name: "resume-rewrite", windowMs: 60 * 60 * 1000, max: 40 });

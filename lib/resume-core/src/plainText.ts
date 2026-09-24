@@ -23,8 +23,10 @@ export function renderPlainText(doc: ResumeDocument): string {
     },
     experience: () => {
       for (const e of doc.experience) {
-        lines.push(`${e.role}, ${e.company}`);
-        lines.push(`${e.start} - ${e.end}`);
+        lines.push([e.role, e.company].filter(Boolean).join(" | "));
+        lines.push([e.start, e.end].map((s) => s.trim()).filter(Boolean).join(" - "));
+        const sub = [e.employmentType, e.location].filter(Boolean).join(" | ");
+        if (sub) lines.push(sub);
         for (const b of e.bullets) lines.push(b.text);
       }
     },
@@ -32,6 +34,7 @@ export function renderPlainText(doc: ResumeDocument): string {
       for (const p of doc.projects) {
         lines.push(p.title);
         if (p.tech.length) lines.push(p.tech.join(", "));
+        if (p.link) lines.push(p.link.replace(/^https?:\/\//, ""));
         for (const b of p.bullets) lines.push(b.text);
       }
     },
@@ -42,15 +45,15 @@ export function renderPlainText(doc: ResumeDocument): string {
     },
     education: () => {
       for (const ed of doc.education) {
-        lines.push(`${ed.degree}, ${ed.institution}`);
-        if (ed.field) lines.push(ed.field);
-        lines.push(`${ed.start} - ${ed.end}`);
-        if (ed.cgpa) lines.push(`CGPA ${ed.cgpa}`);
+        lines.push([ed.degree, ed.institution].filter(Boolean).join(" | "));
+        lines.push([ed.start, ed.end].map((s) => s.trim()).filter(Boolean).join(" - "));
+        const sub = [ed.field, ed.cgpa ? `CGPA ${ed.cgpa}` : null].filter(Boolean).join(" | ");
+        if (sub) lines.push(sub);
       }
     },
     certifications: () => {
       for (const c of doc.certifications) {
-        lines.push(`${c.name}, ${c.issuer}${c.date ? ` (${c.date})` : ""}`);
+        lines.push(`${c.name}${c.issuer ? `, ${c.issuer}` : ""}${c.date ? ` (${c.date})` : ""}`);
       }
     },
     achievements: () => {
