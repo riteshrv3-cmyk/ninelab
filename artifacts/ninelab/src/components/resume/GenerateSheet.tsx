@@ -5,7 +5,7 @@ import { Check, Loader2, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { upgradeContent } from "@workspace/resume-core";
+import { countSuggestions, upgradeContent } from "@workspace/resume-core";
 import { apiFetch } from "@/lib/api/authFetch";
 import { TEMPLATE_REGISTRY } from "@/lib/resume-pdf";
 import { ResumeImport } from "@/components/ResumeImport";
@@ -452,7 +452,11 @@ export function GenerateSheet({
                 </button>
               </div>
             ) : (
-              <p className="text-[10px] text-ink-muted text-center">Every bullet is backed by your profile — nothing invented</p>
+              <p className="text-[12px] text-ink-muted text-center leading-snug">
+                {countSuggestions(previewDoc) > 0
+                  ? `${countSuggestions(previewDoc)} bullet${countSuggestions(previewDoc) > 1 ? "s are" : " is"} marked Suggested. Confirm them in Review; they stay out of your download until you do.`
+                  : "Every bullet is backed by your profile. Nothing invented."}
+              </p>
             )}
 
             {generatedResume?.evidenceMap?.thesis && (

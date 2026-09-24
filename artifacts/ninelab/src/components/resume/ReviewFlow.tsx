@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
-  applyAutoFixes, buildQualityReport, shortenUrl, upgradeContent,
+  applyAutoFixes, buildQualityReport, countSuggestions, shortenUrl, upgradeContent,
   type ContactLink, type QualityRuleResult, type ResumeDocument,
 } from "@workspace/resume-core";
 import { apiFetch } from "@/lib/api/authFetch";
@@ -528,28 +528,49 @@ export function ReviewFlow({
                 {entry.bullets.map((b, bi) => {
                   const quant = quantFor(ei, bi);
                   const isActive = activeQuant && activeQuant.item.section === step && activeQuant.item.entryIndex === ei && activeQuant.item.bulletIndex === bi;
+                  // Editing a suggestion is the student vouching for it, so any
+                  // change (or Confirm) clears the flag; Remove drops it.
+                  const updateBullet = (fn: (y: typeof b) => typeof b | null) =>
+                    mutate(doc => step === "experience"
+                      ? {
+                          ...doc,
+                          experience: doc.experience.map((x, i) => i === ei
+                            ? { ...x, bullets: x.bullets.flatMap((y, j) => (j === bi ? (fn(y) ?? []) : [y])) }
+                            : x),
+                        }
+                      : {
+                          ...doc,
+                          projects: doc.projects.map((x, i) => i === ei
+                            ? { ...x, bullets: x.bullets.flatMap((y, j) => (j === bi ? (fn(y) ?? []) : [y])) }
+                            : x),
+                        });
                   return (
                     <div key={bi} className="space-y-1">
+                      {b.suggested && (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[11px] font-bold text-brand">Suggested: is this true for you?</span>
+                          <button
+                            onClick={() => updateBullet(y => ({ text: y.text, evidence: y.evidence }))}
+                            className="h-6 px-2.5 rounded-full bg-brand text-white text-[11px] font-bold"
+                          >
+                            Yes, keep it
+                          </button>
+                          <button
+                            onClick={() => updateBullet(() => null)}
+                            className="h-6 px-2.5 rounded-full border border-line text-[11px] font-bold text-ink-muted"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
                       <Textarea
                         value={b.text}
                         onChange={e => {
                           const text = e.target.value;
-                          mutate(doc => step === "experience"
-                            ? {
-                                ...doc,
-                                experience: doc.experience.map((x, i) => i === ei
-                                  ? { ...x, bullets: x.bullets.map((y, j) => j === bi ? { ...y, text } : y) }
-                                  : x),
-                              }
-                            : {
-                                ...doc,
-                                projects: doc.projects.map((x, i) => i === ei
-                                  ? { ...x, bullets: x.bullets.map((y, j) => j === bi ? { ...y, text } : y) }
-                                  : x),
-                              });
+                          updateBullet(y => ({ text, evidence: y.evidence }));
                         }}
                         rows={2}
-                        className="rounded-lg border border-line focus:border-brand text-ink text-xs resize-none"
+                        className={`rounded-lg border focus:border-brand text-ink text-xs resize-none ${b.suggested ? "border-dashed border-brand/50 bg-brand-soft/40" : "border-line"}`}
                       />
                       {quant && !isActive && (
                         <button
@@ -727,8 +748,16 @@ export function ReviewFlow({
     low: "border-line bg-paper",
   };
 
+  const pendingSuggestions = countSuggestions(draft);
+
   const finishPanel = (
     <div className="space-y-4">
+      {pendingSuggestions > 0 && (
+        <div className="rounded-xl border border-dashed border-brand/50 bg-brand-soft/40 p-3 text-[12px] text-ink leading-snug">
+          <span className="font-semibold">{pendingSuggestions} suggested bullet{pendingSuggestions > 1 ? "s" : ""} still need your OK.</span>{" "}
+          They are not in your download or your score until you keep or edit them in Experience / Projects.
+        </div>
+      )}
       {stepRules.length > 0 && (
         <div className="space-y-1.5">
           <p className="text-[11px] font-bold text-ink-muted uppercase tracking-wider">Overall checks</p>
@@ -816,6 +845,7 @@ export function ReviewFlow({
         templateId={resume.templateId}
         highlightSection={step === "finish" ? undefined : step}
         onMeasure={m => setFill({ pages: m.pages, fillPct: m.fillPct })}
+        showSuggestions
       />
       {fill && (
         <div className="space-y-0.5">

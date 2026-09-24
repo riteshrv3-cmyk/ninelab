@@ -21,6 +21,7 @@ import {
 import { normTerm } from "./normalize";
 import type { LayoutEstimate, ResumeDocument, SectionKey } from "./types";
 import type { TemplateDensity } from "./budget";
+import { confirmedOnly } from "./suggestions";
 
 export type SubScoreKey = "impact" | "brevity" | "style" | "completeness" | "ats";
 
@@ -832,9 +833,11 @@ const SUB_SCORE_MAX: Record<SubScoreKey, number> = { impact: 25, brevity: 15, st
 // ─── Entry point ─────────────────────────────────────────────────────────────
 
 export function buildQualityReport(
-  doc: ResumeDocument,
+  source: ResumeDocument,
   opts?: { density?: TemplateDensity },
 ): QualityReport {
+  // Unconfirmed AI suggestions earn nothing until the student vouches for them.
+  const doc = confirmedOnly(source);
   const layout = estimateLayout(doc, opts?.density ?? "normal");
   const bullets = collectBullets(doc);
   const input: RuleInput = { doc, bullets, layout };

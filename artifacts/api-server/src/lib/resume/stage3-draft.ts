@@ -135,7 +135,7 @@ function toBullets(raw: DraftBullet[] | undefined, validIds: Set<string>, maxCou
     .slice(0, maxCount);
 }
 
-function parsePeriod(period: string | undefined): { start: string; end: string } {
+export function parsePeriod(period: string | undefined): { start: string; end: string } {
   if (!period) return { start: "", end: "" };
   const parts = period.split(/[-–—]/).map((p) => p.trim());
   return { start: parts[0] ?? "", end: parts[1] ?? period };

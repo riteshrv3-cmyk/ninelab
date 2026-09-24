@@ -22,6 +22,10 @@ export interface Bullet {
   /** Ledger IDs (e.g. "PR:2", "EX:1") this bullet traces back to. Empty means
    * the fabrication gate could not verify it and it should not be rendered. */
   evidence: string[];
+  /** AI-proposed from the entry's own facts for a thin profile. Shown only in
+   * review, left out of every export and score until the student confirms it
+   * (confirming clears the flag). */
+  suggested?: boolean;
 }
 
 export interface SkillSection {
@@ -256,6 +260,8 @@ export interface GenerationMeta {
     topThreeFixes: string[];
   } | null;
   removedByGate: RemovedByGate[];
+  /** Number of AI-suggested bullets awaiting the student's confirmation. */
+  suggestedBullets?: number;
   totalMs: number;
   fontFallback?: boolean;
 }

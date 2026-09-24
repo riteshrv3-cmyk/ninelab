@@ -31,8 +31,10 @@ function toBullets(v: unknown): Bullet[] {
   return arr(v).map((b): Bullet | null => {
     if (typeof b === "string") return { text: b, evidence: [] };
     if (b && typeof b === "object" && typeof (b as { text?: unknown }).text === "string") {
-      const obj = b as { text: string; evidence?: unknown };
-      return { text: obj.text, evidence: Array.isArray(obj.evidence) ? obj.evidence.filter((e) => typeof e === "string") : [] };
+      const obj = b as { text: string; evidence?: unknown; suggested?: unknown };
+      const bullet: Bullet = { text: obj.text, evidence: Array.isArray(obj.evidence) ? obj.evidence.filter((e) => typeof e === "string") : [] };
+      if (obj.suggested === true) bullet.suggested = true;
+      return bullet;
     }
     return null;
   }).filter((b): b is Bullet => b !== null);

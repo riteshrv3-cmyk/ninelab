@@ -1,6 +1,6 @@
 import type { studentsTable } from "@workspace/db";
 import type { EvidenceMap, GenerationMeta, ResumeDocument, StageTelemetry, TemplateDensity } from "@workspace/resume-core";
-import { buildAtsReport, densityBudget, estimateLayout } from "@workspace/resume-core";
+import { buildAtsReport, countSuggestions, densityBudget, estimateLayout } from "@workspace/resume-core";
 import { AI_MODEL_RESUME } from "@workspace/integrations-anthropic-ai";
 import { buildLedger, ledgerVolume } from "./ledger";
 import { analyzeJd } from "./stage1-jd";
@@ -9,6 +9,7 @@ import { draftResume } from "./stage3-draft";
 import { critique } from "./stage4-critic";
 import { fabricationGate } from "./gate";
 import { applyPatches } from "./patch";
+import { suggestForThinEntries } from "./suggest";
 
 type Student = typeof studentsTable.$inferSelect;
 
@@ -124,6 +125,15 @@ export async function runResumePipeline(opts: RunPipelineOptions): Promise<RunPi
     layout = computeLayout(gated);
   }
 
+  // Thin profiles: marked suggestions for entries with fewer than 2 bullets.
+  // They never count toward scores or exports until the student confirms.
+  const suggestion = await suggestForThinEntries({ student: opts.student, ledger, doc: gated, budget, signal: opts.signal });
+  if (suggestion.added > 0) {
+    const regated = fabricationGate(suggestion.doc, ledger);
+    gated = regated.doc;
+    removedByGate.push(...regated.removed);
+  }
+
   const generation: GenerationMeta = {
     pipelineVersion: "v2",
     model: AI_MODEL_RESUME,
@@ -131,6 +141,7 @@ export async function runResumePipeline(opts: RunPipelineOptions): Promise<RunPi
     stages,
     critic: criticSummary,
     removedByGate,
+    suggestedBullets: countSuggestions(gated),
     totalMs: Date.now() - totalStart,
   };
 

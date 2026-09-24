@@ -5,6 +5,7 @@
 
 import { useEffect, useRef } from "react";
 import type { ResumeDocument, SectionKey } from "@workspace/resume-core";
+import { confirmedOnly } from "@workspace/resume-core";
 import { resolveTemplateConfig } from "@/lib/resume-pdf";
 import { DEFAULT_HEADING_LABELS } from "@/lib/resume-pdf/templateConfig";
 import { PAGE, CONTENT_HEIGHT } from "@/lib/resume-pdf/geometry";
@@ -31,6 +32,9 @@ export interface ResumeHtmlProps {
   highlightSection?: string;
   onElementClick?: (target: ResumeClickTarget, el: HTMLElement) => void;
   onMeasure?: (m: ResumeMeasure) => void;
+  /** Review only: show AI-suggested bullets, visibly marked. Everywhere else
+   * (cards, print, server PDF) unconfirmed suggestions are not rendered. */
+  showSuggestions?: boolean;
 }
 
 // The exact faces the print document embeds — injected for the in-app preview
@@ -134,6 +138,8 @@ export const RESUME_HTML_CSS = `
 .rz-skill-row { font-size: var(--r-body-size); line-height: var(--r-body-leading); margin-bottom: var(--r-space-xs); color: var(--r-body-color); }
 .rz-skill-row b { color: var(--r-ink); font-weight: 600; }
 
+.rz-suggested { color: var(--r-muted) !important; font-style: italic; text-decoration: underline dashed rgba(74, 85, 199, 0.6); text-underline-offset: 2pt; }
+.rz-suggested-tag { font-style: normal; font-size: 7pt; font-weight: 600; color: rgb(74, 85, 199); margin-left: 4pt; text-transform: uppercase; }
 .rz-clickable { cursor: pointer; border-radius: 2pt; }
 .rz-clickable:hover { background: rgba(74, 85, 199, 0.08); outline: 1px solid rgba(74, 85, 199, 0.35); }
 .rz-dim { opacity: 0.45; transition: opacity 0.2s; }
@@ -156,7 +162,8 @@ function joinDates(start: string, end: string): string {
   return parts.join(" - ");
 }
 
-export function ResumeHtml({ doc, templateId, highlightSection, onElementClick, onMeasure }: ResumeHtmlProps) {
+export function ResumeHtml({ doc: source, templateId, highlightSection, onElementClick, onMeasure, showSuggestions }: ResumeHtmlProps) {
+  const doc = showSuggestions ? source : confirmedOnly(source);
   const config = resolveTemplateConfig(templateId);
   const theme = themeFor(config);
   // The page box carries A4 min-height, so the fill meter measures the inner
@@ -256,7 +263,11 @@ export function ResumeHtml({ doc, templateId, highlightSection, onElementClick, 
             <ul className="rz-bullets">
               {e.bullets.map((b, bi) => {
                 const c = clickable({ section: "experience", field: "bulletText", entryIndex: ei, bulletIndex: bi });
-                return <li key={bi} className={c.className} onClick={c.onClick}>{b.text}</li>;
+                return (
+                  <li key={bi} className={`${c.className} ${b.suggested ? "rz-suggested" : ""}`} onClick={c.onClick}>
+                    {b.text}{b.suggested && <span className="rz-suggested-tag">Suggested</span>}
+                  </li>
+                );
               })}
             </ul>
           </div>
@@ -283,7 +294,11 @@ export function ResumeHtml({ doc, templateId, highlightSection, onElementClick, 
             <ul className="rz-bullets">
               {p.bullets.map((b, bi) => {
                 const c = clickable({ section: "projects", field: "bulletText", entryIndex: pi, bulletIndex: bi });
-                return <li key={bi} className={c.className} onClick={c.onClick}>{b.text}</li>;
+                return (
+                  <li key={bi} className={`${c.className} ${b.suggested ? "rz-suggested" : ""}`} onClick={c.onClick}>
+                    {b.text}{b.suggested && <span className="rz-suggested-tag">Suggested</span>}
+                  </li>
+                );
               })}
             </ul>
           </div>

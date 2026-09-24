@@ -46,7 +46,13 @@ export function fabricationGate(doc: ResumeDocument, ledger: EvidenceLedger): { 
   const removed: RemovedByGate[] = [];
 
   const hasValidEvidence = (evidence: string[]) => evidence.some((id) => validIds.has(id));
-  const checkBullet = (text: string, evidence: string[], path: string): boolean => {
+  const checkBullet = (text: string, evidence: string[], path: string, suggested = false): boolean => {
+    // A suggestion is a draft the student must confirm, but it still may not
+    // invent a number: metrics come only from the student (quant coach).
+    if (suggested && /\d/.test(text)) {
+      removed.push({ path, term: text.slice(0, 60), reason: "suggested bullet contained a number" });
+      return false;
+    }
     if (!hasValidEvidence(evidence)) {
       removed.push({ path, term: text.slice(0, 60), reason: "no valid evidence citation" });
       return false;
@@ -60,11 +66,11 @@ export function fabricationGate(doc: ResumeDocument, ledger: EvidenceLedger): { 
   };
 
   const experience = doc.experience
-    .map((e, ei) => ({ ...e, bullets: e.bullets.filter((b) => checkBullet(b.text, b.evidence, `experience[${ei}].bullets`)) }))
+    .map((e, ei) => ({ ...e, bullets: e.bullets.filter((b) => checkBullet(b.text, b.evidence, `experience[${ei}].bullets`, b.suggested)) }))
     .filter((e) => e.bullets.length > 0);
 
   const projects = doc.projects
-    .map((p, pi) => ({ ...p, bullets: p.bullets.filter((b) => checkBullet(b.text, b.evidence, `projects[${pi}].bullets`)) }))
+    .map((p, pi) => ({ ...p, bullets: p.bullets.filter((b) => checkBullet(b.text, b.evidence, `projects[${pi}].bullets`, b.suggested)) }))
     .filter((p) => p.bullets.length > 0);
 
   const skillSections = doc.skillSections

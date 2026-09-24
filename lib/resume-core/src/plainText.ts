@@ -1,4 +1,5 @@
 import type { ResumeDocument, SectionKey } from "./types";
+import { confirmedOnly } from "./suggestions";
 
 /**
  * Renders exactly the visible text the PDF prints, section by section, in the
@@ -9,7 +10,8 @@ import type { ResumeDocument, SectionKey } from "./types";
  * Anything not printed on the page (evidence IDs, internal metadata) never
  * appears here — that's what makes scoring against this text meaningful.
  */
-export function renderPlainText(doc: ResumeDocument): string {
+export function renderPlainText(input: ResumeDocument): string {
+  const doc = confirmedOnly(input);
   const lines: string[] = [];
 
   lines.push(doc.contact.name);

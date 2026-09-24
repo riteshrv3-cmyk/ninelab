@@ -197,7 +197,7 @@ export function InlineEditPreview({
         ref={innerRef}
         style={{ width: PAGE_WIDTH_PX, transform: `scale(${scale})`, transformOrigin: "top left", visibility: scale > 0 ? "visible" : "hidden" }}
       >
-        <ResumeHtml doc={resume} templateId={templateId} onElementClick={activeEdit ? undefined : handleElementClick} />
+        <ResumeHtml doc={resume} templateId={templateId} onElementClick={activeEdit ? undefined : handleElementClick} showSuggestions />
       </div>
 
       {/* Inline popover editor, anchored under the clicked element */}

@@ -12,6 +12,8 @@ interface ResumePreviewProps {
   className?: string;
   onMeasure?: (m: ResumeMeasure) => void;
   highlightSection?: string;
+  /** Review only: show AI-suggested bullets, marked. */
+  showSuggestions?: boolean;
 }
 
 /**
@@ -19,7 +21,7 @@ interface ResumePreviewProps {
  * the print/download path uses, so the preview can never disagree with the PDF.
  * Instant on every keystroke (no canvas, no worker, no debounce needed).
  */
-export function ResumePreview({ resume, templateId, className, onMeasure, highlightSection }: ResumePreviewProps) {
+export function ResumePreview({ resume, templateId, className, onMeasure, highlightSection, showSuggestions }: ResumePreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
@@ -52,7 +54,7 @@ export function ResumePreview({ resume, templateId, className, onMeasure, highli
         ref={innerRef}
         style={{ width: PAGE_WIDTH_PX, transform: `scale(${scale})`, transformOrigin: "top left", visibility: scale > 0 ? "visible" : "hidden" }}
       >
-        <ResumeHtml doc={resume} templateId={templateId} onMeasure={onMeasure} highlightSection={highlightSection} />
+        <ResumeHtml doc={resume} templateId={templateId} onMeasure={onMeasure} highlightSection={highlightSection} showSuggestions={showSuggestions} />
       </div>
     </div>
   );

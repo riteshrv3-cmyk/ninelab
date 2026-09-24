@@ -1,5 +1,6 @@
 import type { LayoutEstimate, ResumeDocument, SectionKey } from "./types";
 import type { TemplateDensity } from "./budget";
+import { confirmedOnly } from "./suggestions";
 
 // A4 geometry, matching artifacts/ninelab/src/lib/resume-pdf/geometry.ts exactly —
 // keep these two files in sync if the page geometry ever changes.
@@ -50,7 +51,8 @@ function sectionHeadingHeight(density: TemplateDensity): number {
  * Used by Stage 4's critic (densityFit axis) and, before the real engine has
  * run, by the preview's initial skeleton.
  */
-export function estimateLayout(doc: ResumeDocument, density: TemplateDensity = "normal"): LayoutEstimate {
+export function estimateLayout(input: ResumeDocument, density: TemplateDensity = "normal"): LayoutEstimate {
+  const doc = confirmedOnly(input);
   const spacingMult = DENSITY_SPACING_MULT[density];
   let height = 0;
 

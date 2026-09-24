@@ -9,6 +9,7 @@ import {
   TabStopType,
 } from "docx";
 import type { ResumeDocument, SectionKey } from "@workspace/resume-core";
+import { confirmedOnly } from "@workspace/resume-core";
 import { DEFAULT_HEADING_LABELS } from "./templateConfig";
 
 /** First-Last-Resume: the professional file name checkers look for. */
@@ -194,7 +195,7 @@ export async function renderResumeDocx(doc: ResumeDocument, resumeName: string):
             margin: { top: 720, bottom: 720, left: 1080, right: 1080 },
           },
         },
-        children: buildSections(doc),
+        children: buildSections(confirmedOnly(doc)),
       },
     ],
   });
