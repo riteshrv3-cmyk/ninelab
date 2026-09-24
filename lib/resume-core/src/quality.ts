@@ -281,7 +281,7 @@ const RULES: RuleDef[] = [
       if (bullets.some((b) => OUTCOME_CUES.some((c) => c === "%" || c === "x faster" ? containsPhrase(b.text, c) : containsWord(b.text, c)))) return pass();
       return {
         earned: 0, passed: false,
-        hint: "No bullet states an outcome. Add one 'reduced/improved/saved' result — even scope ('for 3 departments') counts.",
+        hint: "No bullet states an outcome. Add one 'reduced/improved/saved' result, or the real scope of what you built (users, pages, services).",
         targets: [],
       };
     },

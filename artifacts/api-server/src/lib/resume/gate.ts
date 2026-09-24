@@ -1,5 +1,6 @@
 import type { EvidenceLedger, RemovedByGate, ResumeDocument } from "@workspace/resume-core";
 import { normTerm, scanClaimedTech } from "@workspace/resume-core";
+import { introducesNewNumbers, numberTokens } from "./numbers";
 
 /** Specific technologies `text` names that the ledger never mentions. */
 export function unsupportedTech(text: string, ledger: EvidenceLedger): string[] {
@@ -26,11 +27,13 @@ export function bulletPassesGate(text: string, evidence: string[], ledger: Evide
   return true;
 }
 
-/** Drops only the pieces of free prose that claim unsupported tech. */
+/** Drops only the pieces of free prose that claim unsupported tech or a
+ * number the ledger never states. */
 function keepSupportedParts(parts: string[], ledger: EvidenceLedger): { kept: string[]; dropped: string[] } {
   const kept: string[] = [];
   const dropped: string[] = [];
-  for (const p of parts) (suspiciousText(p, ledger) ? dropped : kept).push(p);
+  const ledgerNumbers = numberTokens(ledger.rows.map((r) => r.text).join(" "));
+  for (const p of parts) (suspiciousText(p, ledger) || introducesNewNumbers(p, ledgerNumbers) ? dropped : kept).push(p);
   return { kept, dropped };
 }
 
@@ -47,10 +50,12 @@ export function fabricationGate(doc: ResumeDocument, ledger: EvidenceLedger): { 
 
   const hasValidEvidence = (evidence: string[]) => evidence.some((id) => validIds.has(id));
   const checkBullet = (text: string, evidence: string[], path: string, suggested = false): boolean => {
-    // A suggestion is a draft the student must confirm, but it still may not
-    // invent a number: metrics come only from the student (quant coach).
-    if (suggested && /\d/.test(text)) {
-      removed.push({ path, term: text.slice(0, 60), reason: "suggested bullet contained a number" });
+    // Metrics are the easiest thing for a model to invent and the hardest for
+    // a recruiter to forgive: every number must already be in the rows the
+    // bullet cites (user-confirmed coach answers are ledger rows too).
+    const citedNumbers = numberTokens(ledger.rows.filter((r) => evidence.includes(r.id)).map((r) => r.text).join(" "));
+    if (introducesNewNumbers(text, citedNumbers)) {
+      removed.push({ path, term: text.slice(0, 60), reason: suggested ? "suggested bullet contained a number" : "number not present in the cited evidence" });
       return false;
     }
     if (!hasValidEvidence(evidence)) {
@@ -80,7 +85,17 @@ export function fabricationGate(doc: ResumeDocument, ledger: EvidenceLedger): { 
       return ok;
     });
 
-  const achievements = doc.achievements.filter((a, ai) => checkBullet(a.text, a.evidence, `achievements[${ai}]`));
+  // An achievement that just restates a certification wastes a line and
+  // reads as padding.
+  const certNames = doc.certifications.map((c) => normTerm(c.name));
+  const achievements = doc.achievements
+    .filter((a, ai) => checkBullet(a.text, a.evidence, `achievements[${ai}]`))
+    .filter((a) => {
+      const t = normTerm(a.text);
+      const dup = certNames.some((c) => c.length > 6 && t.includes(c));
+      if (dup) removed.push({ path: "achievements", term: a.text.slice(0, 60), reason: "repeats a certification" });
+      return !dup;
+    });
 
   let gated: ResumeDocument = { ...doc, experience, projects, skillSections, achievements };
 
@@ -102,4 +117,46 @@ export function fabricationGate(doc: ResumeDocument, ledger: EvidenceLedger): { 
   }
 
   return { doc: gated, removed };
+}
+
+/**
+ * Critic patches may only reword. A patched bullet (or summary/headline) that
+ * now carries a number or technology the evidence doesn't support is put back
+ * to its pre-patch text, so one bad rewrite never costs the original bullet.
+ */
+export function revertUnsafePatches(before: ResumeDocument, after: ResumeDocument, ledger: EvidenceLedger): { doc: ResumeDocument; reverted: number } {
+  let reverted = 0;
+  const ledgerNumbers = numberTokens(ledger.rows.map((r) => r.text).join(" "));
+  const safeBullet = (oldText: string, newText: string, evidence: string[]) => {
+    if (oldText === newText) return newText;
+    const allowed = numberTokens(`${oldText} ${ledger.rows.filter((r) => evidence.includes(r.id)).map((r) => r.text).join(" ")}`);
+    if (introducesNewNumbers(newText, allowed) || unsupportedTech(newText, ledger).length > 0) {
+      reverted++;
+      return oldText;
+    }
+    return newText;
+  };
+  const safeProse = (oldText: string, newText: string) => {
+    if (oldText === newText) return newText;
+    if (introducesNewNumbers(newText, new Set([...ledgerNumbers, ...numberTokens(oldText)])) || suspiciousText(newText, ledger)) {
+      reverted++;
+      return oldText;
+    }
+    return newText;
+  };
+  const doc: ResumeDocument = {
+    ...after,
+    summary: safeProse(before.summary, after.summary),
+    headline: safeProse(before.headline, after.headline),
+    experience: after.experience.map((e, ei) => ({
+      ...e,
+      bullets: e.bullets.map((b, bi) => ({ ...b, text: safeBullet(before.experience[ei]?.bullets[bi]?.text ?? b.text, b.text, b.evidence) })),
+    })),
+    projects: after.projects.map((p, pi) => ({
+      ...p,
+      bullets: p.bullets.map((b, bi) => ({ ...b, text: safeBullet(before.projects[pi]?.bullets[bi]?.text ?? b.text, b.text, b.evidence) })),
+    })),
+    achievements: after.achievements.map((a, ai) => ({ ...a, text: safeBullet(before.achievements[ai]?.text ?? a.text, a.text, a.evidence) })),
+  };
+  return { doc, reverted };
 }

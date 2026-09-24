@@ -16,7 +16,7 @@ import type {
   SectionKey,
   SkillSection,
 } from "@workspace/resume-core";
-import { normTerm, renderDensityBudget, termVariants } from "@workspace/resume-core";
+import { CLICHES, normTerm, renderDensityBudget, termVariants } from "@workspace/resume-core";
 import { callJson } from "./callJson";
 import { renderLedgerForPrompt } from "./ledger";
 import { formatDegree, gradYearFor } from "./fallbacks";
@@ -65,7 +65,16 @@ Skills: 2-5 categories with plain names an ATS recognises ("Languages", "Framewo
 "Databases", "Tools & Platforms", "Cloud & DevOps"), ordered by relevance to the job. At least 5
 skills total when the ledger has them. Never list soft skills.
 
+Never use any of these words or phrases anywhere: ${CLICHES.join(", ")}.
+
 Respond with valid JSON only — no markdown, no explanation.`;
+
+/** Guest accounts carry a placeholder address; printing it would be worse
+ * than printing none (the review asks the student to add a real one). */
+function resumeEmail(email: string | null | undefined): string {
+  if (!email || /@guest\.[a-z.]*internal$/i.test(email)) return "";
+  return email;
+}
 
 function buildUserPrompt(opts: {
   ledger: EvidenceLedger;
@@ -323,7 +332,7 @@ export async function draftResume(opts: {
       degraded: true,
       doc: {
         schemaVersion: 2,
-        contact: { name: student.name, email: student.email, phone: student.phone, city: student.city, links: buildContactLinks(student) },
+        contact: { name: student.name, email: resumeEmail(student.email), phone: student.phone, city: student.city, links: buildContactLinks(student) },
         headline: fb.headline,
         summary: fb.summary,
         order,
@@ -414,7 +423,7 @@ export async function draftResume(opts: {
     degraded,
     doc: {
       schemaVersion: 2,
-      contact: { name: student.name, email: student.email, phone: student.phone, city: student.city, links: buildContactLinks(student) },
+      contact: { name: student.name, email: resumeEmail(student.email), phone: student.phone, city: student.city, links: buildContactLinks(student) },
       headline: typeof raw?.headline === "string" ? raw.headline.slice(0, 120) : "",
       summary: typeof raw?.summary === "string" ? raw.summary.slice(0, 400) : "",
       order,

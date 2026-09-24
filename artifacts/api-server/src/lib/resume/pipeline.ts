@@ -1,13 +1,13 @@
 import type { studentsTable } from "@workspace/db";
 import type { EvidenceMap, GenerationMeta, ResumeDocument, StageTelemetry, TemplateDensity } from "@workspace/resume-core";
-import { buildAtsReport, countSuggestions, densityBudget, estimateLayout } from "@workspace/resume-core";
+import { buildAtsReport, buildQualityReport, countSuggestions, densityBudget, estimateLayout, polishGenerated } from "@workspace/resume-core";
 import { AI_MODEL_RESUME } from "@workspace/integrations-anthropic-ai";
 import { buildLedger, ledgerVolume } from "./ledger";
 import { analyzeJd } from "./stage1-jd";
 import { buildEvidenceMap } from "./stage2-map";
 import { draftResume } from "./stage3-draft";
 import { critique } from "./stage4-critic";
-import { fabricationGate } from "./gate";
+import { fabricationGate, revertUnsafePatches } from "./gate";
 import { applyPatches } from "./patch";
 import { suggestForThinEntries } from "./suggest";
 
@@ -100,7 +100,16 @@ export async function runResumePipeline(opts: RunPipelineOptions): Promise<RunPi
 
   for (let iteration = 1 as 1 | 2; iteration <= 2; iteration++) {
     const criticStage = await timed("critic", opts.onProgress, async () => {
-      const r = await critique({ doc: gated, jd, ledger, keywordCoveragePct: atsReport?.scorePct ?? 0, layout, signal: opts.signal });
+      // Hand the critic the rules it can actually repair by rewriting text
+      // (mechanical ones are fixed deterministically at the end).
+      const qualityHints = buildQualityReport(polishGenerated(gated), { density: opts.templateDensity }).rules
+        .filter((r) => !r.passed && !r.vacuous && !r.autoFixable && r.hint)
+        .filter((r) => ["summary", "header", "overall", "experience", "projects", "achievements"].includes(r.section))
+        // Rules that can only be met by adding facts (numbers, outcomes, links,
+        // entries) are for the student, not the critic.
+        .filter((r) => !["IMP-01", "IMP-05", "BRV-03", "CMP-08", "CMP-04", "CMP-05", "CMP-11", "BRV-05"].includes(r.id))
+        .map((r) => r.hint as string);
+      const r = await critique({ doc: gated, jd, ledger, keywordCoveragePct: atsReport?.scorePct ?? 0, layout, qualityHints, signal: opts.signal });
       return { value: r.report, cached: false, degraded: r.degraded };
     });
     stages.push(criticStage.telemetry);
@@ -114,10 +123,11 @@ export async function runResumePipeline(opts: RunPipelineOptions): Promise<RunPi
       topThreeFixes: report.topThreeFixes,
     };
 
-    const shipReady = report.overall >= 82 && report.scores.truthfulness === 100;
-    if (shipReady || iteration === 2 || report.patches.length === 0) break;
+    // Patches only replace existing strings and are re-gated, so apply them
+    // whenever the critic offers any, not only when it scores the draft low.
+    if (iteration === 2 || report.patches.length === 0) break;
 
-    gated = applyPatches(gated, report.patches);
+    gated = revertUnsafePatches(gated, applyPatches(gated, report.patches), ledger).doc;
     const regated = fabricationGate(gated, ledger);
     gated = regated.doc;
     removedByGate.push(...regated.removed);
@@ -133,6 +143,11 @@ export async function runResumePipeline(opts: RunPipelineOptions): Promise<RunPi
     gated = regated.doc;
     removedByGate.push(...regated.removed);
   }
+
+  // Deterministic finish: standard skill groups, section order, casing,
+  // dates, spelling, punctuation. Changes no claim, so no re-gate needed.
+  gated = polishGenerated(gated);
+  atsReport = computeAts(gated);
 
   const generation: GenerationMeta = {
     pipelineVersion: "v2",

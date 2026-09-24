@@ -4,6 +4,7 @@ import { callJson } from "./callJson";
 import { unsupportedTech } from "./gate";
 import { parsePeriod } from "./stage3-draft";
 import { asObjectArray, ShapeError } from "./shapes";
+import { introducesNewNumbers, numberTokens } from "./numbers";
 import { logger } from "../logger";
 
 type Student = typeof studentsTable.$inferSelect;
@@ -22,7 +23,8 @@ Rules for every bullet:
   Configured, Developed, Wrote, Tested, Deployed).
 - 12-24 words, active voice, no first person.
 - Describe what was built and how, using ONLY the technologies named in that entry's facts.
-- NO numbers, digits, percentages or metrics of any kind. The student adds real numbers later.
+- Use a number ONLY if that exact number appears in the entry's facts. Never invent a metric,
+  percentage or count; the student adds real numbers later.
 - No claims of results you cannot see in the facts (no "improved performance", no user counts).
 - Plain, specific, believable. Never "robust", "scalable", "seamless", "passionate".
 
@@ -116,11 +118,11 @@ Return JSON: { "items": [{ "ref": "EX:1", "bullets": ["...", "..."] }] }`,
     byRef.set(it.ref, it.bullets.filter((b): b is string => typeof b === "string"));
   }
 
-  const clean = (text: string): string | null => {
+  const clean = (text: string, facts: string): string | null => {
     const t = text.trim().replace(/^[-•*]\s*/, "").replace(/\s+/g, " ");
     const words = t.split(" ").length;
     if (words < 6 || words > 32) return null;
-    if (/\d/.test(t)) return null;
+    if (introducesNewNumbers(t, numberTokens(facts))) return null;
     if (/\b(i|my|we|our)\b/i.test(t)) return null;
     if (unsupportedTech(t, ledger).length > 0) return null;
     return t;
@@ -130,7 +132,7 @@ Return JSON: { "items": [{ "ref": "EX:1", "bullets": ["...", "..."] }] }`,
   let added = 0;
   const orderAdds = new Set<SectionKey>();
   for (const w of wanted) {
-    const texts = (byRef.get(w.ref) ?? []).map(clean).filter((t): t is string => !!t).slice(0, w.need);
+    const texts = (byRef.get(w.ref) ?? []).map((t) => clean(t, w.facts)).filter((t): t is string => !!t).slice(0, w.need);
     if (texts.length === 0) continue;
     const bullets: Bullet[] = texts.map((text) => ({ text, evidence: [w.ref], suggested: true }));
     added += bullets.length;

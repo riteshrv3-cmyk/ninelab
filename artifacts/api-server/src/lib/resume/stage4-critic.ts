@@ -9,7 +9,10 @@ parser, a recruiter giving it a 7-second skim, and an engineer who will intervie
 Score harshly against the rubrics given — do not be generous. Respond with valid JSON only, no
 markdown, no explanation.`;
 
-function buildUserPrompt(opts: { doc: ResumeDocument; jd: JdAnalysis; ledger: EvidenceLedger }): string {
+function buildUserPrompt(opts: { doc: ResumeDocument; jd: JdAnalysis; ledger: EvidenceLedger; qualityHints?: string[] }): string {
+  const hints = (opts.qualityHints ?? []).length
+    ? `\nDeterministic resume checks this draft currently FAILS (the score recruiters and ATS checkers use). Fix each one you can with a patch that only rewrites existing text:\n${opts.qualityHints!.map((h) => `- ${h}`).join("\n")}\n`
+    : "";
   return `Evidence ledger (the only facts that may appear in the resume):
 ${renderLedgerForPrompt(opts.ledger)}
 
@@ -20,7 +23,7 @@ Resume draft (exactly what will be printed):
 """
 ${renderPlainText(opts.doc)}
 """
-
+${hints}
 Score each axis 0-100 against these rubrics (deduct, don't just vibe-check):
 - evidenceStrength: does every claim read as concrete and specific, or vague/generic? Deduct heavily for filler.
 - impactLanguage: strong verbs, no banned openers (Responsible for/Worked on/Helped with), no filler verbs (Utilised/Leveraged/Spearheaded), no self-adjectives (robust/scalable/seamless), no passive voice ("was developed"), no opening verb used more than twice, no spelling mistakes?
@@ -39,6 +42,7 @@ Return JSON with this exact structure:
 Rules:
 - patches may ONLY replace an existing string at one of the allowed paths above — never add a new array entry, never touch a path outside that list.
 - Do not invent a fix that would add a technology or claim not in the evidence ledger. You are forbidden from adding a technology to raise coverage.
+- Never add a number, count, percentage or scope ("for 3 teams") that is not written in the evidence ledger. A patch that does is discarded.
 - If truthfulness is 100, patches should be empty or only stylistic (impact/parse fixes), never fabrication additions.`;
 }
 
@@ -95,6 +99,7 @@ export async function critique(opts: {
   ledger: EvidenceLedger;
   keywordCoveragePct: number;
   layout: LayoutEstimate;
+  qualityHints?: string[];
   signal?: AbortSignal;
 }): Promise<CritiqueResult> {
   const densityFit = densityFitScore(opts.layout);

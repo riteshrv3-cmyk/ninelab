@@ -10,3 +10,4 @@ export * from "./layoutEstimate";
 export * from "./quality";
 export * from "./autofix";
 export * from "./suggestions";
+export * from "./polish";
