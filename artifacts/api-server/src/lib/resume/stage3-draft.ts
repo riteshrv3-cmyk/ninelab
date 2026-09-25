@@ -16,7 +16,7 @@ import type {
   SectionKey,
   SkillSection,
 } from "@workspace/resume-core";
-import { CLICHES, normTerm, renderDensityBudget, termVariants } from "@workspace/resume-core";
+import { CLICHES, normTerm, renderDensityBudget, skillCategory, termVariants } from "@workspace/resume-core";
 import { callJson } from "./callJson";
 import { renderLedgerForPrompt } from "./ledger";
 import { formatDegree, gradYearFor } from "./fallbacks";
@@ -58,7 +58,13 @@ when the evidence supports it. Write each technology the way its makers do (Java
 PostgreSQL, AWS). Spell a well-known acronym out once where it helps a keyword scanner, e.g.
 "Natural Language Processing (NLP)".
 
-Summary: 25-45 words, no first person, no "seeking". Open with the role the student is aiming
+Length: recruiters and checkers expect ~300+ words on a one-page student resume. Write each
+bullet as 16-26 words of concrete detail from the ledger (what, how, with which tools, for whom).
+
+Soft skills: name one (collaborated, presented, led, mentored, coordinated) only where the ledger
+shows it, e.g. "bugs reported by QA team" supports "collaborated with the QA team".
+
+Summary: 35-45 words, no first person, no "seeking". Open with the role the student is aiming
 for, then their strongest real evidence. Never use passionate, motivated, team player,
 results-driven, or detail-oriented.
 
@@ -413,6 +419,20 @@ export async function draftResume(opts: {
       evidence: (Array.isArray(s.evidence) ? s.evidence : []).filter((e): e is string => typeof e === "string" && validIds.has(e)),
     }))
     .filter((s) => s.category && s.items.length > 0);
+
+  // Keyword scanners count every hard skill; the model often lists only a
+  // subset. Any profile skill still missing goes into its standard group.
+  const listed = new Set(skillSections.flatMap((s) => s.items.flatMap((i) => termVariants(normTerm(i)))));
+  const skillRows = ledger.rows.filter((r) => r.kind === "SK" || r.kind === "GL");
+  for (const row of skillRows) {
+    const name = skillName(row.text);
+    if (!name || termVariants(normTerm(name)).some((v) => listed.has(v))) continue;
+    listed.add(normTerm(name));
+    const category = skillCategory(name) ?? "Other Skills";
+    const target = skillSections.find((s) => s.category.toLowerCase() === category.toLowerCase());
+    if (target) target.items.push(name);
+    else skillSections.push({ category, items: [name], evidence: [row.id] });
+  }
 
   const achievements = rawAchievements
     .slice(0, budget.achievementsMaxItems)

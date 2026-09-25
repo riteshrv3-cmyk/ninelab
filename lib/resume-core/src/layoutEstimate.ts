@@ -9,9 +9,9 @@ const CH = 751.89; // usable content height, pt
 
 const TYPE_SCALE = {
   name: { size: 21, leading: 25.5 },
-  section: { size: 9, leading: 12 },
-  entry: { size: 11, leading: 15 },
-  body: { size: 10, leading: 13.5 },
+  section: { size: 9.75, leading: 12 },
+  entry: { size: 11.25, leading: 15 },
+  body: { size: 10.5, leading: 14.25 },
   meta: { size: 8.25, leading: 10.5 },
 };
 
@@ -31,6 +31,7 @@ const DENSITY_SPACING_MULT: Record<TemplateDensity, number> = { compact: 0.85, n
  * page" signal.
  */
 function charsPerLine(fontSize: number, width = CW): number {
+  // Arial / Liberation Sans average glyph width is about 0.5em for resume text.
   const avgCharWidth = fontSize * 0.5;
   return Math.max(1, Math.floor(width / avgCharWidth));
 }

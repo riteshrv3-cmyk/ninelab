@@ -16,10 +16,12 @@ export const TYPE_SCALE: Record<TypeRole, TypeStyle> = {
   name: { size: 21, leading: 25.5, tracking: 0, weight: "bold" },
   headline: { size: 10.5, leading: 13.5, tracking: 0, weight: "normal" },
   contact: { size: 9, leading: 12, tracking: 0, weight: "normal" },
-  section: { size: 9.5, leading: 12, tracking: 0, weight: "bold" },
-  entry: { size: 11, leading: 15, tracking: 0, weight: "bold" },
-  meta: { size: 8.5, leading: 10.5, tracking: 0, weight: "normal" },
-  body: { size: 10, leading: 13.5, tracking: 0, weight: "normal" },
+  // Every size is a whole number of CSS pixels (pt x 4/3): fractional
+  // pixel sizes (10pt = 13.33px) made ResumeGo's parser reject the PDF.
+  section: { size: 9.75, leading: 12, tracking: 0, weight: "bold" },
+  entry: { size: 11.25, leading: 15, tracking: 0, weight: "bold" },
+  meta: { size: 8.25, leading: 10.5, tracking: 0, weight: "normal" },
+  body: { size: 10.5, leading: 14.25, tracking: 0, weight: "normal" },
   micro: { size: 7.5, leading: 9, tracking: 0, weight: "normal" },
 };
 

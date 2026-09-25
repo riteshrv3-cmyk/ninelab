@@ -5,6 +5,7 @@ import { renderPlainText } from "@workspace/resume-core";
 import { renderResumePdf, resumeFileName } from "../src/lib/resume/pdf";
 import { strong } from "../../../lib/resume-core/test/fixtures/strong";
 import { mediocre } from "../../../lib/resume-core/test/fixtures/mediocre";
+import { TYPE_SCALE } from "../../ninelab/src/lib/resume-pdf/tokens";
 
 const HEADINGS: Record<string, Record<string, string>> = {
   ats: { summary: "SUMMARY", experience: "WORK EXPERIENCE", projects: "PROJECTS", skills: "TECHNICAL SKILLS", education: "EDUCATION", certifications: "CERTIFICATIONS", achievements: "ACHIEVEMENTS" },
@@ -78,6 +79,15 @@ async function checkOne(label: string, doc: ResumeDocument, templateId: string, 
   }
   if (/(?:\b[A-Za-z] ){4,}[A-Za-z]\b/.test(text)) failures.push(`${templateId}: letter-spaced text found`);
   if (/[·▪–]/.test(text)) failures.push(`${templateId}: non-ASCII separator in text layer`);
+  // Two different fonts sharing one embedded name (the old Source Sans files
+  // did) made ResumeGo reject the file as "non-standard font".
+  const subsetsByName = new Map<string, Set<string>>();
+  for (const m of pdf.toString("latin1").matchAll(/\/BaseFont\s*\/([A-Z]{6})\+([A-Za-z0-9-]+)/g)) {
+    subsetsByName.set(m[2], (subsetsByName.get(m[2]) ?? new Set()).add(m[1]));
+  }
+  for (const [name, subsets] of subsetsByName) {
+    if (subsets.size > 1) failures.push(`${templateId}: ${subsets.size} different fonts embedded under one name "${name}"`);
+  }
   if (label === "strong" && pages !== 1) failures.push(`${templateId}: strong fixture ran to ${pages} pages`);
   // Every word the scorer reads must be on the page.
   const scored = renderPlainText(doc).split("\n").map(norm).filter((l) => l.length > 3);
@@ -92,6 +102,11 @@ async function main() {
   for (const templateId of ["ats", "classic", "tech", "minimal"]) {
     failures.push(...(await checkOne("strong", strong, templateId, outDir)));
     failures.push(...(await checkOne("mediocre", mediocre, templateId, outDir)));
+  }
+  // Fractional CSS-pixel font sizes made ResumeGo's parser reject the PDF.
+  for (const [role, t] of Object.entries(TYPE_SCALE)) {
+    const px = (t.size * 4) / 3;
+    if (Math.abs(px - Math.round(px)) > 1e-6) failures.push(`type scale ${role}: ${t.size}pt is ${px.toFixed(2)}px, not a whole pixel`);
   }
   if (resumeFileName("Priya Deshmukh") !== "Priya-Deshmukh-Resume.pdf") failures.push("bad file name");
   if (failures.length) {

@@ -1,6 +1,6 @@
 import { applyAutoFixes } from "./autofix";
 import { normTerm } from "./normalize";
-import type { ResumeDocument, SkillSection } from "./types";
+import type { ResumeDocument, SectionKey, SkillSection } from "./types";
 
 // Standard ATS-recognised skill groups. Order is the order they print in.
 const SKILL_GROUPS: Array<{ category: string; terms: string[] }> = [
@@ -80,6 +80,68 @@ export function dropAspiring(text: string): string {
   return text.replace(/\baspiring\s+/gi, "").replace(/^([a-z])/, (c) => c.toUpperCase());
 }
 
+const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
+
+function listJoin(items: string[]): string {
+  if (items.length <= 1) return items.join("");
+  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+}
+
+/**
+ * Checkers want a 2-3 line summary and ~300+ words overall; the AI summary
+ * sometimes ends up a single short line after the honesty gate trims it.
+ * Tops it up to ~25+ words with sentences built only from facts already on
+ * the resume (education, internship, projects, listed skills).
+ */
+export function ensureSummary(doc: ResumeDocument, nowYear = new Date().getFullYear()): ResumeDocument {
+  let summary = doc.summary.trim();
+  if (wordCount(summary) >= 25) return doc;
+  const has = (s: string) => summary.toLowerCase().includes(s.toLowerCase());
+  const extras: string[] = [];
+
+  const skills = doc.skillSections.flatMap((s) => s.items).slice(0, 4);
+  const role = doc.headline.split("|")[0]?.trim();
+  if (!summary && role && skills.length >= 2) extras.push(`${role} with hands-on experience in ${listJoin(skills)}.`);
+
+  const ed = doc.education[0];
+  if (ed?.institution && !has(ed.institution)) {
+    const subject = ed.degree.includes(" in ") ? ed.degree.split(" in ").slice(1).join(" in ") : ed.degree;
+    const year = /^\d{4}$/.test(ed.end.trim()) ? Number(ed.end.trim()) : null;
+    const when = year === null ? "" : year >= nowYear ? `, graduating in ${year}` : `, graduated in ${year}`;
+    const cgpa = ed.cgpa ? ` with a CGPA of ${ed.cgpa}` : "";
+    extras.push(`${year !== null && year < nowYear ? "Graduate in" : "Student of"} ${subject} at ${ed.institution}${when}${cgpa}.`);
+  }
+
+  const job = doc.experience.find((e) => e.bullets.some((b) => !b.suggested));
+  if (job?.company && !has(job.company)) extras.push(`Worked as ${job.role} at ${job.company}.`);
+
+  const projects = doc.projects.filter((p) => p.bullets.some((b) => !b.suggested)).map((p) => p.title).slice(0, 2);
+  if (projects.length && !projects.every(has)) extras.push(`Built ${projects.length === 1 ? "the project" : "projects including"} ${listJoin(projects)}.`);
+
+  for (const sentence of extras) {
+    if (wordCount(summary) >= 25 || wordCount(`${summary} ${sentence}`) > 45) break;
+    summary = summary ? `${summary.replace(/([^.!?])$/, "$1.")} ${sentence}` : sentence;
+  }
+  return summary === doc.summary ? doc : { ...doc, summary };
+}
+
+// Indian fresher order (placement-cell and recruiter guides): education and
+// skills before work. Tested: ResumeGo only detected the Education section
+// when it came straight after the summary.
+const FRESHER_ORDER: SectionKey[] = ["summary", "education", "skills", "experience", "projects", "certifications", "achievements"];
+
+export function fresherOrder(doc: ResumeDocument): ResumeDocument {
+  const present = new Set(doc.order);
+  const order = FRESHER_ORDER.filter((k) => present.has(k));
+  for (const k of doc.order) if (!order.includes(k)) order.push(k);
+  return order.join() === doc.order.join() ? doc : { ...doc, order };
+}
+
+/** Standard category for a skill name, or null when unknown. */
+export function skillCategory(item: string): string | null {
+  return GROUP_OF.get(normTerm(item)) ?? null;
+}
+
 /**
  * Final deterministic pass on a freshly generated resume: standard skill
  * groups, then every mechanical fix (section order, casing, date format,
@@ -92,5 +154,5 @@ export function polishGenerated(doc: ResumeDocument): ResumeDocument {
     summary: dropAspiring(doc.summary),
     education: doc.education.map((e) => ({ ...e, degree: expandDegree(e.degree) })),
   };
-  return applyAutoFixes(shaped).doc;
+  return ensureSummary(fresherOrder(applyAutoFixes(shaped).doc));
 }

@@ -37,17 +37,9 @@ export interface ResumeHtmlProps {
   showSuggestions?: boolean;
 }
 
-// The exact faces the print document embeds — injected for the in-app preview
-// too, so preview and PDF shape text with the same fonts (identical widths,
-// wrapping, and page-fit measurements).
-export const RESUME_FONT_CSS = `
-@font-face { font-family: "Source Sans 3"; src: url("/fonts/resume/SourceSans3-Regular.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: block; }
-@font-face { font-family: "Source Sans 3"; src: url("/fonts/resume/SourceSans3-SemiBold.ttf") format("truetype"); font-weight: 600; font-style: normal; font-display: block; }
-@font-face { font-family: "Source Sans 3"; src: url("/fonts/resume/SourceSans3-Italic.ttf") format("truetype"); font-weight: 400; font-style: italic; font-display: block; }
-@font-face { font-family: "Source Serif 4"; src: url("/fonts/resume/SourceSerif4-Regular.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: block; }
-@font-face { font-family: "Source Serif 4"; src: url("/fonts/resume/SourceSerif4-SemiBold.ttf") format("truetype"); font-weight: 600; font-style: normal; font-display: block; }
-@font-face { font-family: "Source Serif 4"; src: url("/fonts/resume/SourceSerif4-Italic.ttf") format("truetype"); font-weight: 400; font-style: italic; font-display: block; }
-`;
+// Resumes use standard system fonts (see htmlTheme.ts), so there is nothing
+// to load. Kept as an export so the print document's structure is unchanged.
+export const RESUME_FONT_CSS = "";
 
 // Class-based stylesheet shared verbatim between the in-app preview (injected
 // once into <head>) and the print document (inlined by printResume.ts).

@@ -636,7 +636,9 @@ const RULES: RuleDef[] = [
         return { earned: 0, passed: false, autoFixable: false, hint: "Add your phone number — Indian recruiters usually call before they email.", targets: ["contact.phone"] };
       }
       const digits = phone.replace(/\D/g, "");
-      const ok = /^(91)?[6-9]\d{9}$/.test(digits) || (phone.startsWith("+") && digits.length >= 10 && digits.length <= 14);
+      // Indian mobiles: ten plain digits, the one form every parser tested
+      // reads correctly. Other countries: any +code number.
+      const ok = /^[6-9]\d{9}$/.test(phone) || (phone.startsWith("+") && !phone.startsWith("+91") && digits.length >= 10 && digits.length <= 14);
       if (ok) return pass();
       // Reformattable only when the digits actually form an Indian mobile;
       // "09876543" is simply wrong and needs the student to retype it.
@@ -644,8 +646,8 @@ const RULES: RuleDef[] = [
       return {
         earned: 0, passed: false, autoFixable: fixable,
         hint: fixable
-          ? "Format your phone as +91 followed by the 10 digits, so every ATS can read it."
-          : "That phone number looks incomplete. Check the digits and write it as +91 followed by the 10 digits.",
+          ? "Write your phone as the 10 digits only (9876543210). Spaces and +91 make some ATS read it wrong."
+          : "That phone number looks incomplete. Check the digits and write it as the 10 digits only.",
         targets: ["contact.phone"],
       };
     },

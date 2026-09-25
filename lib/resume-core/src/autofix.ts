@@ -163,9 +163,9 @@ export function applyAutoFixes(input: ResumeDocument): { doc: ResumeDocument; ap
     const m = digits.match(/^(91)?([6-9]\d{9})$/);
     if (m) {
       const ten = m[2];
-      // Ten contiguous digits: US-centric parsers look for 3-3-4 digit runs
-      // and miss "98765 43210", while every parser reads "9876543210".
-      const after = `+91 ${ten}`;
+      // Ten plain digits. Tested: OpenResume misses "98765 43210" and
+      // ResumeGo reads "+91 9876543210" as "9198765432". Both read this.
+      const after = ten;
       if (record("CMP-03", "contact.phone", doc.contact.phone, after)) doc.contact.phone = after;
     }
   }

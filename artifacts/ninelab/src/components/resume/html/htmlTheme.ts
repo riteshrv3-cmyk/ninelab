@@ -6,8 +6,12 @@ import type { TemplateConfig } from "@/lib/resume-pdf/templateConfig";
 import { DENSITY_MULTIPLIER, PALETTE, SPACING, TYPE_SCALE, UPPERCASE_NAME_EXTRA_TRACKING, type RGB } from "@/lib/resume-pdf/tokens";
 
 export const FONT_STACKS = {
-  sans: `"Source Sans 3", "Segoe UI", Arial, sans-serif`,
-  serif: `"Source Serif 4", Georgia, "Times New Roman", serif`,
+  // Standard system fonts only. Tested against ResumeGo's checker: the
+  // bundled Source Sans files (both weights named "SourceSans3-Roman") made
+  // it reject the PDF as "non-standard font"; Arial passed. Railway renders
+  // with Liberation Sans/Serif, the metric-identical clones of Arial/Times.
+  sans: `Arial, "Liberation Sans", Helvetica, sans-serif`,
+  serif: `Georgia, "Times New Roman", "Liberation Serif", serif`,
 } as const;
 
 function rgb(c: RGB): string {
