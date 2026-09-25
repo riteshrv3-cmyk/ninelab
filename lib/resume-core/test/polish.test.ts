@@ -43,6 +43,9 @@ describe("parser-friendly wording", () => {
   });
   it("separates headline skills with pipes, not commas", () => {
     expect(pipeHeadline("Backend Developer | Java, REST APIs, Spring Boot")).toBe("Backend Developer | Java | REST APIs | Spring Boot");
+    expect(pipeHeadline("Frontend Developer · HTML, CSS")).toBe("Frontend Developer | HTML | CSS");
+    expect(pipeHeadline("Data Analyst – Python, SQL")).toBe("Data Analyst | Python | SQL");
+    expect(pipeHeadline("Full-Stack Developer")).toBe("Full-Stack Developer");
   });
 });
 

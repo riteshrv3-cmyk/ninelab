@@ -71,7 +71,9 @@ export function expandDegree(degree: string): string {
 /** "Backend Developer | Java, Spring Boot" -> "Backend Developer | Java | Spring Boot":
  * a comma after a word reads as "City, ST" to some location parsers. */
 export function pipeHeadline(headline: string): string {
-  return headline.split(/\s*[|,]\s*/).filter(Boolean).join(" | ");
+  // Any separator the model picks ("·", "•", "–", ":") becomes a pipe; a
+  // stray middle dot would otherwise be stripped as unsafe and glue words.
+  return headline.split(/\s*(?:[|,;:·•–—]|\s-\s)\s*/).map((p) => p.trim()).filter(Boolean).join(" | ");
 }
 
 /** "Aspiring Software Developer" -> "Software Developer": the one cliché
