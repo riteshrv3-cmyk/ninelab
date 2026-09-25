@@ -166,7 +166,7 @@ const LESSON_TYPE = {
 export default function Course() {
   const [, setLocation] = useLocation();
   const reduced = useReducedMotion();
-  const { isDemo } = useStudentId();
+  const { isDemo, studentId: liveStudentId } = useStudentId();
   const { requireStudent } = useNameGate();
 
   const [ctx, setCtx] = useState<CourseContext | null>(null);
@@ -175,6 +175,8 @@ export default function Course() {
   const [animReady, setAnimReady] = useState(false);
   const [msgIndex, setMsgIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  // Bumped by "Try again" so the load effect and the animation clock re-run.
+  const [retryKey, setRetryKey] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>("roadmap");
 
   // ── Roadmap state ──────────────────────────────────────────────────────────
@@ -255,7 +257,7 @@ export default function Course() {
     const msgTimer = setInterval(() => setMsgIndex(i => (i + 1) % LOAD_MSGS.length), 520);
     const doneTimer = setTimeout(() => setAnimReady(true), MIN_ANIM_MS);
     return () => { clearInterval(msgTimer); clearTimeout(doneTimer); };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [retryKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Init ───────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -306,7 +308,7 @@ export default function Course() {
         setDataReady(true);
       }
     })();
-  }, [setLocation]);
+  }, [setLocation, retryKey]);
 
   // (Progress now syncs to the enrollment via the debounced
   //  updateCourseProgress PATCH below — the old course-progress POST endpoint
@@ -353,7 +355,9 @@ export default function Course() {
       // Don't echo the just-seeded arrays straight back to the server.
       skipNextProgressSync.current = true;
     }).catch(() => { hasEnrolled.current = false; });
-  }, [courseData, ctx]); // eslint-disable-line react-hooks/exhaustive-deps
+    // liveStudentId: a visitor who reached the course in explore mode and was
+    // just given a student row by the NameGate must get enrolled now.
+  }, [courseData, ctx, liveStudentId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Debounced progress persistence — localStorage is instant UI, server durable ─
   useEffect(() => {
@@ -667,7 +671,7 @@ export default function Course() {
       <div className="min-h-screen bg-paper flex flex-col items-center justify-center px-6 pb-28 lg:max-w-2xl lg:mx-auto">
         <h2 className="text-display text-lg font-extrabold text-ink mb-2">Something went wrong</h2>
         <p className="text-sm text-ink-muted text-center mb-6">{error}</p>
-        <Button onClick={() => { setDataReady(false); setAnimReady(false); setMsgIndex(0); hasFetched.current = false; }} className="bg-brand hover:bg-brand/90 text-paper font-bold rounded-xl px-6">
+        <Button onClick={() => { setError(null); setDataReady(false); setAnimReady(false); setMsgIndex(0); hasFetched.current = false; setRetryKey(k => k + 1); }} className="bg-brand hover:bg-brand/90 text-paper font-bold rounded-xl px-6">
           Try again
         </Button>
       </div>

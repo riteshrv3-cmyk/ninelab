@@ -48,6 +48,30 @@ export function useNameGate(): NameGateContextValue {
 const DEFAULT_TITLE = "Let's get you started";
 const DEFAULT_SUBTITLE = "That's all we need — you can add the details later.";
 
+/**
+ * Pops the history entry the gate pushed, then runs `then`. history.back() is
+ * asynchronous: navigating right after it let the pop land after the new push,
+ * so the student bounced back to the page they came from once.
+ */
+function leaveGateEntry(then?: () => void) {
+  if (!history.state?.ktGate) {
+    then?.();
+    return;
+  }
+  if (then) {
+    const onPop = () => {
+      window.removeEventListener("popstate", onPop);
+      then();
+    };
+    window.addEventListener("popstate", onPop);
+  }
+  try {
+    history.back();
+  } catch {
+    then?.();
+  }
+}
+
 export function NameGateProvider({ children }: { children: ReactNode }) {
   const [, setLocation] = useLocation();
   const reduce = useReducedMotion();
@@ -86,17 +110,12 @@ export function NameGateProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const closeGate = useCallback((viaPop = false) => {
+  const closeGate = useCallback((viaPop = false, then?: () => void) => {
     setOpen(false);
     pendingAction.current = null;
     // Consume the history entry we pushed, unless we're already handling a pop.
-    if (!viaPop && history.state?.ktGate) {
-      try {
-        history.back();
-      } catch {
-        /* non-fatal */
-      }
-    }
+    if (!viaPop) leaveGateEntry(then);
+    else then?.();
   }, []);
 
   // Browser/hardware Back closes the gate rather than leaving the page.
@@ -174,14 +193,7 @@ export function NameGateProvider({ children }: { children: ReactNode }) {
       setTimeout(
         () => {
           setOpen(false);
-          if (history.state?.ktGate) {
-            try {
-              history.back();
-            } catch {
-              /* non-fatal */
-            }
-          }
-          action?.();
+          leaveGateEntry(action ?? undefined);
         },
         reduce ? 350 : 1300,
       );
@@ -284,8 +296,7 @@ export function NameGateProvider({ children }: { children: ReactNode }) {
                       type="button"
                       className="text-brand font-semibold"
                       onClick={() => {
-                        closeGate();
-                        setLocation("/sign-in");
+                        closeGate(false, () => setLocation("/sign-in"));
                       }}
                     >
                       Sign in

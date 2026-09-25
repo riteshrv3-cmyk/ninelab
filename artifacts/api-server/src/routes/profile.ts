@@ -382,7 +382,10 @@ Rules:
     fillIfEmpty("portfolioUrl", parsed.portfolioUrl, !student.portfolioUrl);
 
     if (parsed.gradYear && student.year === 1 && !student.targetBatch) {
-      const inferredYear = Math.min(4, Math.max(1, 4 - (parsed.gradYear - new Date().getFullYear())));
+      // Academic year starts in July: graduating 2027 in Sep 2026 is final year.
+      const now = new Date();
+      const academicStart = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
+      const inferredYear = Math.min(4, Math.max(1, 5 - (parsed.gradYear - academicStart)));
       updates.year = inferredYear;
       updates.targetBatch = parsed.gradYear;
       fieldsFilled.push("year", "targetBatch");

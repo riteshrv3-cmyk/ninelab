@@ -2,6 +2,8 @@
 // to the generated react-query hooks, which go through @workspace/api-client-react's
 // custom-fetch.ts). Centralizes the BASE prefix and attaches the same auth headers.
 
+import { isOutageError, isOutageResponse, markServerDown, markServerUp } from "@/lib/serverStatus";
+
 export const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 type TokenGetter = () => Promise<string | null>;
@@ -24,6 +26,12 @@ export function setGuestToken(token: string | null): void {
 
 let handledStaleSession = false;
 
+// Set by <AuthBridge/>: "out" only once Clerk has loaded and says signed out.
+let clerkSignedOut = false;
+export function setClerkSignedOut(value: boolean): void {
+  clerkSignedOut = value;
+}
+
 /**
  * Drop-in replacement for `fetch(BASE + path, init)` that prefixes BASE and attaches
  * `Authorization: Bearer <clerk token>` (if signed in) and `x-guest-token` (if not).
@@ -41,7 +49,15 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
     headers.set("x-guest-token", guestToken);
   }
 
-  const res = await fetch(`${BASE}${path}`, { ...init, headers });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${path}`, { ...init, headers });
+  } catch (e) {
+    if (isOutageError(e)) markServerDown();
+    throw e;
+  }
+  if (isOutageResponse(res)) markServerDown();
+  else markServerUp();
 
   // The server returns 401 here only when it saw neither a Clerk session nor a
   // guest token at all (a mismatched-but-present guest token is 403, handled
@@ -50,7 +66,11 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   // before guestToken existed on this device. There's no recovering that
   // session client-side, so reset local identity and let onboarding create a
   // fresh one, instead of leaving every screen stuck on an error/skeleton.
-  if (res.status === 401 && !token && !guestToken && !handledStaleSession) {
+  // A signed-in account (clerkUserId stored) is only wiped once Clerk has
+  // loaded and confirmed it is signed out. On a cold start its token may just
+  // not be ready yet, and wiping then logged the student out and lost the page.
+  const signedInAccount = !!localStorage.getItem("clerkUserId");
+  if (res.status === 401 && !token && !guestToken && (!signedInAccount || clerkSignedOut) && !handledStaleSession) {
     handledStaleSession = true;
     localStorage.removeItem("studentId");
     localStorage.removeItem("studentName");

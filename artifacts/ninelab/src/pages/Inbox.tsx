@@ -173,11 +173,14 @@ export default function Inbox() {
   useEffect(() => {
     if (!studentId) return;
     apiFetch(`/api/students/${studentId}/invites`)
-      .then(r => r.json())
-      .then((data: Invite[]) => {
-        setInvites(data);
-        // Mark all as seen
-        apiFetch(`/api/students/${studentId}/mark-invites-seen`, { method: "POST" });
+      .then(r => (r.ok ? r.json() : []))
+      .then((data: unknown) => {
+        // An error body is an object, not a list; never let it reach .filter.
+        const list = Array.isArray(data) ? (data as Invite[]) : [];
+        setInvites(list);
+        if (list.some(i => !i.studentSeen)) {
+          apiFetch(`/api/students/${studentId}/mark-invites-seen`, { method: "POST" }).catch(() => {});
+        }
       })
       .catch(() => {})
       .finally(() => setLoading(false));

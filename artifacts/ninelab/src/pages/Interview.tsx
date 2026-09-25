@@ -330,6 +330,9 @@ export default function Interview() {
       setIsFinished(true);
     } catch (e) {
       console.error(e);
+      // Used to fail silently: the student sat on the last question with no
+      // sign anything went wrong.
+      setMessages(prev => [...prev, { id: Date.now().toString(), sender: "bot", text: "I couldn't score this interview just now. Your answers are saved. Tap Finish to try again." }]);
     } finally {
       setIsTyping(false);
     }
@@ -510,9 +513,15 @@ export default function Interview() {
         <Card className="rounded-2xl bg-paper shadow-soft overflow-hidden lg:order-1">
           <CardContent className="p-6 text-center">
             <div className="text-[80px] font-black leading-none mb-1 text-brand">
-              {evalData?.overallScore ?? 85}
+              {typeof evalData?.overallScore === "number" ? evalData.overallScore : "--"}
             </div>
             <p className="text-[12px] font-bold uppercase tracking-wider text-ink-muted mb-3">Overall Score</p>
+            {/* A completed session with no evaluation used to show a made-up 85. */}
+            {!evalData && (
+              <Button onClick={handleComplete} disabled={isTyping} className="bg-brand hover:bg-brand/90 text-paper font-bold rounded-xl px-6 mb-2">
+                {isTyping ? "Scoring..." : "Not scored yet. Score it now"}
+              </Button>
+            )}
             {evalData?.overallRating && (
               <span className="px-4 py-1.5 rounded-full text-sm font-bold bg-brand text-paper">
                 {evalData.overallRating}

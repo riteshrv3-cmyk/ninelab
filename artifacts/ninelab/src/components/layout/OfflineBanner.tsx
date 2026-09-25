@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { WifiOff } from "lucide-react";
+import { CloudOff, WifiOff } from "lucide-react";
+import { useServerDown } from "@/lib/serverStatus";
 
 /**
  * Shown when the browser reports no connectivity.
@@ -28,6 +29,19 @@ export function OfflineBanner() {
       window.removeEventListener("online", goOnline);
     };
   }, []);
+
+  const serverDown = useServerDown();
+
+  if (!offline && serverDown) {
+    return (
+      <div role="status" className="mx-4 mb-3 flex items-center gap-2 rounded-2xl bg-ink px-4 py-3 text-paper">
+        <CloudOff className="w-4 h-4 shrink-0" />
+        <p className="text-[13px] font-semibold text-paper">
+          We can't reach ninelab right now. Your internet is fine; we're checking again every few seconds.
+        </p>
+      </div>
+    );
+  }
 
   if (!offline) return null;
 

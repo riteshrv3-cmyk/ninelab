@@ -110,6 +110,8 @@ export default defineConfig({
             options: {
               cacheName: "toko-art",
               expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              // Only real images: never keep an error page as mascot art for 90 days.
+              cacheableResponse: { statuses: [200] },
             },
           },
           // Deliberately no /api rule. Workbox defaults unmatched requests to

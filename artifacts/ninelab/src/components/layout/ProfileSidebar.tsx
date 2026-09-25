@@ -59,8 +59,9 @@ export function ProfileSidebar({ onClose }: { onClose: () => void }) {
     const id = localStorage.getItem("studentId");
     if (!id) return;
     apiFetch(`/api/students/${id}/full-profile`)
-      .then((r) => r.json())
-      .then((d) => setProfile(d))
+      .then((r) => (r.ok ? r.json() : null))
+      // An error body ({ error }) has no name; storing it crashed the render.
+      .then((d) => setProfile(d && typeof d.name === "string" ? d : null))
       .catch(() => null);
   }, []);
 

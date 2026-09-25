@@ -24,7 +24,8 @@ function weekLabel(weekKey: string): string {
 }
 
 function fmtDate(iso: string) {
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+  // iso is already the IST calendar date; format it as-is in any device zone.
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "UTC" });
 }
 
 async function shareWeek(week: NotebookWeek) {

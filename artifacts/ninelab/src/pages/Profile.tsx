@@ -464,10 +464,11 @@ export default function Profile() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const prefersReduced = useReducedMotion();
-  const { isDemo } = useStudentId();
+  // From the shared store, not a one-time localStorage read: when the NameGate
+  // creates the student on this page, the profile must load without a reload.
+  const { isDemo, studentId } = useStudentId();
   const { requireStudent } = useNameGate();
   const isGuestAccount = useIsGuest();
-  const [studentId, setStudentId] = useState<number | null>(null);
   const [profile, setProfile] = useState<FullProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [editSection, setEditSection] = useState<string | null>(null);
@@ -498,14 +499,6 @@ export default function Profile() {
   const [showLinkedinForm, setShowLinkedinForm] = useState(false);
 
   const [photoPreview, setPhotoPreview] = useState<string>("");
-
-  useEffect(() => {
-    // No studentId → explore mode; ProfileDemo renders below instead of a
-    // redirect. When present, load the real profile.
-    const id = localStorage.getItem("studentId");
-    if (!id) return;
-    setStudentId(parseInt(id, 10));
-  }, []);
 
   // Resume-page "add experience" nudge — scrolls straight to the section.
   useEffect(() => {

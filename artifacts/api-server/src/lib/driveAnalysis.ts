@@ -14,7 +14,13 @@ export function parseFirstNumber(s: string | null | undefined): number | null {
 
 export function normalizeBranch(b: string): string {
   const x = b.toLowerCase().trim();
-  if (x.includes("comp") || x === "cse" || x === "cs" || x === "it" || x.includes("software")) return "cse";
+  // The profile's CS-family fields ("Information Technology", "Data Science",
+  // "Artificial Intelligence", "Cybersecurity") failed every branch gate.
+  if (
+    x.includes("comp") || x === "cse" || x === "cs" || x === "it" || x.includes("software") ||
+    x.includes("information tech") || x.includes("data science") || x.includes("artificial intel") ||
+    x === "ai" || x === "aiml" || x === "ai/ml" || x.includes("machine learning") || x.includes("cyber")
+  ) return "cse";
   if (x.includes("electronic") || x === "ece" || x === "etc" || x === "ete") return "ece";
   if (x.includes("electric") || x === "eee" || x === "ee") return "eee";
   if (x.includes("mech")) return "mech";
@@ -22,6 +28,17 @@ export function normalizeBranch(b: string): string {
   if (x.includes("chem")) return "chem";
   if (x === "all" || x.includes("any") || x.includes("circuit")) return "all";
   return x;
+}
+
+/**
+ * Graduation (batch) year for a student in `year` of a 4-year degree. The
+ * academic year starts in July: in Sep 2026 a final-year student is the 2027
+ * batch. The old fixed "2026 + (4 - year)" was a year early from July on.
+ */
+export function graduationYear(year: number, now = new Date()): number | null {
+  if (!year) return null;
+  const startYear = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
+  return startYear + (5 - year);
 }
 
 export interface EligibilityInput {
@@ -37,12 +54,12 @@ export interface EligibilityGate {
 
 /** Deterministic eligibility gates — never trust the LLM's opinion on whether a student qualifies. */
 export function computeEligibilityGates(
-  student: { cgpa: string | null; field: string; year: number },
+  student: { cgpa: string | null; field: string; year: number; targetBatch?: number | null },
   parsed: EligibilityInput,
 ): { gates: Record<string, EligibilityGate>; gatesOpen: number; gatesTotal: number } {
   const studentCgpa = parseFirstNumber(student.cgpa);
   const studentBranch = normalizeBranch(student.field);
-  const studentBatch = student.year ? 2026 + (4 - student.year) : null;
+  const studentBatch = student.targetBatch ?? graduationYear(student.year);
 
   const gates: Record<string, EligibilityGate> = {};
 

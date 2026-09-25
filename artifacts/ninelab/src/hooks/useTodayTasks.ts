@@ -98,6 +98,8 @@ export function useTodayTasks({ studentId }: UseTodayTasksInput) {
     },
     onSuccess: ({ streakCount, xp, level }) => {
       queryClient.setQueryData<TodayTasksData>(queryKey, (prev) => (prev ? { ...prev, streakCount, xp, level } : prev));
+      // The header streak flame and XP read the full profile, not this query.
+      void queryClient.invalidateQueries({ queryKey: ["student-full-profile"] });
     },
   });
 

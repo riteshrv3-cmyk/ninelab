@@ -1,8 +1,17 @@
-import { QueryClient } from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
+import { isOutageError, markServerDown, onServerBack } from "@/lib/serverStatus";
 
 const CHANNEL_NAME = "ninelab-sync";
 
+// Generated hooks don't go through apiFetch; catch an unreachable server here.
+function noteOutage(err: unknown) {
+  const status = (err as { status?: unknown } | null)?.status;
+  if (isOutageError(err) || status === 502 || status === 503 || status === 504) markServerDown();
+}
+
 export const queryClient = new QueryClient({
+  queryCache: new QueryCache({ onError: noteOutage }),
+  mutationCache: new MutationCache({ onError: noteOutage }),
   defaultOptions: {
     queries: {
       staleTime: 0,
@@ -21,6 +30,9 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// Screens that failed during an outage reload their data once it's back.
+if (typeof window !== "undefined") onServerBack(() => void queryClient.invalidateQueries());
 
 let channel: BroadcastChannel | null = null;
 if (typeof window !== "undefined" && "BroadcastChannel" in window) {

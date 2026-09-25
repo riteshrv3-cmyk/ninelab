@@ -7,6 +7,13 @@ const router = Router();
 
 const MILESTONE_ACTIONS = new Set(["interview_completed", "resume_generated", "all_tasks_done", "course_progress"]);
 
+// Students are in India: a task ticked at 00:30 IST is that day's, not the
+// previous UTC day's. Shift to IST wall-clock before taking dates and weeks.
+const IST_OFFSET_MS = 330 * 60 * 1000;
+function toIst(date: Date): Date {
+  return new Date(date.getTime() + IST_OFFSET_MS);
+}
+
 function isoWeekKey(date: Date): string {
   // Thursday-anchored ISO week, matching the ISO-8601 week-numbering standard.
   const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
@@ -31,7 +38,7 @@ router.get("/students/:id/notebook", requireStudent({ allowGuest: true }), async
 
     const weeks = new Map<string, { events: typeof rows; tasksDone: number; interviews: number; applications: number }>();
     for (const row of rows) {
-      const key = isoWeekKey(row.createdAt);
+      const key = isoWeekKey(toIst(row.createdAt));
       if (!weeks.has(key)) weeks.set(key, { events: [], tasksDone: 0, interviews: 0, applications: 0 });
       const bucket = weeks.get(key)!;
       bucket.events.push(row);
@@ -46,7 +53,7 @@ router.get("/students/:id/notebook", requireStudent({ allowGuest: true }), async
       events: bucket.events.map((e) => ({
         action: e.action,
         description: e.description,
-        date: e.createdAt.toISOString().slice(0, 10),
+        date: toIst(e.createdAt).toISOString().slice(0, 10),
         milestone: MILESTONE_ACTIONS.has(e.action),
       })),
     }));
