@@ -5,7 +5,7 @@ import { overlap } from "./similarity";
 
 // ", enhancing code maintainability" / ", improving user experience": the
 // benefit clause models append when the evidence states no result.
-const TRAILING_BENEFIT = /,\s+(?:thereby\s+)?(?:enhancing|improving|ensuring|facilitating|boosting|streamlining|increasing|optimizing|resulting in|leading to|contributing to|driving|enabling|promoting|fostering)\b[^,;]*$/i;
+const TRAILING_BENEFIT = /,\s+(?:thereby\s+)?(?:enhancing|improving|ensuring|facilitating|boosting|streamlining|increasing|optimizing|resulting in|leading to|contributing to|driving|enabling|promoting|fostering|aiding|supporting|allowing|delivering)\b[^,;]*$/i;
 
 /**
  * Strips a trailing benefit clause the cited evidence doesn't back up. A clause
@@ -15,7 +15,15 @@ export function stripUnsupportedBenefit(text: string, evidenceText: string): str
   const m = text.match(TRAILING_BENEFIT);
   if (!m) return text;
   const clause = m[0].replace(/^,\s+/, "");
-  if (/\d/.test(clause) || overlap(clause, evidenceText) >= 0.5) return text;
+  if (/\d/.test(clause)) return text;
+  // Whole words (plural folded), not stems: "integration" must not match
+  // "intern". Keep the clause only if nearly all of it is in the evidence.
+  const fold = (w: string) => w.replace(/(?<=\w{3})(?:ies|es|s)$/, "");
+  const words = (s: string) => (s.toLowerCase().match(/[a-z][a-z0-9.+#-]{3,}/g) ?? []).map(fold);
+  const evidence = new Set(words(evidenceText));
+  const content = words(clause).slice(1); // skip the -ing verb itself
+  const supported = content.filter((w) => evidence.has(w)).length;
+  if (content.length > 0 && supported / content.length >= 0.75) return text;
   return text.slice(0, m.index).trimEnd();
 }
 

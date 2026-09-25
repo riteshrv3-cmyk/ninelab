@@ -74,8 +74,24 @@ export function resumeFileName(name: string): string {
  * built from stored content (never from client HTML), scripts are off and
  * every network request is refused, so the page can only draw what we gave it.
  */
+// Tighter spacing (not smaller type: sizes must stay whole pixels, see
+// tokens.ts) for a resume that spills a few lines onto page 2.
+const FIT_CSS = `.rz-page{--r-space-xl:10pt !important;--r-space-lg:8pt !important;--r-space-md:5pt !important;--r-space-sm:3pt !important;--r-space-xs:1.5pt !important}
+@page{margin:34pt 51pt 34pt 51pt}`;
+
+function pageCount(pdf: Buffer): number {
+  return (pdf.toString("latin1").match(/\/Type\s*\/Page(?!s)/g) ?? []).length;
+}
+
 export async function renderResumePdf(doc: ResumeDocument, templateId: string, title: string): Promise<Buffer> {
   const html = buildPrintDocument(doc, templateId, title);
+  const first = await renderHtml(html);
+  if (pageCount(first) <= 1) return first;
+  const fitted = await renderHtml(html.replace("</style>", `${FIT_CSS}</style>`));
+  return pageCount(fitted) < pageCount(first) ? fitted : first;
+}
+
+async function renderHtml(html: string): Promise<Buffer> {
   return withSlot(async () => {
     const browser = await getBrowser();
     const page = await browser.newPage();

@@ -428,7 +428,11 @@ export async function draftResume(opts: {
     const name = skillName(row.text);
     if (!name || termVariants(normTerm(name)).some((v) => listed.has(v))) continue;
     listed.add(normTerm(name));
-    const category = skillCategory(name) ?? "Other Skills";
+    // Into its standard group if the resume already has that row; otherwise
+    // one shared "Other Skills" row, never a new one-item row per skill.
+    const standard = skillCategory(name);
+    const existing = standard ? skillSections.find((s) => s.category.toLowerCase() === standard.toLowerCase()) : undefined;
+    const category = existing ? existing.category : "Other Skills";
     const target = skillSections.find((s) => s.category.toLowerCase() === category.toLowerCase());
     if (target) target.items.push(name);
     else skillSections.push({ category, items: [name], evidence: [row.id] });

@@ -114,3 +114,15 @@ describe("unsupported benefit clauses", () => {
     expect(stripUnsupportedBenefit("Fixed UI bugs reported by the QA team", ev)).toBe("Fixed UI bugs reported by the QA team");
   });
 });
+
+describe("benefit clause strictness", () => {
+  const ev = "Experience: Backend Developer Intern at Finvera Technologies (May 2025 - Jul 2025) — Developed 6 REST APIs in Spring Boot for the loan onboarding flow | Containerised 2 services with Docker and deployed them to AWS EC2";
+  it("does not let 'integration' ride on 'intern'", () => {
+    expect(stripUnsupportedBenefit("Developed 6 REST APIs in Spring Boot for the loan onboarding flow, enhancing service integration", ev))
+      .toBe("Developed 6 REST APIs in Spring Boot for the loan onboarding flow");
+  });
+  it("strips 'streamlining deployment' and 'aiding error detection'", () => {
+    expect(stripUnsupportedBenefit("Containerised 2 services with Docker, streamlining deployment", ev)).toBe("Containerised 2 services with Docker");
+    expect(stripUnsupportedBenefit("Parsed 2 GB of logs, aiding error detection", "Python tool that parses 2 GB of server logs")).toBe("Parsed 2 GB of logs");
+  });
+});
