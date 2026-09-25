@@ -6,7 +6,7 @@ import {
   recruiterInvites,
   applicationsTable,
 } from "@workspace/db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, ne } from "drizzle-orm";
 import { getActiveCourseProgress } from "./courseProgress";
 
 export const GENERIC_SKILLS = new Set([
@@ -272,8 +272,8 @@ function levelForXp(xp: number): number {
  * Awards XP for a task completion (and a same-day bonus for finishing every
  * task), or revokes it on uncomplete. Called from completeTask so every path
  * that flips `done` — manual toggle and autoCompleteTaskKind alike — earns
- * XP consistently. Uncomplete doesn't try to claw back a bonus that may have
- * come from a different task; simplicity over perfect symmetry on an edge case.
+ * XP consistently. Uncompleting a task in a fully-done day also takes back
+ * the all-done bonus, so toggling one task can't farm the bonus.
  */
 async function applyTaskXp(studentId: number, date: string, justCompleted: boolean): Promise<{ xp: number; level: number }> {
   const [student] = await db.select({ xp: studentsTable.xp }).from(studentsTable).where(eq(studentsTable.id, studentId)).limit(1);
@@ -288,7 +288,14 @@ async function applyTaskXp(studentId: number, date: string, justCompleted: boole
     const allDone = todaysTasks.length > 0 && todaysTasks.every((t) => t.done);
     if (allDone) xp += XP_ALL_DONE_BONUS;
   } else {
-    xp = Math.max(0, xp - XP_PER_TASK);
+    // The task is already marked not-done here; if every other task is done,
+    // the day was fully complete a moment ago and the bonus was paid.
+    const todaysTasks = await db
+      .select({ done: dailyTasksTable.done })
+      .from(dailyTasksTable)
+      .where(and(eq(dailyTasksTable.studentId, studentId), eq(dailyTasksTable.date, date)));
+    const wasAllDone = todaysTasks.filter((t) => !t.done).length === 1;
+    xp = Math.max(0, xp - XP_PER_TASK - (wasAllDone ? XP_ALL_DONE_BONUS : 0));
   }
 
   const level = levelForXp(xp);
@@ -297,12 +304,24 @@ async function applyTaskXp(studentId: number, date: string, justCompleted: boole
 }
 
 export async function completeTask(studentId: number, taskId: number, done: boolean) {
+  // Only a real flip earns or costs XP: a repeated "complete" on a done task
+  // (double tap, retry) used to add another 20 XP each time.
   const [task] = await db
     .update(dailyTasksTable)
     .set({ done, completedAt: done ? new Date() : null })
-    .where(and(eq(dailyTasksTable.id, taskId), eq(dailyTasksTable.studentId, studentId)))
+    .where(and(eq(dailyTasksTable.id, taskId), eq(dailyTasksTable.studentId, studentId), ne(dailyTasksTable.done, done)))
     .returning();
-  if (!task) return null;
+  if (!task) {
+    const [current] = await db
+      .select()
+      .from(dailyTasksTable)
+      .where(and(eq(dailyTasksTable.id, taskId), eq(dailyTasksTable.studentId, studentId)))
+      .limit(1);
+    if (!current) return null;
+    const [student] = await db.select({ xp: studentsTable.xp, level: studentsTable.level }).from(studentsTable).where(eq(studentsTable.id, studentId)).limit(1);
+    const streakCount = await recomputeStreak(studentId);
+    return { task: current, streakCount, xp: student?.xp ?? 0, level: student?.level ?? 1 };
+  }
   const streakCount = await recomputeStreak(studentId);
   const { xp, level } = await applyTaskXp(studentId, task.date, done);
   return { task, streakCount, xp, level };

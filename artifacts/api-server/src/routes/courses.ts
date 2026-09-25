@@ -57,6 +57,12 @@ function moduleQuestions(courseData: unknown, moduleId: string): QuizQ[] {
   return idx >= 0 && idx < all.length ? [all[idx]] : [];
 }
 
+// The exam is graded on the server; the browser must never get the key, or
+// the answers sit in the network tab and a certificate is one click away.
+function withoutKey(questions: unknown): Omit<QuizQ, "answer" | "explanation">[] {
+  return ((questions as QuizQ[] | null) ?? []).map(({ answer: _a, explanation: _e, ...rest }) => rest);
+}
+
 function grade(questions: QuizQ[], answers: string[]): { score: number; total: number; passed: boolean } {
   let score = 0;
   questions.forEach((q, i) => { if (letter(answers[i]) && letter(answers[i]) === letter(q.answer)) score++; });
@@ -184,7 +190,7 @@ router.post("/students/:id/courses/:enrollmentId/final-exam/generate", requireSt
     if (!e || e.studentId !== id) return res.status(404).json({ error: "Not found" });
 
     const [existing] = await db.select().from(courseFinalExamsTable).where(eq(courseFinalExamsTable.enrollmentId, enrollmentId)).limit(1);
-    if (existing) return res.json({ examId: existing.id, questions: existing.questions });
+    if (existing) return res.json({ examId: existing.id, questions: withoutKey(existing.questions) });
 
     // Gate: every module quiz passed.
     const passed = await passedModuleIds(enrollmentId);
@@ -214,7 +220,7 @@ Rules:
     catch { const m = c.text.match(/\{[\s\S]*\}/); if (!m) throw new Error("No JSON"); parsed = JSON.parse(m[0]); }
     const questions = parsed.questions ?? [];
     const [row] = await db.insert(courseFinalExamsTable).values({ enrollmentId, questions }).returning({ id: courseFinalExamsTable.id });
-    return res.json({ examId: row.id, questions });
+    return res.json({ examId: row.id, questions: withoutKey(questions) });
   } catch (err) {
     req.log.error({ err }, "exam generate failed");
     return res.status(500).json({ error: "Exam generation failed" });

@@ -8,7 +8,7 @@ import {
   GetNextInterviewQuestionBody,
   SubmitInterviewFeedbackBody,
 } from "@workspace/api-zod";
-import { rlInterview } from "../middlewares/rateLimit";
+import { rlInterview, rlInterviewMedia, rlInterviewTurn } from "../middlewares/rateLimit";
 import { requireStudent, requireStudentViaResource } from "../middlewares/studentAuth";
 import { autoCompleteTaskKind } from "../lib/dailyTasks";
 import { contextPack } from "../lib/contextPack";
@@ -25,7 +25,7 @@ async function sessionStudentId(req: Parameters<Parameters<typeof requireStudent
 }
 
 // tts/transcribe carry no session/student id (they're stateless AI passthroughs) — rate-limited only.
-router.post("/interview/tts", rlInterview, async (req, res) => {
+router.post("/interview/tts", rlInterviewMedia, async (req, res) => {
   const { text } = (req.body ?? {}) as { text?: string };
   if (!text?.trim()) return res.status(400).json({ error: "text is required" });
   try {
@@ -40,7 +40,7 @@ router.post("/interview/tts", rlInterview, async (req, res) => {
 });
 
 // POST /interview/transcribe — transcribe a recorded answer (base64 audio -> text).
-router.post("/interview/transcribe", rlInterview, async (req, res) => {
+router.post("/interview/transcribe", rlInterviewMedia, async (req, res) => {
   const { audio, mimeType } = (req.body ?? {}) as { audio?: string; mimeType?: string };
   if (!audio) return res.status(400).json({ error: "audio (base64) is required" });
   try {
@@ -120,7 +120,7 @@ router.get("/interview/sessions/:id", requireStudentViaResource(sessionStudentId
 });
 
 // POST /interview/sessions/:id/question
-router.post("/interview/sessions/:id/question", requireStudentViaResource(sessionStudentId, { allowGuest: true }), async (req, res) => {
+router.post("/interview/sessions/:id/question", requireStudentViaResource(sessionStudentId, { allowGuest: true }), rlInterviewTurn, async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
   const parsed = GetNextInterviewQuestionBody.safeParse(req.body);
@@ -129,6 +129,9 @@ router.post("/interview/sessions/:id/question", requireStudentViaResource(sessio
   try {
     const [session] = await db.select().from(interviewSessionsTable).where(eq(interviewSessionsTable.id, id)).limit(1);
     if (!session) return res.status(404).json({ error: "Session not found" });
+    // Evaluated once. Re-running it let a student re-roll the score until it
+    // cleared the certificate interview gate.
+    if (session.completed && session.evaluation) return res.json(session.evaluation);
 
     const questions = session.questions as string[];
     const answers = session.answers as string[];
@@ -205,7 +208,7 @@ router.get("/interview/students/:studentId/sessions", requireStudent({ allowGues
 });
 
 // POST /interview/sessions/:id/evaluate
-router.post("/interview/sessions/:id/evaluate", requireStudentViaResource(sessionStudentId, { allowGuest: true }), async (req, res) => {
+router.post("/interview/sessions/:id/evaluate", requireStudentViaResource(sessionStudentId, { allowGuest: true }), rlInterviewTurn, async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
   try {

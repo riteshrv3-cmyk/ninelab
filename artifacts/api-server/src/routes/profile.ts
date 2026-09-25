@@ -10,6 +10,7 @@ import { extractJson } from "../lib/extractJson";
 import { logEvent } from "../lib/events";
 import { cacheGetOrSet } from "../lib/aiCache";
 import { computeProfileStrength, computeCommitmentScore } from "../lib/profileStrength";
+import { requireAdmin } from "../middlewares/adminAuth";
 
 const router = Router();
 
@@ -816,7 +817,7 @@ RULES:
 
 // ─── GET /students (recruiter talent pool) ───────────────────────────────────
 
-router.get("/talent-pool", async (req, res) => {
+router.get("/talent-pool", requireAdmin, async (req, res) => {
   try {
     const students = await db
       .select({

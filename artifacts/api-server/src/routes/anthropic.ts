@@ -4,11 +4,12 @@ import { conversations as conversationsTable, messages as messagesTable } from "
 import { eq } from "drizzle-orm";
 import { anthropic, AI_MODEL } from "@workspace/integrations-anthropic-ai";
 import { rlAiLight, rlAiMedium } from "../middlewares/rateLimit";
+import { requireAdmin } from "../middlewares/adminAuth";
 
 const router = Router();
 
 // GET /anthropic/conversations
-router.get("/anthropic/conversations", async (req, res) => {
+router.get("/anthropic/conversations", requireAdmin, async (req, res) => {
   try {
     const rows = await db.select().from(conversationsTable).orderBy(conversationsTable.id);
     return res.json(rows.map(c => ({
@@ -23,7 +24,7 @@ router.get("/anthropic/conversations", async (req, res) => {
 });
 
 // POST /anthropic/conversations
-router.post("/anthropic/conversations", rlAiLight, async (req, res) => {
+router.post("/anthropic/conversations", requireAdmin, rlAiLight, async (req, res) => {
   const { title } = req.body;
   if (!title) return res.status(400).json({ error: "title is required" });
   try {
@@ -36,7 +37,7 @@ router.post("/anthropic/conversations", rlAiLight, async (req, res) => {
 });
 
 // GET /anthropic/conversations/:id
-router.get("/anthropic/conversations/:id", async (req, res) => {
+router.get("/anthropic/conversations/:id", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
   try {
@@ -62,7 +63,7 @@ router.get("/anthropic/conversations/:id", async (req, res) => {
 });
 
 // DELETE /anthropic/conversations/:id
-router.delete("/anthropic/conversations/:id", async (req, res) => {
+router.delete("/anthropic/conversations/:id", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
   try {
@@ -77,7 +78,7 @@ router.delete("/anthropic/conversations/:id", async (req, res) => {
 });
 
 // GET /anthropic/conversations/:id/messages
-router.get("/anthropic/conversations/:id/messages", async (req, res) => {
+router.get("/anthropic/conversations/:id/messages", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
   try {
@@ -96,7 +97,7 @@ router.get("/anthropic/conversations/:id/messages", async (req, res) => {
 });
 
 // POST /anthropic/conversations/:id/messages (SSE stream)
-router.post("/anthropic/conversations/:id/messages", rlAiMedium, async (req, res) => {
+router.post("/anthropic/conversations/:id/messages", requireAdmin, rlAiMedium, async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
   const { content } = req.body;

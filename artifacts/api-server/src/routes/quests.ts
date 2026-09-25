@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { questsTable, studentQuestsTable, studentsTable, studentActivityLogTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
+import { requireStudent } from "../middlewares/studentAuth";
 
 const router = Router();
 
@@ -24,7 +25,7 @@ router.get("/quests", async (req, res) => {
 });
 
 // GET /students/:id/quests
-router.get("/students/:id/quests", async (req, res) => {
+router.get("/students/:id/quests", requireStudent({ allowGuest: true }), async (req, res) => {
   const studentId = Number(req.params.id);
   if (isNaN(studentId)) return res.status(400).json({ error: "Invalid id" });
   try {
@@ -61,7 +62,7 @@ router.get("/students/:id/quests", async (req, res) => {
 });
 
 // POST /students/:id/quests/:questId/complete
-router.post("/students/:id/quests/:questId/complete", async (req, res) => {
+router.post("/students/:id/quests/:questId/complete", requireStudent({ allowGuest: true }), async (req, res) => {
   const studentId = Number(req.params.id);
   const questId = Number(req.params.questId);
   if (isNaN(studentId) || isNaN(questId)) return res.status(400).json({ error: "Invalid id" });

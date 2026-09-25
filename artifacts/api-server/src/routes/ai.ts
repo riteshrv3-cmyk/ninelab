@@ -9,11 +9,12 @@ import { cacheGetOrSet } from "../lib/aiCache";
 import { contextPack } from "../lib/contextPack";
 import { extractJson } from "../lib/extractJson";
 import { requireStudent } from "../middlewares/studentAuth";
+import { requireAdmin } from "../middlewares/adminAuth";
 
 const router = Router();
 
 // POST /ai/candidate-report — recruiter-side rich AI report on a candidate vs a job
-router.post("/ai/candidate-report", rlAiMedium, async (req, res) => {
+router.post("/ai/candidate-report", requireAdmin, rlAiMedium, async (req, res) => {
   const { studentId, jobTitle, company, jobTags } = req.body || {};
   if (!studentId || !jobTitle) {
     return res.status(400).json({ error: "studentId and jobTitle are required" });
@@ -284,7 +285,7 @@ Rules:
 });
 
 // POST /ai/generate-roadmap
-router.post("/ai/generate-roadmap", rlAiHeavy, async (req, res) => {
+router.post("/ai/generate-roadmap", requireAdmin, rlAiHeavy, async (req, res) => {
   const parsed = GenerateRoadmapBody.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.message });
   const { year, field } = parsed.data;

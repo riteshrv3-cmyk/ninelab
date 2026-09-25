@@ -29,12 +29,17 @@ function defaultKeyer(req: Request): string {
   const { userId } = getAuth(req);
   if (userId) return `u:${userId}`;
 
+  // A guest token only counts once requireStudent has matched it to a real
+  // row; otherwise a random header per request meant a fresh bucket each time.
   const guestToken = req.header("x-guest-token");
-  if (guestToken) return `g:${createHash("sha256").update(guestToken).digest("hex").slice(0, 16)}`;
+  const verified = (req as Request & { student?: { guestToken?: string | null } }).student;
+  if (guestToken && verified?.guestToken === guestToken) {
+    return `g:${createHash("sha256").update(guestToken).digest("hex").slice(0, 16)}`;
+  }
 
-  const fwd = req.headers["x-forwarded-for"];
-  const ip = (Array.isArray(fwd) ? fwd[0] : fwd?.split(",")[0]?.trim()) || req.ip || "unknown";
-  return `ip:${ip}`;
+  // req.ip honours "trust proxy" (one hop: Railway's edge), so a client can't
+  // pick its own key by sending an X-Forwarded-For header.
+  return `ip:${req.ip || "unknown"}`;
 }
 
 export function rateLimit(opts: LimiterOptions): RequestHandler {
@@ -90,6 +95,12 @@ export const rlAiHeavy = rateLimit({ name: "ai-heavy", windowMs: 60 * 60 * 1000,
 export const rlAiMedium = rateLimit({ name: "ai-medium", windowMs: 60 * 60 * 1000, max: 60 });
 export const rlAiLight = rateLimit({ name: "ai-light", windowMs: 60 * 1000, max: 30 });
 export const rlInterview = rateLimit({ name: "interview", windowMs: 60 * 60 * 1000, max: 20 });
+// Per-turn calls inside a session (next question, evaluate): a full mock
+// interview makes ~10 of these, so they get their own, larger bucket.
+export const rlInterviewTurn = rateLimit({ name: "interview-turn", windowMs: 60 * 60 * 1000, max: 80 });
+// TTS + transcription: two calls per question, keyed by IP (no student id on
+// these), sized so a college lab behind one IP can still run interviews.
+export const rlInterviewMedia = rateLimit({ name: "interview-media", windowMs: 60 * 60 * 1000, max: 200 });
 export const rlDriveCheck = rateLimit({ name: "drivecheck", windowMs: 60 * 60 * 1000, max: 15 });
 // The 4-stage resume pipeline costs 4-5x a single rlAiHeavy call — a dedicated,
 // tighter bucket instead of sharing rlAiHeavy's 30/hr.

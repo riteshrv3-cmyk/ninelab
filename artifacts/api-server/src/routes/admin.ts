@@ -15,26 +15,10 @@ import {
   collegeAdminsTable,
 } from "@workspace/db";
 import { desc, sql, gte, eq } from "drizzle-orm";
-import { timingSafeEqual } from "crypto";
+import { requireAdmin } from "../middlewares/adminAuth";
 
 const router = Router();
 
-// Admin token gate: fail-closed if env not set; constant-time compare.
-function requireAdmin(req: Request, res: Response, next: NextFunction): void {
-  const expected = process.env.ADMIN_API_TOKEN;
-  if (!expected) {
-    res.status(503).json({ error: "Admin API disabled (ADMIN_API_TOKEN not configured)" });
-    return;
-  }
-  const provided = req.header("x-admin-token") || "";
-  const a = Buffer.from(expected);
-  const b = Buffer.from(provided);
-  if (a.length !== b.length || !timingSafeEqual(a, b)) {
-    res.status(401).json({ error: "Invalid admin token" });
-    return;
-  }
-  next();
-}
 
 // Gate every /admin/* route in this file — several below were previously missing this
 // individually. Scoped to the "/admin" prefix: this router is mounted at the app root

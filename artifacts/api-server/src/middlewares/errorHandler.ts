@@ -47,6 +47,18 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     return;
   }
 
+  // body-parser / http-errors (413 too large, 400 bad JSON) carry their own
+  // 4xx status; they are the client's mistake, not a server failure.
+  const status = (err as { status?: unknown; statusCode?: unknown })?.status ?? (err as { statusCode?: unknown })?.statusCode;
+  if (typeof status === "number" && status >= 400 && status < 500) {
+    const expose = (err as { expose?: boolean }).expose === true;
+    res.status(status).json({
+      error: status === 413 ? "Upload too large" : expose && err instanceof Error ? err.message : "Bad request",
+      code: status === 413 ? "PAYLOAD_TOO_LARGE" : "BAD_REQUEST",
+    });
+    return;
+  }
+
   const message = err instanceof Error ? err.message : "Internal server error";
   const isProd = process.env.NODE_ENV === "production";
   res.status(500).json({

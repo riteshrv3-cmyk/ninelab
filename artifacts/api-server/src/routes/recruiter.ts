@@ -9,6 +9,8 @@ import {
 import { eq, desc, and, inArray, sql } from "drizzle-orm";
 import { anthropic, AI_MODEL } from "@workspace/integrations-anthropic-ai";
 
+import { requireAdmin } from "../middlewares/adminAuth";
+
 const router = Router();
 
 interface ParsedJob {
@@ -31,7 +33,7 @@ function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n));
 }
 
-router.post("/recruiters/login", async (req, res) => {
+router.post("/recruiters/login", requireAdmin, async (req, res) => {
   const { email, name, company, role } = (req.body ?? {}) as {
     email?: string; name?: string; company?: string; role?: string;
   };
@@ -57,7 +59,7 @@ router.post("/recruiters/login", async (req, res) => {
   return res.json(created);
 });
 
-router.get("/recruiters/:id", async (req, res) => {
+router.get("/recruiters/:id", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
   const [recruiter] = await db.select().from(recruitersTable).where(eq(recruitersTable.id, id)).limit(1);
@@ -65,7 +67,7 @@ router.get("/recruiters/:id", async (req, res) => {
   return res.json(recruiter);
 });
 
-router.get("/recruiters/:id/dashboard", async (req, res) => {
+router.get("/recruiters/:id/dashboard", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
   const [recruiter] = await db.select().from(recruitersTable).where(eq(recruitersTable.id, id)).limit(1);
@@ -154,7 +156,7 @@ router.get("/recruiters/:id/dashboard", async (req, res) => {
 });
 
 // PATCH invite status — recruiter marks "interviewed" / "hired" / etc.
-router.patch("/recruiter-invites/:id/status", async (req, res) => {
+router.patch("/recruiter-invites/:id/status", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
   const { status } = (req.body ?? {}) as { status?: string };
@@ -172,7 +174,7 @@ router.patch("/recruiter-invites/:id/status", async (req, res) => {
 });
 
 // GET invites for a specific student from a specific recruiter (for status buttons in StudentDetail)
-router.get("/recruiters/:recruiterId/invites/student/:studentId", async (req, res) => {
+router.get("/recruiters/:recruiterId/invites/student/:studentId", requireAdmin, async (req, res) => {
   const recruiterId = Number(req.params.recruiterId);
   const studentId = Number(req.params.studentId);
   if (isNaN(recruiterId) || isNaN(studentId)) return res.status(400).json({ error: "Invalid id" });
@@ -185,7 +187,7 @@ router.get("/recruiters/:recruiterId/invites/student/:studentId", async (req, re
   return res.json(rows);
 });
 
-router.get("/recruiters/:id/jobs", async (req, res) => {
+router.get("/recruiters/:id/jobs", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
   const jobs = await db
@@ -325,7 +327,7 @@ function scoreStudentForJob(
   };
 }
 
-router.post("/recruiter-jobs", async (req, res) => {
+router.post("/recruiter-jobs", requireAdmin, async (req, res) => {
   const { recruiterId, title, rawDescription } = (req.body ?? {}) as {
     recruiterId?: number; title?: string; rawDescription?: string;
   };
@@ -401,7 +403,7 @@ router.post("/recruiter-jobs", async (req, res) => {
   return res.json({ job, parsed, matches: ranked });
 });
 
-router.get("/recruiter-jobs/:id/matches", async (req, res) => {
+router.get("/recruiter-jobs/:id/matches", requireAdmin, async (req, res) => {
   const id = Number(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
   const [job] = await db.select().from(recruiterJobsTable).where(eq(recruiterJobsTable.id, id)).limit(1);
@@ -430,7 +432,7 @@ router.get("/recruiter-jobs/:id/matches", async (req, res) => {
   return res.json({ job, matches: ranked });
 });
 
-router.post("/recruiter-jobs/:id/bulk-invite", async (req, res) => {
+router.post("/recruiter-jobs/:id/bulk-invite", requireAdmin, async (req, res) => {
   const jobId = Number(req.params.id);
   if (isNaN(jobId)) return res.status(400).json({ error: "Invalid id" });
   const { studentIds, message } = (req.body ?? {}) as { studentIds?: number[]; message?: string };
@@ -491,7 +493,7 @@ router.get("/platform/stats", async (req, res) => {
   }
 });
 
-router.get("/talent-pool/showcase", async (_req, res) => {
+router.get("/talent-pool/showcase", requireAdmin, async (_req, res) => {
   const all = await db
     .select()
     .from(studentsTable)

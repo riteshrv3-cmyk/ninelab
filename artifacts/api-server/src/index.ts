@@ -2,6 +2,11 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { ensureDefaultTracks } from "./lib/defaultTracks";
 
+// Log and keep serving: one stray rejection must not take every student offline.
+process.on("unhandledRejection", (reason) => {
+  logger.error({ err: reason }, "Unhandled promise rejection");
+});
+
 const rawPort = process.env["PORT"];
 
 if (!rawPort) {
