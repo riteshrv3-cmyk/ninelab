@@ -182,7 +182,7 @@ export default function Resume() {
       <div className="min-h-screen bg-canvas">
         <PageHeader
           title="My Resumes"
-          subtitle="AI-generated from your real profile · scored against 34 checks"
+          subtitle="AI-generated from your real profile · scored against 38 checks"
         />
         <div className="bg-canvas rounded-t-3xl -mt-6 min-h-[60vh] pb-28">
           <div className="p-4 pt-6 max-w-md lg:max-w-2xl mx-auto space-y-4">
@@ -199,7 +199,7 @@ export default function Resume() {
       <div className="min-h-screen bg-canvas">
         <PageHeader
           title="My Resumes"
-          subtitle="AI-generated from your real profile · scored against 34 checks"
+          subtitle="AI-generated from your real profile · scored against 38 checks"
           right={
             <motion.div whileTap={{ scale: 0.96 }}>
               <Button

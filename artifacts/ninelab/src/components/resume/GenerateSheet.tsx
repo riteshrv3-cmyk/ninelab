@@ -36,6 +36,9 @@ async function readErrorMessage(r: Response): Promise<string> {
   }
   if (r.status === 404) return "We couldn't find your profile. Sign out and sign back in.";
   if (r.status === 502 || r.status === 503 || r.status === 504) return OFFLINE_MESSAGE;
+  // Our API always explains a 5xx in JSON; an empty one came from a proxy
+  // in front of it, i.e. the server itself isn't answering.
+  if (r.status >= 500 && !body.error && !body.message) return OFFLINE_MESSAGE;
   return body.message ?? body.error ?? "Something went wrong on our side. Please try again in a minute.";
 }
 
@@ -454,7 +457,9 @@ export function GenerateSheet({
             ) : (
               <p className="text-[12px] text-ink-muted text-center leading-snug">
                 {countSuggestions(previewDoc) > 0
-                  ? `${countSuggestions(previewDoc)} bullet${countSuggestions(previewDoc) > 1 ? "s are" : " is"} marked Suggested. Confirm them in Review; they stay out of your download until you do.`
+                  ? countSuggestions(previewDoc) > 1
+                    ? `${countSuggestions(previewDoc)} bullets are marked Suggested. Confirm them in Review; they stay out of your download until you do.`
+                    : "1 bullet is marked Suggested. Confirm it in Review; it stays out of your download until you do."
                   : "Every bullet is backed by your profile. Nothing invented."}
               </p>
             )}
